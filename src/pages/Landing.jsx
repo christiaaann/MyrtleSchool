@@ -3,13 +3,16 @@ import Navbar from '../components/Navbar'
 import bg from '../assets/bg.png'
 import kid from '../assets/kid.png'
 import girl from '../assets/girl.png'
+import flyingkid from '../assets/flyingkid.png'
 const Landing = () => {
   return (
     <>
     <Navbar />
      <div id='home' className='h-screen relative bg-no-repeat bg-cover bg-center z-0' style={{backgroundImage: `url(${bg})`}}>
-       <div className='h-full flex-col flex justify-center px-20'>
-        <h1 className='text-yellow-100 leading-10 text-[6rem] font-baloo drop-shadow-lg font-bold'>Welcome to</h1>
+      
+      <div className=' border h-[50rem] flex items-center'>
+       <div className='h-full  flex-col flex justify-center px-20'>
+        <h1 className='text-yellow-100  leading-10 text-[6rem] font-baloo drop-shadow-lg font-bold'>Welcome to</h1>
          <h1 className=' text-green-200 flex drop-shadow-xl gap-5 font-baloo font-bold text-[6rem]'>Myrtle<span className='text-white drop-shadow-lg'>School</span></h1>
         
         <div className='flex px-6 gap-5'>
@@ -17,7 +20,10 @@ const Landing = () => {
           <button className=' border-2 text-white px-10 rounded-full font-bold'>Learn More</button>
        </div>
        </div> 
-          
+
+       <img className='w-1/2' src={flyingkid} alt="" />
+</div>
+
             <div className="absolute -bottom-28 w-full h-40 bg-white blur-xl"></div>
             
      </div>
