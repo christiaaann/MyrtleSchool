@@ -13,7 +13,7 @@ const Navbar = () => {
      <ul className='flex text-[#494949] font-baloo font-semibold justify-end w-full space-x-11'>
       <li><a href="#home">Home</a></li>
       <li><a href="">About</a></li>
-      <li><a href="#programs">Programs</a></li>
+      <li><a href="#courses">Courses</a></li>
       <li><a href="">Contact</a></li>
      </ul>
        
