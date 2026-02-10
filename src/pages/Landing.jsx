@@ -13,7 +13,7 @@ const Landing = () => {
     <>
     <Navbar />
      <div id='home' className='h-screen relative bg-no-repeat bg-cover bg-center z-0' style={{backgroundImage: `url(${bg})`}}>
-      <div className=' border h-[50rem] flex items-center'>
+      <div className=' h-[50rem] flex gap-2 justify-center items-center'>
       <div className='h-full  flex-col flex justify-center px-20'>
       <h1  className='text-yellow-100  leading-10 text-[6rem] font-baloo drop-shadow-lg font-bold'>Welcome to</h1>
       <h1  className=' text-green-200 flex drop-shadow-xl gap-5 font-baloo font-bold text-[6rem]'>Myrtle<span className='text-white drop-shadow-lg'>School</span></h1>
