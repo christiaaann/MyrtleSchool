@@ -16,9 +16,13 @@ const Auth = () => {
       <div className=' rounded-s-xl border w-full h-full relative overflow-hidden p-2'>
       <video className=' absolute inset-0 rounded-s-xl w-full h-full object-cover' autoPlay loop muted playsInline src={video}></video>
        <div className="absolute inset-0 w-full h-full bg-green-500/30"></div>
+        <div className='flex items-center gap-4 w-full absolute  left-5'>
+             <img className='w-16 bottom-3' src={logo} alt="" />
+        <img className='w-16 bottom-3' src={DepED} alt="" />
+       </div>
       </div>
       
-      <div className='relative flex flex-col justify-center items-center p-10'>
+      <div className='relative flex w-full flex-col justify-center items-center p-10'>
         {/* Title */}
       <h2 className="text-4xl mt-10 absolute text-green-600 w-full text-center top-2 font-semibold">
       {mode === "login" ? "Sign In" : "Account Registration"}
@@ -43,10 +47,6 @@ const Auth = () => {
        <hr className='w-36 border-spacing-2' /></div>
         <button className=' w-80 rounded-lg py-2 mt-5 text-neutral-600 font-semibold bg-neutral-100 flex items-center justify-center gap-5'><img className='w-7' src={facebook} alt="" />Continue with Facebook</button>
      
-       <div className='flex items-center gap-4 w-full justify-end absolute bottom-2 right-10'>
-             <img className='w-16 bottom-3' src={logo} alt="" />
-        <img className='w-16 bottom-3' src={DepED} alt="" />
-       </div>
       </div>
     </div>
    </div>
