@@ -5,6 +5,7 @@ import kid from '../assets/kid.png'
 import girl from '../assets/girl.png'
 import flyingkid from '../assets/flyingkid.png'
 import { useNavigate } from 'react-router-dom'
+import model1 from '../assets/model1.png'
 const Landing = () => {
   
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const Landing = () => {
       <h1  className='text-yellow-100  leading-10 text-[6rem] font-baloo drop-shadow-lg font-bold'>Welcome to</h1>
       <h1  className=' text-green-200 flex drop-shadow-xl gap-5 font-baloo font-bold text-[6rem]'>Myrtle<span className='text-white drop-shadow-lg'>School</span></h1>
       <div className='flex px-6 gap-5'>
-      <button onClick={() => navigate("/enroll")} className='bg-[#FFBD41] px-10 py-4 rounded-full font-bold shadow-md text-white'>Enroll Now</button>
+      <button onClick={() => navigate("/Auth")} className='bg-[#FFBD41] px-10 py-4 rounded-full font-bold shadow-md text-white'>Enroll Now</button>
       <button className=' border-2 text-white px-10 rounded-full font-bold'>Learn More</button>
       </div>
       </div> 
@@ -30,7 +31,7 @@ const Landing = () => {
 
      {/* programs */}
      <div id='courses' className=' h-[30rem] relative'>
-      <h1 className=' w-full text-center text-5xl text-[#57D021] drop-shadow-lg font-bold font-baloo'>Courses Offered</h1>  
+      <h1 className=' w-full text-center text-5xl text-[#57D021] drop-shadow-lg font-bold font-baloo'>Program</h1>  
       
       <div className=' absolute flex justify-center items-center h-full w-full'>
          
@@ -50,7 +51,7 @@ const Landing = () => {
            <p className=' text-justify font-baloo font-semibold text-neutral-500'>Enroll your child in our Preschool and watch them grow through fun, play-based learning in a safe, caring, and creative environment. Our teachers nurture curiosity, confidence, and early skills while keeping every day joyful and engaging.</p>
            <button onClick={()=> navigate("/preschool")} className='bg-white rounded-lg font-baloo shadow-sm py-1 w-32'>View More</button>
           </div>
-           <img className='w-72 drop-shadow-xl' src={kid} alt="" />
+           <img className='w-64 drop-shadow-xl' src={model1} alt="" />
          </div>
 
          </div>
@@ -72,7 +73,7 @@ const Landing = () => {
          <p className=' text-justify font-baloo font-semibold text-neutral-500'>Our Elementary program builds strong academic foundations while helping students grow in confidence, discipline, and responsibility. With supportive teachers and engaging lessons, we guide children to develop critical thinking, good values, and a love for learning.</p>
          <button className='bg-white rounded-lg font-baloo shadow-sm py-1 w-32'>View More</button>
          </div>
-         <img className='w-72 drop-shadow-xl' src={girl} alt="" />
+         <img className='w-64 drop-shadow-xl' src={model1} alt="" />
          </div>
          </div>
          </div>
