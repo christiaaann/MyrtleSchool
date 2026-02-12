@@ -9,6 +9,7 @@ import facebook from '../../assets/icons/facebook.png'
 const Auth = () => {
 
   const [mode, setMode] = useState("login");
+  
   return (
    <>
    <div className='h-screen max-w-7xl mx-auto p-10'>
@@ -24,7 +25,7 @@ const Auth = () => {
       
       <div className='relative flex w-full flex-col justify-center items-center p-10'>
         {/* Title */}
-      <h2 className="text-4xl mt-10 absolute text-green-600 w-full text-center top-2 font-semibold">
+      <h2 className="text-4xl absolute text-green-600 w-full text-center top-2 font-semibold">
       {mode === "login" ? "Sign In" : "Account Registration"}
      </h2>
       {mode === "login" ? <SignInForm /> : <SignUpForm />}

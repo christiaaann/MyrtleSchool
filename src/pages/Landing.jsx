@@ -30,12 +30,11 @@ const Landing = () => {
           
 
      {/* programs */}
-     <div id='courses' className=' h-[40rem] relative'>
+     <div id='courses' className=' h-[40rem] mt-20 relative'>
       <h1 className=' w-full text-center text-5xl text-[#57D021] drop-shadow-lg font-bold font-baloo'>Program</h1>  
-      
-      <div className=' absolute flex justify-center items-center h-full w-full'>
+      <div className=' absolute flex justify-center w-full'>
          
-         <div className=' grid grid-cols-2 gap-2'>
+         <div className=' grid grid-cols-2 mt-10 gap-2'>
          
          <div className=' bg-neutral-100 p-5 rounded-lg w-[38rem]'>
            
