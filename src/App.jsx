@@ -1,8 +1,12 @@
 import React from 'react'
 import { BrowserRouter,Routes, Route } from 'react-router-dom';
+
 import Landing from './pages/Landing';
 import Auth from './pages/student/Auth';
 import PreSchool from './pages/PreSchool';
+import AdminDashboard from './pages/admin/AdminDashboard'
+import Enrollment from './pages/student/Enrollment';
+
 const App = () => {
   return (
      <BrowserRouter>
@@ -11,6 +15,9 @@ const App = () => {
       <Route path='/' element={<Landing/>}/>
       <Route path='/Auth' element={<Auth/>}/>
       <Route path='/preschool' element={<PreSchool/>}/>
+
+      <Route path='/AdminDashboard' element={<AdminDashboard/>}/>
+      <Route path='/Enrollment' element={<Enrollment/>}/>
      </Routes>
      </div>  
      </BrowserRouter>
