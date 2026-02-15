@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import iconcall from '../assets/icons/call.png'
-import icongmail from '../assets/icons/gmail.png'
+import iconcall from '../../assets/icons/call.png'
+import icongmail from '../../assets/icons/gmail.png'
 const PreSchool = () => {
 
   const faqData = [

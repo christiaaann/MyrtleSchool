@@ -1,11 +1,11 @@
 import React from 'react'
-import Navbar from '../components/Navbar'
-import bg from '../assets/bg.png'
-import kid from '../assets/kid.png'
-import girl from '../assets/girl.png'
-import flyingkid from '../assets/flyingkid.png'
+import Navbar from '../../components/Navbar'
+import bg from '../../assets/bg.png'
+import kid from '../../assets/kid.png'
+import girl from '../../assets/girl.png'
+import flyingkid from '../../assets/flyingkid.png'
 import { useNavigate } from 'react-router-dom'
-import model1 from '../assets/model1.png'
+import model1 from '../../assets/model1.png'
 const Landing = () => {
   
   const navigate = useNavigate();
@@ -77,6 +77,11 @@ const Landing = () => {
          </div>
          </div>
       </div>
+     </div>
+      
+      {/* about */}
+     <div id='about' className=' min-h-screen'>
+
      </div>
     </>
   )

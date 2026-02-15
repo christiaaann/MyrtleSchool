@@ -10,7 +10,8 @@ const SignUpForm = () => {
   const [email, setemail] = useState("");
   const [password, setpassword] = useState("");
   const [image, setimage] = useState(null);
-
+  
+  // cloudinary
   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 

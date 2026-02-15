@@ -12,8 +12,8 @@ const Auth = () => {
   
   return (
    <>
-   <div className='h-screen max-w-7xl mx-auto p-10'>
-      <div className='flex shadow-lg rounded-lg p-1 h-full w-full'>
+   <div className='min-h-screen flex border max-w-7xl mx-auto p-10'>
+      <div className='flex shadow-lg rounded-lg p-1 w-full'>
       <div className=' rounded-s-xl border w-full h-full relative overflow-hidden p-2'>
       <video className=' absolute inset-0 rounded-s-xl w-full h-full object-cover' autoPlay loop muted playsInline src={video}></video>
        <div className="absolute inset-0 w-full h-full bg-green-500/30"></div>

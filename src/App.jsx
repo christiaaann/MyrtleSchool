@@ -1,9 +1,9 @@
 import React from 'react'
 import { BrowserRouter,Routes, Route } from 'react-router-dom';
 
-import Landing from './pages/Landing';
+import Landing from './pages/public/Landing'
 import Auth from './pages/student/Auth';
-import PreSchool from './pages/PreSchool';
+import PreSchool from './pages/public/PreSchool'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import Enrollment from './pages/student/Enrollment';
 

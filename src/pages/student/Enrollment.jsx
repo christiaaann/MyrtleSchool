@@ -45,7 +45,7 @@ const Enrollment = () => {
       <div className=' flex bg-gray-100 w-full p-5 rounded-lg'>
       <aside className="w-64 bg-white justify-center rounded-s-lg text-neutral-400 flex flex-col">
         <div className=" flex gap-3 p-4 text-[13px] font-semibold text-black">
-         <img className='w-10 h-10 rounded-full object-cover' src={userData.profilePicture ||deaf} alt="" />
+         <img className='w-12 h-12 rounded-full object-cover' src={userData.profilePicture ||deaf} alt="" />
          <div className=''>
            <h1 className=' text-xl'>{userData.fullname}</h1>
            <div className='flex items-center gap-2'>
