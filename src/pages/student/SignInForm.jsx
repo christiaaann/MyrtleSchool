@@ -16,14 +16,12 @@
 
      const handleSubmit = async (e) => {
      e.preventDefault();
-     setLoading(true); // start loading
+     setLoading(true); 
      try {
      const userCredential = await signInWithEmailAndPassword(auth, email, password);
      console.log("Login Success", userCredential.user);
      
      const user = userCredential.user
-
-    // 🔥 Get role from Firestore
      const docRef = doc(db, "users", user.uid);
      const docSnap = await getDoc(docRef);
 
@@ -35,7 +33,7 @@
 
      setTimeout(() => {
       if (role === "admin") {
-        navigate("/AdminDashboard");
+        navigate("/admin");
       } else {
         navigate("/Enrollment");
       }
@@ -58,7 +56,6 @@
 
     return (
       <div className=' w-full flex justify-center'>
-         {/* UI Message */}
       {message && (
         <div
           className={`px-4 py-1 absolute top-20 rounded-md text-white ${

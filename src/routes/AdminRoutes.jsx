@@ -1,9 +1,22 @@
-import React from 'react'
+import { Routes, Route, Navigate } from "react-router-dom";
+import AdminLayout from "../layouts/AdminLayout";
+
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import Users from "../pages/admin/Users";
+import Settings from "../pages/admin/Settings";
 
 const AdminRoutes = () => {
   return (
-    <div>AdminRoutes</div>
-  )
-}
+    <Routes>
+      {/* Parent route must have path="/*" */}
+      <Route path="/*" element={<AdminLayout />}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="users" element={<Users />} />
+        <Route path="settings" element={<Settings />} />
+        <Route path="*" element={<Navigate to="/admin" />} />
+      </Route>
+    </Routes>
+  );
+};
 
-export default AdminRoutes
+export default AdminRoutes;

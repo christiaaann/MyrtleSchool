@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import SignInForm from './SignInForm';
 import SignUpForm from './SignUpForm';
 import logo from '../../assets/logo.png'
@@ -6,13 +6,30 @@ import check from '../../assets/icons/check.png'
 import video from '../../assets/video.mp4'
 import DepED from '../../assets/DepEDLogo.png'
 import facebook from '../../assets/icons/facebook.png'
+
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 const Auth = () => {
 
   const [mode, setMode] = useState("login");
-  
+  const {user, role} = useAuth();
+  const navigate = useNavigate();
+
+useEffect(() => {
+  if (!user) return;
+
+  if (role === "admin") {
+    navigate("/admin");
+  } else {
+    navigate("/Enrollment");
+  }
+}, [user, role, navigate]);
+
+
+
   return (
    <>
-   <div className='min-h-screen flex border max-w-7xl mx-auto p-10'>
+   <div className='min-h-screen flex max-w-7xl mx-auto p-10'>
       <div className='flex shadow-lg rounded-lg p-1 w-full'>
       <div className=' rounded-s-xl border w-full h-full relative overflow-hidden p-2'>
       <video className=' absolute inset-0 rounded-s-xl w-full h-full object-cover' autoPlay loop muted playsInline src={video}></video>
