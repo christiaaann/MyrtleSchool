@@ -6,9 +6,19 @@ import deaf from '../../assets/default.png'
 import gmail from '../../assets/icons/gmail.png'
 import logo from '../../assets/logo.png'
 import deped from '../../assets/DepEDLogo.png'
+import { useNavigate } from 'react-router-dom';
 const Enrollment = () => {
   const [userData, setUserData] = useState(null);
+  const navigate = useNavigate();
 
+  const  handlelogout =async () => {
+    try {
+     await auth.signOut();
+     navigate("/auth")
+    }catch (error){
+      console.log("Logout failed",error);
+    }
+  };
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -24,6 +34,8 @@ const Enrollment = () => {
 
     return () => unsubscribe();
   }, []);
+
+
 
   if (!userData) return <p>Loading...</p>;
 
@@ -42,6 +54,7 @@ const Enrollment = () => {
     
     <div className=' flex min-h-screen p-5 bg-gray-200'>
      <nav className=''>hello</nav>
+     <button onClick={handlelogout}>Logout</button>
     </div>
 
     </>

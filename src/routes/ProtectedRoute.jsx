@@ -6,6 +6,13 @@ import { useAuth } from "../context/AuthContext";
 const ProtectedRoute = ({ children, requiredRole }) => {
   const { user, role, loading } = useAuth();
 
+  if (loading)
+    return (
+      <div className="text-center mt-20 text-gray-500">
+        Loading...
+      </div>
+    );
+
   if (!user) return <Navigate to="/Auth" replace />;
 
   if (requiredRole && role !== requiredRole) return <Navigate to="/Auth" replace />;

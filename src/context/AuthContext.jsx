@@ -1,6 +1,7 @@
 // src/context/AuthContext.jsx
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth, db } from '../services/firebase';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { auth, db } from "../services/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 const AuthContext = createContext();
 
@@ -18,15 +19,24 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      const doc = await db.collection("users").doc(firebaseUser.uid).get();
-      if (doc.exists) {
-        setUser(firebaseUser);
-        setRole(doc.data().role);
-      } else {
+      try {
+        const docRef = doc(db, "users", firebaseUser.uid);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          setUser(firebaseUser);
+          setRole(docSnap.data().role); // must match Firestore exactly: "user" or "admin"
+        } else {
+          setUser(firebaseUser);
+          setRole(null);
+        }
+      } catch (error) {
+        console.error("Error fetching user role:", error);
         setUser(firebaseUser);
         setRole(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();

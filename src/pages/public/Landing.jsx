@@ -13,9 +13,9 @@ const Landing = () => {
   return (
     <>
     <Navbar />
-     <div id='home' className='h-screen relative bg-no-repeat bg-cover bg-center z-0' style={{backgroundImage: `url(${bg})`}}>
-      <div className=' h-[50rem] flex gap-2 items-center'>
-      <div className='h-full  flex-col flex justify-center px-20'>
+     <div id='home' className='h-screen bg-no-repeat bg-cover bg-center' style={{backgroundImage: `url(${bg})`}}>
+      <div className=' h-[50rem] flex gap-2 items-center px-10'>
+      <div className=' flex-col flex justify-center'>
       <h1  className='text-yellow-100  leading-10 text-[6rem] font-baloo drop-shadow-lg font-bold'>Welcome to</h1>
       <h1  className=' text-green-200 flex drop-shadow-xl gap-5 font-baloo font-bold text-[6rem]'>Myrtle<span className='text-white drop-shadow-lg'>School</span></h1>
       <div className='flex px-6 gap-5'>
@@ -26,13 +26,13 @@ const Landing = () => {
       {/* <img className='w-1/2' src={flyingkid} alt="" /> */}
       </div>
       
-      <div className="absolute -bottom-28 w-full h-40 bg-white blur-xl"></div>      
+      {/* <div className="absolute -bottom-28 w-full h-40 bg-white blur-xl"></div>       */}
      </div>
           
 
      {/* programs */}
-     <div id='courses' className=' min-h-screen flex flex-col justify-center'>
-      <h1 className=' w-full text-center text-5xl text-[#57D021] drop-shadow-lg font-bold font-baloo'>Program</h1>  
+     <div id='courses' className=' min-h-screen bg-yellow-300 flex flex-col justify-center'>
+      <h1 className=' w-full text-center text-7xl text-white drop-shadow-lg font-bold font-baloo'>Program</h1>  
          <div className='flex  justify-center items-center mt-10 gap-2'>
          <div className=' bg-neutral-100 border-t-8 border-[#57D021] p-5 rounded-lg w-[38rem]'> 
          <div className='flex text-neutral-600 gap-5 font-baloo font-semibold'>
