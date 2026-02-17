@@ -13,10 +13,11 @@ const Enrollment = () => {
   const [isOpen, setIsOpen] = useState(false);
   const toggleDropdown = () => setIsOpen(!isOpen);
   const [open, setOpen] = useState(false);
+  const [page, setpage] = useState("personal");
 
   const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
-
+  
   const  handlelogout =async () => {
     try {
      await auth.signOut();
@@ -98,12 +99,12 @@ const Enrollment = () => {
         >
           <ul className="text-body font-medium">
             <li>
-              <a
+              <button onClick={() => {setpage("children"); setIsOpen(false); }}
                 href="#"
                 className=" block p-2 py-2 w-full hover:bg-[#2D5B60] hover:text-white"
               >
               Personal Info
-              </a>
+              </button>
             </li>
             <li>
               <a
@@ -114,12 +115,12 @@ const Enrollment = () => {
               </a>
             </li>
           <li>
-              <a
+              <button onClick={() => {setpage("archive"); setIsOpen(false); }}
                 href="#"
                 className=" block p-2 py-2 w-full hover:bg-[#2D5B60] hover:text-white"
               >
                 Archive
-              </a>
+              </button>
             </li>
           </ul>
         </div>
@@ -178,7 +179,22 @@ const Enrollment = () => {
     </div>
      </header>
 
+  <div className="min-h-screen w-full flex justify-center items-start p-2">
+  {page === "children" && (
+    <div className="bg-white p-6 rounded shadow w-full ">
+      <h2 className="text-xl font-semibold mb-4">Add Child</h2>
+      <p>Dito lalagay ang Add Child form</p>
     </div>
+  )}
+  
+  {page === "archive" && (
+    <div className="bg-white p-6 rounded shadow w-full">
+      <h2 className="text-xl font-semibold mb-4">Archive</h2>
+      <p>Archive</p>
+    </div>
+  )}
+  </div>
+ </div>
 
     </>
   );
