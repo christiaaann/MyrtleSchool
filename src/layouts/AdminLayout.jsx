@@ -1,6 +1,18 @@
-import { Outlet, NavLink } from "react-router-dom";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { auth } from "../services/firebase";
 
 const AdminLayout = () => {
+  
+  const navigate = useNavigate();
+
+  const handlelogout = async () => {
+    try{
+      await auth.signOut();
+      navigate("/auth")
+    }catch (error){
+      console.log("Logout failed", error);
+    }
+  }
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
@@ -43,6 +55,7 @@ const AdminLayout = () => {
         {/* Topbar */}
         <header className="h-16 bg-white shadow flex items-center px-6">
           <h2 className="text-xl font-semibold">Admin</h2>
+          <button onClick={handlelogout}>Logout</button>
         </header>
 
         {/* Page content */}

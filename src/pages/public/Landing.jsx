@@ -6,6 +6,7 @@ import girl from '../../assets/girl.png'
 import flyingkid from '../../assets/flyingkid.png'
 import { useNavigate } from 'react-router-dom'
 import model1 from '../../assets/model1.png'
+import mission from '../../assets/icons/mission.png'
 const Landing = () => {
   
   const navigate = useNavigate();
@@ -13,13 +14,13 @@ const Landing = () => {
   return (
     <>
     <Navbar />
-     <div id='home' className='h-screen bg-no-repeat bg-cover bg-center' style={{backgroundImage: `url(${bg})`}}>
-      <div className=' h-[50rem] flex gap-2 items-center px-10'>
+     <div id='home' className=' min-h-screen'>
+      <div className=' h-[50rem] flex gap-2 items-center px-10 rounded-xl bg-no-repeat bg-center'style={{backgroundImage: `url(${bg})`}}>
       <div className=' flex-col flex justify-center'>
       <h1  className='text-yellow-100  leading-10 text-[6rem] font-baloo drop-shadow-lg font-bold'>Welcome to</h1>
       <h1  className=' text-green-200 flex drop-shadow-xl gap-5 font-baloo font-bold text-[6rem]'>Myrtle<span className='text-white drop-shadow-lg'>School</span></h1>
-      <div className='flex px-6 gap-5'>
-      <button onClick={() => navigate("/Auth")} className='bg-[#FFBD41] px-10 py-4 rounded-full font-bold shadow-md text-white'>Enroll Now</button>
+      <div className='flex gap-5'>
+      <button onClick={() => navigate("/Auth")} className='bg-[#F3EFE4] border-2 px-10 py-4 rounded-full font-bold shadow-md text-[#2D5B60]'>Enroll Now</button>
       <button className=' border-2 text-white px-10 rounded-full backdrop-blur-sm font-bold'>Learn More</button>
       </div>
       </div> 
@@ -31,10 +32,10 @@ const Landing = () => {
           
 
      {/* programs */}
-     <div id='courses' className=' min-h-screen bg-yellow-300 flex flex-col justify-center'>
-      <h1 className=' w-full text-center text-7xl text-white drop-shadow-lg font-bold font-baloo'>Program</h1>  
-         <div className='flex  justify-center items-center mt-10 gap-2'>
-         <div className=' bg-neutral-100 border-t-8 border-[#57D021] p-5 rounded-lg w-[38rem]'> 
+     <div id='courses' className=' min-h-screen gap-5  bg-[#F3EFE4] flex flex-col justify-center'>
+      <h1 className=' w-full text-center text-7xl text-[#2D5B60] drop-shadow-lg font-bold font-baloo'>Program</h1>  
+         <div className='flex   justify-center items-center  gap-2'>
+         <div className=' bg-neutral-100 border-t-8 border-[#2D5B60] p-5 rounded-lg w-[38rem]'> 
          <div className='flex text-neutral-600 gap-5 font-baloo font-semibold'>
           <h1 className='border border-black px-5 rounded-lg'>Nursery</h1>
           <h1 className='border border-black px-5 rounded-lg'>Preparatory</h1>
@@ -52,7 +53,7 @@ const Landing = () => {
 
          </div>
 
-         <div className='bg-neutral-100 w-[38rem] rounded-lg p-5 border-t-8 border-[#57D021]'>
+         <div className='bg-neutral-100 w-[38rem] rounded-lg p-5 border-t-8 border-[#2D5B60]'>
           <div className='flex text-neutral-600 gap-2 flex-wrap font-baloo text-[15px] font-semibold'>
           <h1 className='border border-black px-4 rounded-lg'>Grade I</h1>
           <h1 className='border border-black px-4 rounded-lg'>Grade II</h1>
@@ -76,9 +77,10 @@ const Landing = () => {
      </div>
       
       {/* about */}
-     <div id='about' className='h-screen'>
-            <h1>About </h1>
-     </div>
+    <div id='about' className='min-h-screen'>
+   
+</div>
+
     </>
   )
 }

@@ -48,7 +48,7 @@ const SignInForm = () => {
   };
 
   return (
-    <div className="w-full flex justify-center mt-20">
+    <div className="w-full flex flex-col items-center justify-center mt-20">
       {message && (
         <div
           className={`px-4 py-1 rounded-md text-white text-center w-80 mb-4 ${

@@ -18,7 +18,7 @@ const Navbar = () => {
      </ul>
        
        <div>
-          <button className='text-nowrap mr-16 text-white  w-full px-2 py-2 rounded-full font-semibold shadow-sm  bg-[#FFBD41]'>Enroll Now</button>
+          <button className='text-nowrap mr-16 text-white  w-full px-2 py-2 rounded-full font-semibold shadow-sm  bg-[#2D5B60]'>Enroll Now</button>
        </div>
     </nav></div>
   )
