@@ -7,6 +7,9 @@ import gmail from '../../assets/icons/gmail.png'
 import logo from '../../assets/logo.png'
 import deped from '../../assets/DepEDLogo.png'
 import { useNavigate } from 'react-router-dom';
+import user from '../../assets/icons/user.png'
+import usericon from '../../assets/icons/usericon.png'
+import archive from '../../assets/icons/archive.png'
 const Enrollment = () => {
   
   // dropdown menu
@@ -14,7 +17,10 @@ const Enrollment = () => {
   const toggleDropdown = () => setIsOpen(!isOpen);
   const [open, setOpen] = useState(false);
   const [page, setpage] = useState("personal");
+  const [level, setLevel] = useState("");
+  const [grade, setGrade] = useState("");
 
+  const [phone, setPhone] = useState('');
   const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
   
@@ -99,26 +105,26 @@ const Enrollment = () => {
         >
           <ul className="text-body font-medium">
             <li>
-              <button onClick={() => {setpage("children"); setIsOpen(false); }}
+              <button onClick={() => {setpage("personal"); setIsOpen(true); }}
                 href="#"
-                className=" block p-2 py-2 w-full hover:bg-[#2D5B60] hover:text-white"
-              >
-              Personal Info
+                className="flex items-center gap-2 w-full p-2 py-2  hover:bg-[#2D5B60] hover:text-white"
+              ><img className='w-5' src={user} alt="" />
+              Info
               </button>
             </li>
             <li>
-              <a
+              <button onClick={() => {setpage("children"); setIsOpen(false);}}
                 href="#"
-                className=" block p-2 py-2 w-full hover:bg-[#2D5B60] hover:text-white"
-              >
+                className="flex items-center gap-2 p-2 py-2 w-full hover:bg-[#2D5B60] hover:text-white"
+              ><img className='w-5' src={usericon} alt="" />
                 Children
-              </a>
+              </button>
             </li>
           <li>
               <button onClick={() => {setpage("archive"); setIsOpen(false); }}
                 href="#"
-                className=" block p-2 py-2 w-full hover:bg-[#2D5B60] hover:text-white"
-              >
+                className="flex items-center gap-2 p-2 py-2 w-full hover:bg-[#2D5B60] hover:text-white"
+              ><img className='w-5' src={archive} alt="" />
                 Archive
               </button>
             </li>
@@ -140,7 +146,8 @@ const Enrollment = () => {
           <div className="font-medium text-heading">
             {userData.fullname || null }
           </div>
-          <div className="truncate text-body">
+          <div className="truncate flex items-center gap-2 text-body">
+            <img className='w-4' src={gmail} alt="" />
             {userData.email || null}
           </div>
         </div>
@@ -179,12 +186,244 @@ const Enrollment = () => {
     </div>
      </header>
 
-  <div className="min-h-screen w-full flex justify-center items-start p-2">
-  {page === "children" && (
-    <div className="bg-white p-6 rounded shadow w-full ">
-      <h2 className="text-xl font-semibold mb-4">Add Child</h2>
-      <p>Dito lalagay ang Add Child form</p>
+  <div className="min-h-screen bg-gray-100 text-gray-700 text-[15px] w-full p-5">
+  {page === "personal" && (
+    <div className='flex flex-col'>
+    <div className="bg-white p-6 border-t-8 border-[#2D5B60] rounded shadow ">
+       <h2 className="text-xl font-semibold mb-4">Add Child</h2>
+       <h2 className='flex items-center text-lg gap-2 font-semibold'><img className='w-5' src={user} alt="" />Child Information</h2>
+       {/* personal info */}
+       <div className='flex gap-5 mt-2'>
+       <div className='flex flex-col gap-1'><h1 className=' flex gap-1'><span className=' text-red-600'>*</span>Firstname</h1><input className='rounded-lg border outline-green-800 text-neutral-600 py-1 px-6' type="text" placeholder='e:g Juan' /></div>
+       <div className='flex flex-col gap-1'><h1 className=' flex gap-1'><span className=' text-red-600'>*</span>Middle</h1><input className='rounded-lg border outline-green-800 text-neutral-600 py-1 px-6' type="text" placeholder='e:g Dela' /></div>
+       <div className='flex flex-col gap-1'><h1 className=' flex gap-1'><span className=' text-red-600'>*</span>Lastname</h1><input className='rounded-lg border outline-green-800 text-neutral-600 py-1 px-6' type="text" placeholder='e:g Cruz' /></div>
+       <div className="flex flex-col gap-1">
+       <label className="flex gap-1">Suffix</label>
+       <select className="border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#2D5B60]" defaultValue="none">
+       <option value="none">None</option>
+       <option value="Jr.">Jr.</option>
+       <option value="Sr.">Sr.</option>
+       <option value="III">III</option>
+       <option value="IV">IV</option>
+      </select>
+      </div>
+      </div>
+      <div className=' flex items-center mt-2 gap-5'>
+      <div className="flex gap-1 flex-col w-56">
+      <label className="flex gap-1"><span className="text-red-500">*</span>Age</label>
+     <input
+      type="number"
+      placeholder="Age"
+      min="0"
+      max="120"
+      className="border rounded-lg px-3 py-1"
+      />
     </div>
+    <div className="flex flex-col w-56">
+    <label className="mb-1"><span className="text-red-500">*</span> Sex</label>
+   <select className="border rounded-lg px-3 py-1" defaultValue="">
+    <option value="" disabled>Select sex</option>
+    <option value="Male">Male</option>
+    <option value="Female">Female</option>
+    <option value="Other">Other</option>
+  </select>
+  </div>
+  <div className="flex flex-col w-96">
+  <label className=" mb-1">
+    Previous School
+  </label>
+  <input
+    type="text"
+    placeholder="Enter previous school"
+    className="border rounded-lg px-3 py-1"
+  />
+</div>
+       </div>
+
+       <div className="flex gap-5 mt-2">
+
+  {/* LEVEL */}
+  <div className="flex flex-col w-56">
+    <label className="mb-1">
+      <span className="text-red-500">*</span> Level
+    </label>
+    <select
+      className="border rounded-lg px-3 py-1"
+      value={level}
+      onChange={(e) => {
+        setLevel(e.target.value);
+        setGrade(""); // reset grade pag nagpalit level
+      }}
+    >
+      <option value="">Select level</option>
+      <option value="Preschool">Preschool</option>
+      <option value="Elementary">Elementary</option>
+    </select>
+  </div>
+
+  {/* GRADE */}
+  <div className="flex flex-col w-56">
+    <label className="mb-1">
+      <span className="text-red-500">*</span> Grade
+    </label>
+    <select
+      className="border rounded-lg px-3 py-1"
+      value={grade}
+      onChange={(e) => setGrade(e.target.value)}
+      disabled={!level}
+    >
+      <option value="">Select grade</option>
+
+      {level === "Preschool" && (
+        <>
+          <option value="Nursery">Nursery</option>
+          <option value="Preparatory">Preparatory</option>
+          <option value="Kindergarten">Kindergarten</option>
+        </>
+      )}
+
+      {level === "Elementary" && (
+        <>
+          <option value="Grade 1">Grade 1</option>
+          <option value="Grade 2">Grade 2</option>
+          <option value="Grade 3">Grade 3</option>
+          <option value="Grade 4">Grade 4</option>
+          <option value="Grade 5">Grade 5</option>
+          <option value="Grade 6">Grade 6</option>
+        </>
+      )}
+    </select>
+  </div>
+
+</div>
+
+      </div> 
+
+      {/* Father Information */}
+<div className="bg-white p-6 border-t-8 border-[#2D5B60] rounded h-full shadow w-full mt-2">
+  <h2 className='flex items-center text-lg gap-2 font-semibold'>
+    <img className='w-5' src={user} alt="" /> Father Information
+  </h2>
+
+  <div className='flex gap-5 mt-2'>
+    <div className='flex flex-col gap-1 w-56'>
+      <label className="flex gap-1"><span className="text-red-600">*</span> Firstname</label>
+      <input className='rounded-lg border outline-blue-800 text-neutral-600 py-1 px-6' type="text" placeholder='e.g: Pedro' />
+    </div>
+    <div className='flex flex-col gap-1 w-56'>
+      <label className="flex gap-1"><span className="text-red-600">*</span> Middlename</label>
+      <input className='rounded-lg border outline-blue-800 text-neutral-600 py-1 px-6' type="text" placeholder='e.g: Dela' />
+    </div>
+    <div className='flex flex-col gap-1 w-56'>
+      <label className="flex gap-1"><span className="text-red-600">*</span> Lastname</label>
+      <input className='rounded-lg border outline-blue-800 text-neutral-600 py-1 px-6' type="text" placeholder='e.g: Cruz' />
+    </div>
+  </div>
+
+  <div className='flex items-center gap-5 mt-2'>
+ <div className="flex flex-col w-56 mt-2">
+  <label className="mb-1"><span className="text-red-500">*</span> Father Occupation</label>
+  <select className="border rounded-lg px-3 py-1" defaultValue="">
+    <option value="" disabled>Select occupation</option>
+    <option value="Engineer">Engineer</option>
+    <option value="Teacher">Teacher</option>
+    <option value="Farmer">Farmer</option>
+    <option value="Businessman">Businessman</option>
+    <option value="Police">Police</option>
+    <option value="Other">Other</option>
+  </select>
+</div>
+  <div className='flex flex-col mt-2 w-56'>
+  <label className='flex gap-1'>
+    <span className='text-red-500'>*</span> Phone Number
+  </label>
+  <input
+    type="text"
+    placeholder='e.g: 09123456789'
+    maxLength={11}
+    className='border rounded-lg px-3 py-1'
+    onChange={(e) => {
+      const value = e.target.value.replace(/\D/g, '');
+      setPhone(value);
+    }}
+    value={phone}
+  />
+</div>
+
+
+
+  </div>
+</div>
+{/* mother */}
+<div className="bg-white p-6 border-t-8 border-[#2D5B60] rounded h-full shadow w-full mt-2">
+  <h2 className='flex items-center text-lg gap-2 font-semibold'>
+    <img className='w-5' src={user} alt="" /> Mother Information
+  </h2>
+
+  <div className='flex gap-5 mt-2'>
+    <div className='flex flex-col gap-1 w-56'>
+      <label className="flex gap-1"><span className="text-red-600">*</span> Firstname</label>
+      <input className='rounded-lg border outline-blue-800 text-neutral-600 py-1 px-6' type="text" placeholder='e.g: Pedro' />
+    </div>
+    <div className='flex flex-col gap-1 w-56'>
+      <label className="flex gap-1"><span className="text-red-600">*</span> Middlename</label>
+      <input className='rounded-lg border outline-blue-800 text-neutral-600 py-1 px-6' type="text" placeholder='e.g: Dela' />
+    </div>
+    <div className='flex flex-col gap-1 w-56'>
+      <label className="flex gap-1"><span className="text-red-600">*</span> Lastname</label>
+      <input className='rounded-lg border outline-blue-800 text-neutral-600 py-1 px-6' type="text" placeholder='e.g: Cruz' />
+    </div>
+  </div>
+
+  <div className='flex items-center gap-5 mt-2'>
+ <div className="flex flex-col w-56 mt-2">
+  <label className="mb-1"><span className="text-red-500">*</span> Father Occupation</label>
+  <select className="border rounded-lg px-3 py-1" defaultValue="">
+    <option value="" disabled>Select occupation</option>
+    <option value="Engineer">Engineer</option>
+    <option value="Teacher">Teacher</option>
+    <option value="Farmer">Farmer</option>
+    <option value="Businessman">Businessman</option>
+    <option value="Police">Police</option>
+    <option value="Other">Other</option>
+  </select>
+</div>
+  <div className='flex flex-col mt-2 w-56'>
+  <label className='flex gap-1'>
+    <span className='text-red-500'>*</span> Phone Number
+  </label>
+  <input
+    type="text"
+    placeholder='e.g: 09123456789'
+    maxLength={11}
+    className='border rounded-lg px-3 py-1'
+    onChange={(e) => {
+      const value = e.target.value.replace(/\D/g, '');
+      setPhone(value);
+    }}
+    value={phone}
+  />
+</div>
+
+
+
+  </div>
+</div>
+
+ <div className=' bg-white flex justify-end w-full p-2 mt-2'>
+ <button className=' bg-[#2D5B60] text-white px-10 py-2 rounded-lg font-semibold'>NEXT</button>
+ </div>
+
+    </div>
+    
+    
+    
+  )}
+
+  {page === "children" && (
+   <div>
+    <h1>Children</h1>
+   </div>
   )}
   
   {page === "archive" && (
@@ -194,6 +433,7 @@ const Enrollment = () => {
     </div>
   )}
   </div>
+  
  </div>
 
     </>

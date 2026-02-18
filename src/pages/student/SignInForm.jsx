@@ -81,7 +81,7 @@ const SignInForm = () => {
           type="submit"
           disabled={loading}
           className={`py-2 rounded-lg font-semibold text-white transition-colors ${
-            loading ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+            loading ? "bg-gray-400 cursor-not-allowed" : " bg-[#2D5B60]  hover:bg-green-950"
           }`}
         >
           {loading ? (
