@@ -38,12 +38,15 @@ useEffect(() => {
       <img className='w-16 bottom-3' src={DepED} alt="" />
       </div>
       </div>
-      
-      <div className='relative flex w-full flex-col justify-center items-center p-10'>
+       
+      <div className='relative flex w-full flex-col justify-center items-center px-44'>
+       <button onClick={() =>navigate("/")} className=" absolute top-5 right-5">Back</button> 
         {/* Title */}
-      <h2 className="text-4xl  text-[#2D5B60] text-center  font-semibold">
+      <h2 className={`text-4xl text-[#2D5B60] text-center font-semibold ${
+      mode === "login" ? "mb-6" : "-mt-2 mb-11"}`}>
       {mode === "login" ? "Sign In" : "Account Registration"}
-     </h2>
+      </h2>
+
       {mode === "login" ? <SignInForm /> : <SignUpForm />}
 
         <div className='flex items-center justify-center gap-1 mt-5'>
@@ -62,7 +65,7 @@ useEffect(() => {
         <hr className='w-36 border-spacing-2' />
         <h1>Or</h1>
        <hr className='w-36 border-spacing-2' /></div>
-        <button className=' w-80 rounded-lg py-2 mt-5 text-neutral-600 font-semibold bg-neutral-100 flex items-center justify-center gap-5'><img className='w-7' src={facebook} alt="" />Continue with Facebook</button>
+        <button disabled className='w-80 cursor-not-allowed rounded-lg py-2 mt-5 text-neutral-600 font-semibold bg-neutral-100 flex items-center justify-center gap-5'><img className='w-7' src={facebook} alt="" />Continue with Facebook</button>
      
       </div>
     </div>

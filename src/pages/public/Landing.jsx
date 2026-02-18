@@ -14,8 +14,8 @@ const Landing = () => {
   return (
     <>
     <Navbar />
-     <div id='home' className=' min-h-screen'>
-      <div className=' h-[50rem] flex gap-2 items-center px-10 rounded-xl bg-no-repeat bg-center'style={{backgroundImage: `url(${bg})`}}>
+     <div id='home' className=' min-h-screen flex items-center bg-no-repeat bg-center bg-cover' style={{backgroundImage: `url(${bg})`}}>
+      <div className='px-10'>
       <div className=' flex-col flex justify-center'>
       <h1  className='text-yellow-100  leading-10 text-[6rem] font-baloo drop-shadow-lg font-bold'>Welcome to</h1>
       <h1  className=' text-green-200 flex drop-shadow-xl gap-5 font-baloo font-bold text-[6rem]'>Myrtle<span className='text-white drop-shadow-lg'>School</span></h1>
