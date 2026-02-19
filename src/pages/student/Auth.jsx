@@ -29,9 +29,9 @@ useEffect(() => {
 
   return (
    <>
-   <div className='min-h-screen flex '>
+   <div className='h-screen flex '>
       <div className=' flex w-full'>
-      <div className=' w-full h-full relative overflow-hidden p-2'>
+      <div className=' w-full  relative overflow-hidden p-2'>
       <video className=' absolute inset-0 w-full h-full object-cover' autoPlay loop muted playsInline src={video}></video>
       <div className='flex items-center gap-4 w-full absolute  left-5'>
       <img className='w-16 bottom-3' src={logo} alt="" />
@@ -39,7 +39,7 @@ useEffect(() => {
       </div>
       </div>
        
-      <div className='relative flex w-[80rem] flex-col justify-center items-center p-36'>
+      <div className='relative flex w-full flex-col justify-center items-center p-36'>
        <button onClick={() =>navigate("/")} className=" absolute top-5 right-5">Back</button> 
         {/* Title */}
       <h2 className={`text-4xl text-[#2D5B60] text-center font-semibold ${

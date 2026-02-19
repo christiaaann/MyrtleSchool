@@ -123,7 +123,7 @@ const SignUpForm = () => {
   }, [selectedCity]);
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-4 overflow-y-auto h-[30rem]">
+    <form onSubmit={handleSubmit} className="flex w-[35rem] flex-col gap-4 overflow-y-auto h-[30rem]">
       {/* Profile */}
       <div className="flex flex-col items-center gap-2">
         <img src={preview || deaf} className="w-20 h-20 rounded-full border-4 object-cover" />
