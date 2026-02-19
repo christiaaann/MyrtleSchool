@@ -1,9 +1,46 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { auth } from "../services/firebase";
-
+import { auth, db } from "../services/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
 const AdminLayout = () => {
   
   const navigate = useNavigate();
+  const [userData, setUserData] = useState(null);
+  
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const docRef = doc(db, "users", user.uid);
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setUserData({
+              fullname: data.fullname || data.name || "Admin",
+              profilePicture: data.profilePicture || data.photoURL || "/default.png",
+              email: data.email || user.email,
+              role: data.role || "user",
+            });
+          } else {
+            setUserData({
+              fullname: user.displayName || "Admin",
+              profilePicture: user.photoURL || "/default.png",
+              email: user.email,
+              role: "admin",
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (!userData) return <p>Loading...</p>;
 
   const handlelogout = async () => {
     try{
@@ -16,15 +53,15 @@ const AdminLayout = () => {
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-800 text-white flex flex-col p-4">
-        <h1 className="text-2xl font-bold mb-6">Admin Panel</h1>
-
-        <nav className="flex flex-col gap-2">
+      <aside className="w-64 text-white flex flex-col p-4">
+    
+        <h1 className="text-black">{userData.fullname}</h1>
+        <nav className="flex text-neutral-500 flex-col gap-2">
           <NavLink
             to="/admin"
             end
             className={({ isActive }) =>
-              `p-2 rounded ${isActive ? "bg-gray-700" : "hover:bg-gray-700"}`
+              `p-2 rounded ${isActive ? "bg-gray-200 text-black" : "hover:bg-gray-200 "}`
             }
           >
             Dashboard
@@ -33,7 +70,7 @@ const AdminLayout = () => {
           <NavLink
             to="/admin/users"
             className={({ isActive }) =>
-              `p-2 rounded ${isActive ? "bg-gray-700" : "hover:bg-gray-700"}`
+              `p-2 rounded ${isActive ? "bg-gray-200 text-black" : "hover:bg-gray-200"}`
             }
           >
             Users
@@ -42,7 +79,7 @@ const AdminLayout = () => {
           <NavLink
             to="/admin/settings"
             className={({ isActive }) =>
-              `p-2 rounded ${isActive ? "bg-gray-700" : "hover:bg-gray-700"}`
+              `p-2 rounded ${isActive ? "bg-gray-200 text-" : "hover:bg-gray-200"}`
             }
           >
             Settings

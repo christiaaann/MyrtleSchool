@@ -144,7 +144,7 @@ const Enrollment = () => {
 
         <div className="text-sm">
           <div className="font-medium text-heading">
-            {userData.fullname || null }
+            {userData.parent.firstname || null } {userData.parent.middlename || null } {userData.parent.lastname || null }
           </div>
           <div className="truncate flex items-center gap-2 text-body">
             <img className='w-4' src={gmail} alt="" />
