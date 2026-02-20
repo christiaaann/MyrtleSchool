@@ -123,21 +123,22 @@ const SignUpForm = () => {
   }, [selectedCity]);
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-[35rem] flex-col gap-4 overflow-y-auto h-[30rem]">
-      {/* Profile */}
-      <div className="flex flex-col items-center gap-2">
-        <img src={preview || deaf} className="w-20 h-20 rounded-full border-4 object-cover" />
-        <input type="file" id="upload_profile" hidden accept="image/*" onChange={handleImage} />
-        <label htmlFor="upload_profile" className="bg-[#2D5B60] text-white px-4 py-1 rounded cursor-pointer">
-          Upload Profile
-        </label>
-      </div>
+     <div>
+     <form onSubmit={handleSubmit} className="flex w-[30rem] flex-col gap-4 overflow-y-auto h-[30rem]">
+     {/* Profile */}
+     <div className="flex flex-col items-center gap-2">
+     <img src={preview || deaf} className="w-20 h-20 rounded-full border-4 object-cover" />
+     <input type="file" id="upload_profile" hidden accept="image/*" required onChange={handleImage} />
+     <label htmlFor="upload_profile" className="bg-[#2D5B60] text-white px-4 py-1 rounded cursor-pointer">
+     Upload Profile
+     </label>
+     </div>
 
-      {/* Parent */}
-      
-  <h2 className="font-semibold text-lg">Parent / Guardian</h2>
-  <div className='flex gap-2'>
-  <div className="">
+
+    {/* Parent */}
+   <h2 className="font-semibold text-lg">Parent / Guardian</h2>
+   <div className='flex gap-2'>
+   <div className="">
    <input
     type="text"
     className="px-5 py-2 border-2 rounded-md w-full"
@@ -145,10 +146,10 @@ const SignUpForm = () => {
     value={parent.firstname || ''}
     onChange={(e) => setParent({ ...parent, firstname: e.target.value })}
     required
-  />
-</div>
+   />
+   </div>
 
-<div className="">
+  <div className="">
   <input
     type="text"
     className="px-5 py-2 border-2 rounded-md w-full"
@@ -156,10 +157,10 @@ const SignUpForm = () => {
     value={parent.middlename || ''}
     onChange={(e) => setParent({ ...parent, middlename: e.target.value })}
     required
-  />
-</div>
+   />
+  </div>
 
-<div>
+  <div>
   <input
     type="text"
     className="px-5 py-2 border-2 rounded-md w-full"
@@ -214,27 +215,60 @@ const SignUpForm = () => {
 
       {/* Spouse */}
       <h2 className="font-semibold text-lg">Spouse</h2>
-      {['firstname','middlename','lastname','occupation','contact'].map(field => (
-        <input
-          key={field}
-          className="px-5 py-2 border-2 rounded-md w-full"
-          type="text"
-          placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-          value={spouse[field]}
-          onChange={(e) => setSpouse({...spouse, [field]: e.target.value})}
-          required
-        />
-      ))}
+       <div className='flex gap-2'>
+       <input
+       type="text"
+       className="px-5 py-2 border-2 rounded-md w-full"
+       placeholder="Firstname"
+       value={spouse.firstname || ''}
+       onChange={(e) => setSpouse({ ...spouse, firstname: e.target.value })}
+       required
+       />
+
+      <input
+       type="text"
+       className="px-5 py-2 border-2 rounded-md w-full"
+       placeholder="Middlename"
+       value={spouse.middlename || ''}
+       onChange={(e) => setSpouse({ ...spouse, middlename: e.target.value })}
+       required
+      />
+
+      <input
+      type="text"
+      className="px-5 py-2 border-2 rounded-md w-full"
+      placeholder="Lastname"
+      value={spouse.lastname || ''}
+      onChange={(e) => setSpouse({ ...spouse, lastname: e.target.value })}
+      required
+      />
+      </div>
+      <input
+      type="text"
+      className="px-5 py-2 border-2 rounded-md w-full"
+      placeholder="Occupation"
+      value={spouse.occupation || ''}
+      onChange={(e) => setSpouse({ ...spouse, occupation: e.target.value })}
+      required
+      />
+
+     <input
+     type="text"
+     className="px-5 py-2 border-2 rounded-md w-full"
+     placeholder="Contact"
+     value={spouse.contact || ''}
+     onChange={(e) => setSpouse({ ...spouse, contact: e.target.value })}
+     required
+    />
 
       {/* Account */}
-      <h2 className="font-semibold text-lg">Account</h2>
-      <input className="px-5 py-2 border-2 rounded-md w-full" type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
-      <input className="px-5 py-2 border-2 rounded-md w-full" type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
-
-      <button type="submit" className="bg-[#2D5B60] text-white py-2 rounded-lg w-full font-semibold">
-        Register
-      </button>
-    </form>
+    <h2 className="font-semibold text-lg">Account</h2>
+    <input className="px-5 py-2 border-2 rounded-md w-full" type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
+    <input className="px-5 py-2 border-2 rounded-md w-full" type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
+    <button type="submit" className="bg-[#2D5B60] text-white py-2 rounded-lg w-full font-semibold">
+    Register
+   </button>
+    </form></div>
   );
 };
 

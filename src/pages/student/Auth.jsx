@@ -43,7 +43,7 @@ useEffect(() => {
        <button onClick={() =>navigate("/")} className=" absolute top-5 right-5">Back</button> 
         {/* Title */}
       <h2 className={`text-4xl text-[#2D5B60] text-center font-semibold ${
-      mode === "login" ? "mb-6" : "-mt-2 mb-11"}`}>
+      mode === "login" ? "mb-6" : "-mt-2 mb-8 text-[25px]"}`}>
       {mode === "login" ? "Sign In" : "Account Registration"}
       </h2>
 

@@ -22,7 +22,10 @@ const SignInForm = () => {
       const user = userCredential.user;
       const docRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(docRef);
-
+      
+      await updateDoc(doc(db, "users", userCredential.user.uid), {
+    lastActive: serverTimestamp(),
+  });
       if (docSnap.exists()) {
         const role = docSnap.data().role;
         setMessage("Login Successful!");
