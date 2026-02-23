@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, } from 'firebase/firestore';
 import { db, auth } from '../../services/firebase';
 import { onAuthStateChanged } from "firebase/auth";
 import deaf from '../../assets/default.png'
@@ -26,34 +26,12 @@ const Enrollment = () => {
   
  const handlelogout = async () => {
   try {
-    const user = auth.currentUser;
-    if (user) {
-      const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, {
-      isOnline: false,
-      lastActive: serverTimestamp()
-    });
-    }
     await auth.signOut();
     navigate("/auth");
   } catch (error) {
     console.log("Logout failed", error);
   }
 };
-useEffect(() => {
-  const interval = setInterval(async () => {
-    const user = auth.currentUser;
-    if (user) {
-      const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, {
-        lastActive: serverTimestamp(),
-        isOnline: true,
-      });
-    }
-  }, 10000); 
-
-  return () => clearInterval(interval);
-}, []); 
 
 useEffect(() => {
   const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -63,11 +41,6 @@ useEffect(() => {
 
       if (docSnap.exists()) {
         setUserData(docSnap.data());
-        await updateDoc(docRef, {
-          lastActive: serverTimestamp(),
-          isOnline: true,
-        });
-
       } else {
         console.log("No such user!");
       }

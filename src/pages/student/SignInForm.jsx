@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../../services/firebase";
 import { useNavigate } from "react-router-dom";
-import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 
 const SignInForm = () => {
   const navigate = useNavigate();
@@ -20,15 +20,22 @@ const SignInForm = () => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
+
     const docRef = doc(db, "users", user.uid);
     const docSnap = await getDoc(docRef);
 
-    await updateDoc(doc(db, "users", user.uid), {
-      lastActive: serverTimestamp()
-    });
-
     if (docSnap.exists()) {
-      const role = docSnap.data().role;
+      const data = docSnap.data();
+
+      // 🔹 Check if user is archived
+      if (data.isActive === false) {
+        setMessage("Your account is archived and cannot access the system.");
+        setSuccess(false);
+        await auth.signOut(); // logout agad
+        return; // stop further execution
+      }
+
+      const role = data.role;
       setMessage("Login Successful!");
       setSuccess(true);
 
@@ -50,17 +57,6 @@ const SignInForm = () => {
     setLoading(false);
   }
 };
-
-useEffect(() => {
-  const interval = setInterval(async () => {
-    if (auth.currentUser) {
-      await updateDoc(doc(db, "users", auth.currentUser.uid), {
-        lastActive: serverTimestamp(),
-      });
-    }
-  }, 10000); 
-  return () => clearInterval(interval);
-}, []);
 
   return (
     <div className="w-full flex flex-col items-center justify-center mt-20">
@@ -96,7 +92,9 @@ useEffect(() => {
           type="submit"
           disabled={loading}
           className={`py-2 rounded-lg font-semibold text-white transition-colors ${
-            loading ? "bg-gray-400 cursor-not-allowed" : " bg-[#2D5B60]  hover:bg-green-950"
+            loading
+              ? "bg-gray-400 cursor-not-allowed"
+              : " bg-[#2D5B60]  hover:bg-green-950"
           }`}
         >
           {loading ? (
