@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../../services/firebase';
 import { onAuthStateChanged } from "firebase/auth";
 import deaf from '../../assets/default.png'
 import gmail from '../../assets/icons/gmail.png'
 import logo from '../../assets/logo.png'
-import deped from '../../assets/DepEDLogo.png'
+// import deped from '../../assets/DepEDLogo.png'
 import { useNavigate } from 'react-router-dom';
 import user from '../../assets/icons/user.png'
 import usericon from '../../assets/icons/usericon.png'
@@ -24,30 +24,60 @@ const Enrollment = () => {
   const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
   
-  const  handlelogout =async () => {
-    try {
-     await auth.signOut();
-     navigate("/auth")
-    }catch (error){
-      console.log("Logout failed",error);
-    }
-  };
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setUserData(docSnap.data());
-        } else {
-          console.log("No such user!");
-        }
-      }
+ const handlelogout = async () => {
+  try {
+    const user = auth.currentUser;
+    if (user) {
+      const userRef = doc(db, "users", user.uid);
+      await updateDoc(userRef, {
+      isOnline: false,
+      lastActive: serverTimestamp()
     });
+    }
+    await auth.signOut();
+    navigate("/auth");
+  } catch (error) {
+    console.log("Logout failed", error);
+  }
+};
+useEffect(() => {
+  const interval = setInterval(async () => {
+    const user = auth.currentUser;
+    if (user) {
+      const userRef = doc(db, "users", user.uid);
+      await updateDoc(userRef, {
+        lastActive: serverTimestamp(),
+        isOnline: true,
+      });
+    }
+  }, 10000); 
 
-    return () => unsubscribe();
-  }, []);
+  return () => clearInterval(interval);
+}, []); 
 
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const docRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        setUserData(docSnap.data());
+        await updateDoc(docRef, {
+          lastActive: serverTimestamp(),
+          isOnline: true,
+        });
+
+      } else {
+        console.log("No such user!");
+      }
+    } else {
+      navigate("/auth"); // redirect kapag walang user
+    }
+  });
+
+  return () => unsubscribe();
+}, [navigate]);
 
 
   if (!userData) return <p>Loading...</p>;

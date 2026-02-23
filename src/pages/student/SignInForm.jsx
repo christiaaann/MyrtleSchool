@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../../services/firebase";
 import { useNavigate } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 
 const SignInForm = () => {
   const navigate = useNavigate();
@@ -13,42 +13,54 @@ const SignInForm = () => {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("");
+  e.preventDefault();
+  setLoading(true);
+  setMessage("");
 
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      const docRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(docRef);
-      
-      await updateDoc(doc(db, "users", userCredential.user.uid), {
-    lastActive: serverTimestamp(),
-  });
-      if (docSnap.exists()) {
-        const role = docSnap.data().role;
-        setMessage("Login Successful!");
-        setSuccess(true);
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    const docRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(docRef);
 
-        setTimeout(() => {
-          if (role === "admin") {
-            navigate("/admin");
-          } else {
-            navigate("/Enrollment");
-          }
-        }, 1000);
-      } else {
-        setMessage("User data not found.");
-        setSuccess(false);
-      }
-    } catch (error) {
-      setMessage(error.message);
+    await updateDoc(doc(db, "users", user.uid), {
+      lastActive: serverTimestamp()
+    });
+
+    if (docSnap.exists()) {
+      const role = docSnap.data().role;
+      setMessage("Login Successful!");
+      setSuccess(true);
+
+      setTimeout(() => {
+        if (role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/Enrollment");
+        }
+      }, 1000);
+    } else {
+      setMessage("User data not found.");
       setSuccess(false);
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    setMessage(error.message);
+    setSuccess(false);
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  const interval = setInterval(async () => {
+    if (auth.currentUser) {
+      await updateDoc(doc(db, "users", auth.currentUser.uid), {
+        lastActive: serverTimestamp(),
+      });
+    }
+  }, 10000); 
+  return () => clearInterval(interval);
+}, []);
 
   return (
     <div className="w-full flex flex-col items-center justify-center mt-20">

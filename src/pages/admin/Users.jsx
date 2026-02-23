@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
+import { collection, doc, deleteDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import defaultPic from "../../assets/default.png";
 
@@ -8,29 +8,21 @@ const Users = () => {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedPicture, setSelectedPicture] = useState(null);
-  
 
+function getLastSeen(ts) {
+  if (!ts) return "Offline";
 
-  const getLastSeen = (timestamp) => {
-    if (!timestamp) return "Offline";
+  const now = Date.now();
+  const last = ts.toDate().getTime();
+  const diff = Math.floor((now - last) / 1000);
+            
+  if (diff < 5) return "just now";
+  if (diff < 60) return diff + "s ago";
+  if (diff < 3600) return Math.floor(diff / 60) + "m ago";
+  if (diff < 86400) return Math.floor(diff / 3600) + "h ago";
 
-    const now = new Date();
-    const last = timestamp.toDate();
-    const diffMs = now - last;
-    const diffMin = Math.floor(diffMs / 60000);
-
-    if (diffMin < 1) return "Online";
-    if (diffMin === 1) return "1 minute ago";
-    if (diffMin < 60) return `${diffMin} minute s ago`;
-
-    const diffHr = Math.floor(diffMin / 60);
-    if (diffHr === 1) return "1 hour ago";
-    if (diffHr < 24) return `${diffHr} hours ago`;
-
-    const diffDay = Math.floor(diffHr / 24);
-    return `${diffDay} days ago`;
-  };
-
+  return Math.floor(diff / 86400) + "d ago";
+}
   // 🔹 delete user
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this user?")) return;
@@ -45,44 +37,87 @@ const Users = () => {
   };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const snapshot = await getDocs(collection(db, "users"));
-
-        const list = snapshot.docs.map((docu) => {
-          const data = docu.data();
-
-          return {
-            id: docu.id,
-            fullname:
-              `${data.parent?.firstname || ""} ${data.parent?.middlename || ""} ${data.parent?.lastname || ""}`
-                .trim() ||
-              data.fullname ||
-              data.name ||
-              "No Name",
-            email: data.email,
-            contact: data.parent?.contact || "",
-            role: data.role,
-            profilePicture:
-              data.profilePicture || data.photoURL || defaultPic,
-            parent: data.parent || null,
-            spouse: data.spouse || null,
-            lastActive: data.lastActive || null,
-          };
-        });
-
-        setUsers(list);
-        setLoading(false);
-      } catch (e) {
-        console.error(e);
-        setLoading(false);
-      }
+     const unsub = onSnapshot(collection(db, "users"), (snapshot) => {
+     const list = snapshot.docs
+     .map((docu) => {
+      const data = docu.data();
+      return {
+      id: docu.id,
+      fullname:
+      `${data.parent?.firstname || ""} ${data.parent?.middlename || ""} ${data.parent?.lastname || ""}`.trim() ||
+      data.fullname ||
+      data.name ||
+      "No Name",
+      email: data.email,
+      contact: data.parent?.contact || "",
+      role: data.role,
+      profilePicture: data.profilePicture || data.photoURL || defaultPic,
+      parent: data.parent || null,
+      spouse: data.spouse || null,
+      lastActive: data.lastActive || null,
+      isOnline: data.isOnline || false,
     };
+  })
+  .filter((u) => (u.role || "").toLowerCase() !== "admin"); 
+      setUsers(list);
+      setTimeout(() => setLoading(false), 1000);
+    });
 
-    fetchUsers();
+    return () => unsub();
   }, []);
+   
 
-  if (loading) return <p>Loading users...</p>;
+  // skeletal loading
+  if (loading) {
+  return (
+    <div className="bg-white  ">
+      <h1 className="text-xl font-semibold mb-4">Users</h1>
+
+      <table className="w-full text-left border-collapse">
+        <thead className="text-neutral-500">
+          <tr>
+            <th className="border-b px-4 py-2">Picture</th>
+            <th className="border-b px-4 py-2">Name</th>
+            <th className="border-b px-4 py-2">Email</th>
+            <th className="border-b px-4 py-2">Contact</th>
+            <th className="border-b px-4 py-2 text-center">Online/Offline</th>
+            <th className="border-b px-4 py-2">Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {[...Array(5)].map((_, i) => (
+            <tr key={i} className="animate-pulse">
+              <td className="px-4 py-3">
+                <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+              </td>
+
+              <td className="px-4 py-3">
+                <div className="h-3 bg-gray-300 rounded w-32"></div>
+              </td>
+
+              <td className="px-4 py-3">
+                <div className="h-3 bg-gray-200 rounded w-48"></div>
+              </td>
+
+              <td className="px-4 py-3">
+                <div className="h-3 bg-gray-200 rounded w-28"></div>
+              </td>
+
+              <td className="px-4 py-3 text-center">
+                <div className=" h-3 bg-gray-300 w-32 rounded mx-auto"></div>
+              </td>
+
+              <td className="px-4 py-3">
+                <div className="h-3 bg-gray-300 rounded w-12"></div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
   return (
     <div className="bg-white">
@@ -98,8 +133,8 @@ const Users = () => {
               <th className="border-b px-4 py-2">Name</th>
               <th className="border-b px-4 py-2">Email</th>
               <th className="border-b px-4 py-2">Contact</th>
-              <th className="border-b px-4 py-2">Status</th>
-              <th className="border-b px-4 py-2">Role</th>
+              <th className="border-b px-4 py-2 text-center">Online/Offline</th>
+              {/* <th className="border-b px-4 py-2">Role</th> */}
               <th className="border-b px-4 py-2">Action</th>
             </tr>
           </thead>
@@ -123,35 +158,25 @@ const Users = () => {
                 <td className="border-b px-4 py-2">{user.email}</td>
                 <td className="border-b px-4 py-2">{user.contact}</td>
 
-                {/* STATUS */}
-            <td className="border-b px-4 py-2">
-            {user.lastActive ? (
-            <span className={new Date() - user.lastActive.toDate() < 60000
-             ? "text-green-600"
-             : "text-neutral-300"
-             }>
-             {getLastSeen(user.lastActive)}
-             </span>
-             ) : (
-            <span className="text-neutral-300">Offline</span>
-             )}
-            </td>
+          {/* STATUS */}
+         <td className="border-b px-4 py-2 text-center">
+         {user.isOnline ? (
+         <span className="bg-green-400 inline-block rounded-full w-3 h-3"></span>
+          ) : Date.now() - user.lastActive?.toDate().getTime() < 60000 ? (
+        <span className="text-neutral-500">Offline</span>
+          ) : (
+         <span className="text-neutral-500 text-[15px]">Active {getLastSeen(user.lastActive)}</span>
+          )}
+          </td>
 
-                <td className="border-b px-4 py-2">{user.role}</td>
-
-                {/* ACTION */}
-                <td
-                  className="border-b px-4 py-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    onClick={() => handleDelete(user.id)}
-                    className="text-red-600 hover:underline"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
+           {/* <td className="border-b px-4 py-2">{user.role}</td> */}
+           {/* ACTION */}
+          <td className="border-b px-4 py-2" onClick={(e) => e.stopPropagation()}>
+          <button onClick={() => handleDelete(user.id)} className="text-red-600 hover:underline">
+           Delete
+          </button>
+          </td>
+          </tr>
             ))}
           </tbody>
         </table>
@@ -161,6 +186,16 @@ const Users = () => {
       {selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start pt-20 z-40">
           <div className="bg-white p-6 rounded shadow w-96 relative text-black">
+           {/* status */}
+           { selectedUser.isOnline ? (
+            <span className=" bg-green-400  inline-block rounded-full w-3 h-3"></span>
+           ): Date.now() - selectedUser.lastActive?.toDate().getTime() < 60000 ? (
+            <span className=" text-neutral-5">Offline</span>
+           ): (
+            <span className=" text-neutral-500">Active {getLastSeen(selectedUser.lastActive)}</span>
+           )
+
+           }
             <button
               className="absolute top-2 right-2 text-xl font-bold"
               onClick={() => setSelectedUser(null)}
@@ -210,6 +245,17 @@ const Users = () => {
                   <p>{selectedUser.parent.contact}</p>
                 </div>
               )}
+
+              {selectedUser.address && (
+              <div className=" w-full">
+                <h3 className=" font-semibold">Adress</h3>
+              <p>{selectedUser.address.province}</p>
+              <p>{selectedUser.address.city}</p>
+              <p>{selectedUser.address.barangay}</p>
+              </div> 
+              )
+
+              }
 
               {selectedUser.spouse && (
                 <div className="mt-2 w-full text-left">

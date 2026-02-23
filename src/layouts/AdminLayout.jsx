@@ -1,27 +1,20 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { auth, db } from "../services/firebase";
-import { doc, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, onSnapshot} from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
   const [userData, setUserData] = useState(null);
 
-  useEffect(() => {
-  let interval;
+ useEffect(() => {
   let unsubscribeSnapshot;
 
   const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
     if (user) {
       const userRef = doc(db, "users", user.uid);
-
-      await updateDoc(userRef, { lastActive: serverTimestamp(), isOnline: true });
-
-      interval = setInterval(async () => {
-        await updateDoc(userRef, { lastActive: serverTimestamp(), isOnline: true });
-      }, 30000);
-
       unsubscribeSnapshot = onSnapshot(userRef, (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
@@ -39,7 +32,6 @@ const AdminLayout = () => {
 
   return () => {
     unsubscribeAuth();
-    if (interval) clearInterval(interval);
     if (unsubscribeSnapshot) unsubscribeSnapshot();
   };
 }, []);
@@ -89,11 +81,21 @@ const AdminLayout = () => {
         </nav>
       </aside>
 
-      {/* Right side */}
+      {/* Top */}
       <div className="flex-1 flex flex-col">
-        <header className="h-16 bg-white flex items-center px-6">
+        <header className="h-14 bg-white flex items-center justify-end px-6">
           <h2 className="text-xl font-semibold">Admin</h2>
-          <button onClick={handlelogout}>Logout</button>
+          <button onClick={() => setOpen(!open)}>View</button>
+      
+          
+          {open && (
+            <div className=" bg-white flex gap-4 flex-col top-20 border absolute w-40">
+             <button>Profile</button>
+             <button>Settings</button>
+             <button onClick={handlelogout}>Logout</button>
+            </div>
+          )}
+
         </header>
 
         <main className="flex-1 p-2 bg-gray-100 overflow-auto">
