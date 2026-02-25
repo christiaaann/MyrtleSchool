@@ -18,8 +18,8 @@ const AdminLayout = () => {
       unsubscribeSnapshot = onSnapshot(userRef, (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setUserData({
-            fullname: data.fullname || data.name || "Admin",
+            setUserData({
+            fullname: data.firstname || "Admin",
             profilePicture: data.profilePicture || data.photoURL || "/default.png",
             email: data.email || user.email,
             role: data.role || "user",
@@ -68,7 +68,15 @@ const AdminLayout = () => {
               `p-2 rounded ${isActive ? "bg-gray-200 text-black" : "hover:bg-gray-200"}`
             }
           >
-            Users
+            Parents
+          </NavLink>
+          <NavLink
+          to="/admin/students"
+          className={({ isActive }) =>
+          `p-2 rounded ${isActive ? "bg-gray-200 text-black": "hover:bg-gray-200"}`
+          }
+          >
+            Students 
           </NavLink>
           <NavLink
             to="/admin/settings"
@@ -90,7 +98,14 @@ const AdminLayout = () => {
           
           {open && (
             <div className=" bg-white flex gap-4 flex-col top-20 border absolute w-40">
-             <button>Profile</button>
+            <NavLink
+             to="/admin/profile"
+             className={({ isActive }) =>
+            ` p-2 text-center ${isActive ? "bg-gray-200" : "hover:bg-gray-200"}`
+            }
+            >
+            Profile
+           </NavLink>
              <button>Settings</button>
              <button onClick={handlelogout}>Logout</button>
             </div>
@@ -99,7 +114,7 @@ const AdminLayout = () => {
         </header>
 
         <main className="flex-1 p-2 bg-gray-100 overflow-auto">
-          <Outlet />
+          <Outlet context={{ userData}} />
         </main>
       </div>
     </div>

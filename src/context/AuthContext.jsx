@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }) => {
 
         if (docSnap.exists()) {
           setUser(firebaseUser);
-          setRole(docSnap.data().role); // must match Firestore exactly: "user" or "admin"
+          setRole(docSnap.data().role); 
         } else {
           setUser(firebaseUser);
           setRole(null);

@@ -1,77 +1,82 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react';
 import SignInForm from './SignInForm';
 import SignUpForm from './SignUpForm';
-import logo from '../../assets/logo.png'
-import check from '../../assets/icons/check.png'
-import video from '../../assets/video.mp4'
-import DepED from '../../assets/DepEDLogo.png'
-import facebook from '../../assets/icons/facebook.png'
+import logo from '../../assets/logo.png';
+import video from '../../assets/video.mp4';
+import DepED from '../../assets/DepEDLogo.png';
+import facebook from '../../assets/icons/facebook.png';
 
-import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 const Auth = () => {
-
   const [mode, setMode] = useState("login");
-  const {user, role} = useAuth();
-  const navigate = useNavigate();
-
-useEffect(() => {
-  if (!user) return;
-
-  if (role === "admin") {
-    navigate("/admin");
-  } else {
-    navigate("/Enrollment");
-  }
-}, [user, role, navigate]);
-
-
 
   return (
-   <>
-   <div className='h-screen flex '>
-      <div className=' flex w-full'>
-      <div className=' w-full  relative overflow-hidden p-2'>
-      <video className=' absolute inset-0 w-full h-full object-cover' autoPlay loop muted playsInline src={video}></video>
-      <div className='flex items-center gap-4 w-full absolute  left-5'>
-      <img className='w-16 bottom-3' src={logo} alt="" />
-      <img className='w-16 bottom-3' src={DepED} alt="" />
-      </div>
-      </div>
-       
-      <div className='relative flex w-full flex-col justify-center items-center p-36'>
-       <button onClick={() =>navigate("/")} className=" absolute top-5 right-5">Back</button> 
-        {/* Title */}
-      <h2 className={`text-4xl text-[#2D5B60] text-center font-semibold ${
-      mode === "login" ? "mb-6" : "-mt-2 mb-8 text-[25px]"}`}>
-      {mode === "login" ? "Sign In" : "Account Registration"}
-      </h2>
+    <div className="h-screen flex">
+      <div className="flex w-full">
+        {/* Left side video */}
+        <div className="w-full relative overflow-hidden p-2">
+          <video
+            className="absolute inset-0 w-full h-full object-cover"
+            autoPlay
+            loop
+            muted
+            playsInline
+            src={video}
+          />
+          <div className="flex items-center gap-4 w-full absolute left-5">
+            <img className="w-16 bottom-3" src={logo} alt="" />
+            <img className="w-16 bottom-3" src={DepED} alt="" />
+          </div>
+        </div>
 
-      {mode === "login" ? <SignInForm /> : <SignUpForm />}
+        {/* Right side forms */}
+        <div className="relative flex w-full flex-col justify-center items-center p-36">
+          <button className="absolute top-5 right-5">
+            Back
+          </button>
 
-        <div className='flex items-center justify-center gap-1 mt-5'>
-        <h2 className=' text-center text-neutral-600 font-semibold'>
-        {mode === "login"
-          ? "Don’t have an account yet?"
-          : "Already have an account?"}
-       </h2>
-        <button className='font-semibold text-[#2D5B60] text-[17px]' onClick={() =>
-          setMode(mode === "login" ? "signup" : "login")
-        }>
-          {mode === "login" ? " Sign up" : " Sign in"}
-        </button>
-</div>
-        <div className='flex mt-2 text-neutral-500 items-center gap-2'>
-        <hr className='w-36 border-spacing-2' />
-        <h1>Or</h1>
-       <hr className='w-36 border-spacing-2' /></div>
-        <button disabled className='w-80 cursor-not-allowed rounded-lg py-2 mt-5 text-neutral-600 font-semibold bg-neutral-100 flex items-center justify-center gap-5'><img className='w-7' src={facebook} alt="" />Continue with Facebook</button>
-     
+          {/* Title */}
+          <h2
+            className={`text-4xl text-[#2D5B60] text-center font-semibold ${
+              mode === "login" ? "mb-6" : "-mt-2 mb-8 text-[25px]"
+            }`}
+          >
+            {mode === "login" ? "Sign In" : "Account Registration"}
+          </h2>
+
+          {mode === "login" ? <SignInForm /> : <SignUpForm />}
+
+          {/* Switch mode */}
+          <div className="flex items-center justify-center gap-1 mt-5">
+            <h2 className="text-center text-neutral-600 font-semibold">
+              {mode === "login" ? "Don’t have an account yet?" : "Already have an account?"}
+            </h2>
+            <button
+              className="font-semibold text-[#2D5B60] text-[17px]"
+              onClick={() => setMode(mode === "login" ? "signup" : "login")}
+            >
+              {mode === "login" ? " Sign up" : " Sign in"}
+            </button>
+          </div>
+
+          {/* Separator */}
+          <div className="flex mt-2 text-neutral-500 items-center gap-2">
+            <hr className="w-36 border-spacing-2" />
+            <h1>Or</h1>
+            <hr className="w-36 border-spacing-2" />
+          </div>
+
+          {/* Facebook button */}
+          <button
+            disabled
+            className="w-80 cursor-not-allowed rounded-lg py-2 mt-5 text-neutral-600 font-semibold bg-neutral-100 flex items-center justify-center gap-5"
+          >
+            <img className="w-7" src={facebook} alt="" />
+            Continue with Facebook
+          </button>
+        </div>
       </div>
     </div>
-   </div>
-   </>
-  )
-}
+  );
+};
 
-export default Auth
+export default Auth;

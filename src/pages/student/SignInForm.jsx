@@ -13,54 +13,60 @@ const SignInForm = () => {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setMessage("");
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
 
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-    const docRef = doc(db, "users", user.uid);
-    const docSnap = await getDoc(docRef);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-    await updateDoc(doc(db, "users", user.uid), {
-      lastActive: serverTimestamp()
-    });
+      const docRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(docRef);
 
-    if (docSnap.exists()) {
-      const role = docSnap.data().role;
-      setMessage("Login Successful!");
-      setSuccess(true);
-
-      setTimeout(() => {
-        if (role === "admin") {
-          navigate("/admin");
-        } else {
-          navigate("/Enrollment");
-        }
-      }, 1000);
-    } else {
-      setMessage("User data not found.");
-      setSuccess(false);
-    }
-  } catch (error) {
-    setMessage(error.message);
-    setSuccess(false);
-  } finally {
-    setLoading(false);
-  }
-};
-
-useEffect(() => {
-  const interval = setInterval(async () => {
-    if (auth.currentUser) {
-      await updateDoc(doc(db, "users", auth.currentUser.uid), {
-        lastActive: serverTimestamp(),
+      await updateDoc(doc(db, "users", user.uid), {
+        lastActive: serverTimestamp()
       });
+
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        const role = userData.role?.toLowerCase();
+        setMessage("Login Successful!");
+        setSuccess(true);
+
+        //  Role based redirect
+        if (role === "admin") {
+          navigate("/admin", { replace: true });
+        } else if (role === "user" || role === "parent") {
+          navigate("/Enrollment", { replace: true });
+        } else {
+          setMessage("User role undefined. Contact admin.");
+          setSuccess(false);
+        }
+
+      } else {
+        setMessage("User data not found.");
+        setSuccess(false);
+      }
+    } catch (error) {
+      setMessage(error.message);
+      setSuccess(false);
+    } finally {
+      setLoading(false);
     }
-  }, 10000); 
-  return () => clearInterval(interval);
-}, []);
+  };
+
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (auth.currentUser) {
+        await updateDoc(doc(db, "users", auth.currentUser.uid), {
+          lastActive: serverTimestamp(),
+        });
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="w-full flex flex-col items-center justify-center mt-20">
@@ -99,33 +105,7 @@ useEffect(() => {
             loading ? "bg-gray-400 cursor-not-allowed" : " bg-[#2D5B60]  hover:bg-green-950"
           }`}
         >
-          {loading ? (
-            <span className="flex items-center justify-center">
-              <svg
-                className="animate-spin h-5 w-5 mr-2 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v8H4z"
-                ></path>
-              </svg>
-              Logging in...
-            </span>
-          ) : (
-            "Login"
-          )}
+          {loading ? "Logging in..." : "Login"}
         </button>
       </form>
     </div>

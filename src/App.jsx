@@ -17,18 +17,22 @@ const App = () => {
           <Route path="/" element={<Landing />} />
           <Route path="/Auth" element={<Auth />} />
           <Route path="/preschool" element={<PreSchool />} />
+
+          {/* Enrollment route for both user & parent */}
           <Route
             path="/Enrollment"
             element={
-              <ProtectedRoute requiredRole="user">
+              <ProtectedRoute allowedRoles={["user", "parent"]}>
                 <Enrollment />
               </ProtectedRoute>
             }
           />
+
+          {/* Admin route */}
           <Route
             path="/admin/*"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminRoutes />
               </ProtectedRoute>
             }
