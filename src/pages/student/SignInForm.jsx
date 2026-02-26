@@ -3,14 +3,31 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../../services/firebase";
 import { useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { useAuth } from "../../context/AuthContext"; 
 
 const SignInForm = () => {
   const navigate = useNavigate();
+  const { user, role, loading: authLoading } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // kapag may user redirect to enrollment
+  useEffect(() => {
+    if (!authLoading && user) {
+      const userRole = role?.toLowerCase();
+      if (userRole === "admin") {
+        navigate("/admin", { replace: true });
+      } else if (userRole === "user" || userRole === "parent") {
+        navigate("/Enrollment", { replace: true });
+      } else {
+        console.log("Role undefined, contact admin");
+      }
+    }
+  }, [user, role, authLoading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,7 +51,7 @@ const SignInForm = () => {
         setMessage("Login Successful!");
         setSuccess(true);
 
-        //  Role based redirect
+     
         if (role === "admin") {
           navigate("/admin", { replace: true });
         } else if (role === "user" || role === "parent") {
@@ -43,7 +60,6 @@ const SignInForm = () => {
           setMessage("User role undefined. Contact admin.");
           setSuccess(false);
         }
-
       } else {
         setMessage("User data not found.");
         setSuccess(false);
@@ -88,6 +104,7 @@ const SignInForm = () => {
           placeholder="your@gmail.com"
           className="px-5 py-2 border-2 rounded-lg outline-none"
           required
+          disabled={authLoading} // 🔹 disable if checking auth
         />
         <input
           type="password"
@@ -96,13 +113,14 @@ const SignInForm = () => {
           placeholder="Password"
           className="px-5 py-2 border-2 rounded-lg outline-none"
           required
+          disabled={authLoading}
         />
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || authLoading}
           className={`py-2 rounded-lg font-semibold text-white transition-colors ${
-            loading ? "bg-gray-400 cursor-not-allowed" : " bg-[#2D5B60]  hover:bg-green-950"
+            loading || authLoading ? "bg-gray-400 cursor-not-allowed" : " bg-[#2D5B60]  hover:bg-green-950"
           }`}
         >
           {loading ? "Logging in..." : "Login"}

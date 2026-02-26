@@ -171,7 +171,7 @@ const Users = () => {
 
               {selectedUser.spouse && (
                 <div className="mt-2 w-full text-left">
-                  <h3 className="font-semibold">Spouse Details</h3>
+                  <h3 className="font-semibold">Father Details</h3>
                   <p>{selectedUser.spouse.firstname} {selectedUser.spouse.middlename} {selectedUser.spouse.lastname}</p>
                   <p>{selectedUser.spouse.occupation}</p>
                   <p>{selectedUser.spouse.contact}</p>

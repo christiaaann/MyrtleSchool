@@ -5,10 +5,10 @@ import logo from '../../assets/logo.png';
 import video from '../../assets/video.mp4';
 import DepED from '../../assets/DepEDLogo.png';
 import facebook from '../../assets/icons/facebook.png';
-
+import { useNavigate } from 'react-router-dom';
 const Auth = () => {
   const [mode, setMode] = useState("login");
-
+    const navigate = useNavigate();
   return (
     <div className="h-screen flex">
       <div className="flex w-full">
@@ -30,7 +30,7 @@ const Auth = () => {
 
         {/* Right side forms */}
         <div className="relative flex w-full flex-col justify-center items-center p-36">
-          <button className="absolute top-5 right-5">
+          <button onClick={() =>navigate("/")} className="absolute top-5 right-5">
             Back
           </button>
 

@@ -10,6 +10,13 @@ export const AuthProvider = ({ children }) => {
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // manual updater para sa SignUp
+  const setAuthUser = (firebaseUser, userRole) => {
+    setUser(firebaseUser);
+    setRole(userRole);
+    setLoading(false);
+  };
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
       if (!firebaseUser) {
@@ -25,7 +32,7 @@ export const AuthProvider = ({ children }) => {
 
         if (docSnap.exists()) {
           setUser(firebaseUser);
-          setRole(docSnap.data().role); 
+          setRole(docSnap.data().role);
         } else {
           setUser(firebaseUser);
           setRole(null);
@@ -43,7 +50,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, role, loading }}>
+    <AuthContext.Provider value={{ user, role, loading, setAuthUser }}>
       {children}
     </AuthContext.Provider>
   );
