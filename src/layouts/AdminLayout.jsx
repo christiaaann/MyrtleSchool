@@ -145,14 +145,7 @@ const AdminLayout = () => {
           >
             Students
           </NavLink>
-          <NavLink
-            to="/admin/settings"
-            className={({ isActive }) =>
-              `p-2 rounded ${isActive ? "bg-gray-200 text-black" : "hover:bg-gray-200"}`
-            }
-          >
-            Settings
-          </NavLink>
+    
         </nav>
       </aside>
 
@@ -162,7 +155,7 @@ const AdminLayout = () => {
           <button className="text-[12px] border px-2 rounded-sm" onClick={() => setOpen(!open)}>View</button>
 
           {open && (
-            <div className="bg-white flex gap-4 flex-col top-16 border absolute w-40">
+            <div className="bg-white rounded-lg gap-1 overflow-hidden flex flex-col top-16 border-2 absolute w-40">
               <NavLink
                 to="/admin/profile"
                 className={({ isActive }) =>
@@ -171,8 +164,23 @@ const AdminLayout = () => {
               >
                 Profile
               </NavLink>
-              <button>Settings</button>
-              <button onClick={handleLogout}>Logout</button>
+              <NavLink
+              to="/admin/settings"
+              className={({ isActive }) =>
+                `p-2 text-center text-[14px]  ${isActive? "bg-gray-200" : "hover:bg-gray-200"}`
+            }
+              >
+                Settings
+              </NavLink>
+              <NavLink
+              to="/admin/sdsd"
+              className={({ isActive }) =>
+                `p-2 text-center text-[14px] ${isActive? "bg-gray-200" : "hover:bg-gray-200"}`
+            }
+              >
+                Add Admin
+              </NavLink>
+            
             </div>
           )}
         </header>

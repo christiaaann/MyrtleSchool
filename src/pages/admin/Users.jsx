@@ -97,7 +97,7 @@ const Users = () => {
               <th className="border-b px-4 py-2">Name</th>
               <th className="border-b px-4 py-2">Email</th>
               <th className="border-b px-4 py-2">Contact</th>
-              <th className="border-b px-4 py-2 text-center">Status</th>
+              {/* <th className="border-b px-4 py-2 text-center">Status</th> */}
               <th className="border-b px-4 py-2">Action</th>
             </tr>
           </thead>
@@ -107,19 +107,25 @@ const Users = () => {
               const isOnline = user.lastActive?.toDate && Date.now() - user.lastActive.toDate().getTime() < 60000;
               return (
                 <tr key={user.id} className="hover:bg-gray-100 cursor-pointer" onClick={() => setSelectedUser(user)}>
-                  <td className="border-b px-4 py-2">
+                  <td className="border-b relative px-4 w-10 py-2">
                     <img src={user.profilePicture} alt={user.fullname} className="w-10 h-10 rounded-full object-cover" />
+                    {isOnline ? (
+                    <span className="bg-green-500 absolute right-7 top-10 w-3 h-3 rounded-full inline-block"></span>
+                    ):(
+                   <span className="bg-red-600 absolute right-7 top-10 w-3 h-3 rounded-full inline-block"></span>
+                    )
+                    }
                   </td>
                   <td className="border-b px-4 py-2">{user.fullname}</td>
                   <td className="border-b px-4 py-2">{user.email}</td>
                   <td className="border-b px-4 py-2">{user.contact}</td>
-                  <td className="border-b px-4 py-2 text-center">
+                  {/* <td className="border-b px-4 py-2 text-center">
                     {isOnline ? (
                       <span className="bg-green-400 inline-block rounded-full w-3 h-3"></span>
                     ) : (
-                      <span className="text-neutral-500 text-sm">Offline {user.lastActive ? getLastSeen(user.lastActive) : "Offline"}</span>
+                      <span className="text-neutral-500 text-sm">Offline {user.lastActive ? getLastSeen(user.lastActive): ""}</span>
                     )}
-                  </td>
+                  </td> */}
                   <td className="border-b px-4 py-2" onClick={(e) => e.stopPropagation()}>
                     <button onClick={() => handleDelete(user.id)} className="text-red-600 hover:underline">
                       Delete

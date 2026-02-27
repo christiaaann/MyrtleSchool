@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { useOutletContext } from "react-router-dom";
 import { db, auth } from "../../services/firebase";
 import { doc, updateDoc } from "firebase/firestore";
-import { updateEmail, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
+
 
 const Profile = () => {
   const { userData } = useOutletContext();
@@ -31,8 +31,7 @@ const Profile = () => {
     middlename: userData.middlename || "",
     lastname: userData.lastname || "",
     email: userData.email || "",
-    password: "",
-    currentPassword: "", // for reauth
+   
   });
 
   const [imageFile, setImageFile] = useState(null);
@@ -84,27 +83,7 @@ const Profile = () => {
         imageUrl = await uploadToCloudinary(imageFile);
       }
 
-      // Only reauthenticate if email or password is changing
-      if ((form.email !== userData.email || form.password) && !form.currentPassword) {
-        return alert("Current password is required to update email or password.");
-      }
-
-      if (form.email !== userData.email || form.password) {
-        const credential = EmailAuthProvider.credential(auth.currentUser.email, form.currentPassword);
-        await reauthenticateWithCredential(auth.currentUser, credential);
-      }
-
-      // Update email
-      if (form.email !== userData.email) {
-        await updateEmail(auth.currentUser, form.email);
-      }
-
-      // Update password
-      if (form.password) {
-        if (form.password.length < 6) return alert("Password must be at least 6 characters.");
-        await updatePassword(auth.currentUser, form.password);
-      }
-
+      
       // Update Firestore
       await updateDoc(userRef, {
         firstname: form.firstname,
@@ -115,7 +94,6 @@ const Profile = () => {
       });
 
       setEditing(false);
-      setForm({ ...form, password: "", currentPassword: "" });
       alert("Profile updated successfully!");
     } catch (err) {
       console.error(err);
@@ -124,12 +102,18 @@ const Profile = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow max-w-xl mx-auto mt-6">
-      <h2 className="text-xl font-semibold mb-4">Edit Info</h2>
+    <div className="bg-white p-6 rounded-xl shadow h-full">
+     
 
       {/* PROFILE PREVIEW */}
-      <div className="flex flex-col items-center mb-4">
+      <div className="flex flex-col mb-4">
+        <div className="flex items-center gap-2">
         <img src={preview || "/default.png"} alt="profile" className="w-28 h-28 rounded-full object-cover border" />
+         <div className="flex flex-col">
+         <h1 className="text-xl font-semibold">{userData.firstname} {userData.middlename} {userData.lastname}</h1>
+         <h1>{userData.email}</h1>
+      </div> 
+       </div>
         {editing && (
           <div className="flex gap-2 mt-2">
             <input type="file" accept="image/*" onChange={handleImage} />
@@ -154,44 +138,37 @@ const Profile = () => {
       )}
 
       {/* FORM FIELDS */}
-      <div className="space-y-3">
-        <input name="firstname" value={form.firstname} onChange={handleChange} disabled={!editing} className="w-full border p-2 rounded" />
-        <input name="middlename" value={form.middlename} onChange={handleChange} disabled={!editing} className="w-full border p-2 rounded" />
-        <input name="lastname" value={form.lastname} onChange={handleChange} disabled={!editing} className="w-full border p-2 rounded" />
-        <input name="email" type="email" value={form.email} onChange={handleChange} disabled={!editing} className="w-full border p-2 rounded" placeholder="Email" />
-        <input name="password" type="password" value={form.password} onChange={handleChange} disabled={!editing} className="w-full border p-2 rounded" placeholder="Change password" />
-
-        {/* Current Password */}
-        {(form.email !== userData.email || form.password) && (
-          <input
-            name="currentPassword"
-            type="password"
-            value={form.currentPassword}
-            onChange={handleChange}
-            disabled={!editing}
-            className="w-full border p-2 rounded"
-            placeholder="Current Password"
-          />
-        )}
-      </div>
-
-      {/* BUTTONS */}
-      <div className="mt-4 flex gap-2">
+      <div className=" border-2 h-[20rem] border-gray-100 rounded-lg p-5">
+        <div className="flex justify-between">
+        <h1 className="text-xl font-semibold">Personal Info</h1>
+          {/* BUTTONS */}
+      <div className=" flex gap-2">
         {!editing ? (
-          <button onClick={() => setEditing(true)} className="px-4 py-2 bg-blue-600 text-white rounded">
+          <button onClick={() => setEditing(true)} className="px-4 border-2 rounded-lg">
             Edit
           </button>
         ) : (
           <>
-            <button onClick={handleSave} className="px-4 py-2 bg-green-600 text-white rounded">
+            <button onClick={handleSave} className="px-4 border-2 rounded-lg">
               Save
             </button>
-            <button onClick={() => setEditing(false)} className="px-4 py-2 bg-gray-400 text-white rounded">
+            <button onClick={() => setEditing(false)} className="px-4 text-red-600 rounded">
               Cancel
             </button>
           </>
         )}
       </div>
+      </div>
+        <div className="flex gap-5 mt-2 items-center">
+        <input name="firstname" value={form.firstname} onChange={handleChange} disabled={!editing} className=" p-2 px-4 rounded-full bg-gray-100 outline-none" />
+        <input name="middlename" value={form.middlename} onChange={handleChange} disabled={!editing} className=" p-2 px-4 rounded-full bg-gray-100 outline-non" />
+        <input name="lastname" value={form.lastname} onChange={handleChange} disabled={!editing} className=" p-2 px-4 rounded-full bg-gray-100 outline-non" />
+        <input name="email" type="email" value={form.email} onChange={handleChange} disabled={!editing} className=" p-2 px-4 rounded-full bg-gray-100 outline-non" placeholder="Email" />
+     </div>
+     
+      </div>
+
+    
     </div>
   );
 };
