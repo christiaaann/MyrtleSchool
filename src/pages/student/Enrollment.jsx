@@ -151,6 +151,7 @@ const fetchMyStudents = async (uid) => {
             <header className=' bg-white flex items-center gap-5 p-2'>
                 <img className='w-12 object-contain' src={logo} alt="" />
                 <h1 className=' font-semibold'>Myrtle Christian School</h1>
+                <h1></h1>
                 
                 <div className="relative">
                     <button onClick={toggleDropdown} className="inline-flex bg-neutral-200 px-10 py-2 text-[#2D5B60] font-semibold items-center justify-center">
