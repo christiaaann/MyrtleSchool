@@ -11,7 +11,7 @@ import deaf from '../../assets/default.png'
 import logo from '../../assets/logo.png'
 import user from '../../assets/icons/user.png'
 import archive from '../../assets/icons/archive.png'
-import location from '../../assets/icons/location.png'
+
 
 const Enrollment = () => {
     const [isOpen, setIsOpen] = useState(false);

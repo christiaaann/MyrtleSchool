@@ -1,62 +1,88 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../../services/firebase";
 import { useNavigate } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { useAuth } from "../../context/AuthContext"; 
 
 const SignInForm = () => {
   const navigate = useNavigate();
+  const { user, role, loading: authLoading } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setMessage("");
-
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-
-    const docRef = doc(db, "users", user.uid);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-
-      // 🔹 Check if user is archived
-      if (data.isActive === false) {
-        setMessage("Your account is archived and cannot access the system.");
-        setSuccess(false);
-        await auth.signOut(); // logout agad
-        return; // stop further execution
+  // kapag may user redirect to enrollment
+  useEffect(() => {
+    if (!authLoading && user) {
+      const userRole = role?.toLowerCase();
+      if (userRole === "admin") {
+        navigate("/admin", { replace: true });
+      } else if (userRole === "user" || userRole === "parent") {
+        navigate("/Enrollment", { replace: true });
+      } else {
+        console.log("Role undefined, contact admin");
       }
-
-      const role = data.role;
-      setMessage("Login Successful!");
-      setSuccess(true);
-
-      setTimeout(() => {
-        if (role === "admin") {
-          navigate("/admin");
-        } else {
-          navigate("/Enrollment");
-        }
-      }, 1000);
-    } else {
-      setMessage("User data not found.");
-      setSuccess(false);
     }
-  } catch (error) {
-    setMessage(error.message);
-    setSuccess(false);
-  } finally {
-    setLoading(false);
-  }
-};
+  }, [user, role, authLoading, navigate]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      const docRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(docRef);
+
+      await updateDoc(doc(db, "users", user.uid), {
+        lastActive: serverTimestamp()
+      });
+
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        const role = userData.role?.toLowerCase();
+        setMessage("Login Successful!");
+        setSuccess(true);
+
+     
+        if (role === "admin") {
+          navigate("/admin", { replace: true });
+        } else if (role === "user" || role === "parent") {
+          navigate("/Enrollment", { replace: true });
+        } else {
+          setMessage("User role undefined. Contact admin.");
+          setSuccess(false);
+        }
+      } else {
+        setMessage("User data not found.");
+        setSuccess(false);
+      }
+    } catch (error) {
+      setMessage(error.message);
+      setSuccess(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (auth.currentUser) {
+        await updateDoc(doc(db, "users", auth.currentUser.uid), {
+          lastActive: serverTimestamp(),
+        });
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="w-full flex flex-col items-center justify-center mt-20">
@@ -78,6 +104,7 @@ const SignInForm = () => {
           placeholder="your@gmail.com"
           className="px-5 py-2 border-2 rounded-lg outline-none"
           required
+          disabled={authLoading} // 🔹 disable if checking auth
         />
         <input
           type="password"
@@ -86,44 +113,17 @@ const SignInForm = () => {
           placeholder="Password"
           className="px-5 py-2 border-2 rounded-lg outline-none"
           required
+          disabled={authLoading}
         />
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || authLoading}
           className={`py-2 rounded-lg font-semibold text-white transition-colors ${
-            loading
-              ? "bg-gray-400 cursor-not-allowed"
-              : " bg-[#2D5B60]  hover:bg-green-950"
+            loading || authLoading ? "bg-gray-400 cursor-not-allowed" : " bg-[#2D5B60]  hover:bg-green-950"
           }`}
         >
-          {loading ? (
-            <span className="flex items-center justify-center">
-              <svg
-                className="animate-spin h-5 w-5 mr-2 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v8H4z"
-                ></path>
-              </svg>
-              Logging in...
-            </span>
-          ) : (
-            "Login"
-          )}
+          {loading ? "Logging in..." : "Login"}
         </button>
       </form>
     </div>
