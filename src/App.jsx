@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-
+import { Toaster } from "sileo";
 import Landing from "./pages/public/Landing";
 import Auth from "./pages/student/Auth";
 import PreSchool from "./pages/public/PreSchool";
@@ -13,6 +13,7 @@ const App = () => {
   return (
     <AuthProvider>
       <BrowserRouter>
+      <Toaster />
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/Auth" element={<Auth />} />
