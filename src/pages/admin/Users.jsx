@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { collection, doc, updateDoc, onSnapshot } from "firebase/firestore";
-import { db } from "../../services/firebase";
+import { collection, doc, deleteDoc, onSnapshot, updateDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore";
+import { auth, db } from "../../services/firebase";
 import defaultPic from "../../assets/default.png";
 
 const Users = () => {
@@ -8,41 +8,40 @@ const Users = () => {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedPicture, setSelectedPicture] = useState(null);
-  const [showArchived, setShowArchived] = useState(false); 
+  const [studentStats, setStudentStats] = useState({ enrolled: 0, pending: 0 });
 
-  // 🔹 Archive user (soft delete)
-  const handleArchive = async (id) => {
-    if (!window.confirm("Archive this user?")) return;
+  function getLastSeen(ts) {
+    if (!ts) return "Offline";
+    const now = Date.now();
+    const last = ts.toDate().getTime();
+    const diff = Math.floor((now - last) / 1000);
+    if (diff < 60) return "Active Now";
+    if (diff < 3600) return Math.floor(diff / 60) + "m ago";
+    if (diff < 86400) return Math.floor(diff / 3600) + "h ago";
+    return Math.floor(diff / 86400) + "d ago";
+  }
 
-    try {
-      await updateDoc(doc(db, "users", id), {
-        isActive: false,
-        archivedAt: new Date(),
-      });
-      setUsers(users.map(u => u.id === id ? {...u, isActive: false} : u));
-      setSelectedUser(null);
-    } catch (err) {
-      console.error("Archive error:", err);
-    }
-  };
+  useEffect(() => {
+    const getCounts = async () => {
+      if (selectedUser?.id) {
+        try {
+          const q = query(collection(db, "students"), where("parentUID", "==", selectedUser.id));
+          const snapshot = await getDocs(q);
+          const students = snapshot.docs.map(doc => doc.data());
+          setStudentStats({
+            enrolled: students.filter(s => s.status === "Enrolled").length,
+            pending: students.filter(s => s.status === "Pending").length
+          });
+        } catch (err) {
+          console.error("Error counts:", err);
+          setStudentStats({ enrolled: 0, pending: 0 });
+        }
+      }
+    };
+    getCounts();
+  }, [selectedUser?.id]); 
 
-  // 🔹 Restore archived user
-  const handleRestore = async (id) => {
-    if (!window.confirm("Restore this user?")) return;
-
-    try {
-      await updateDoc(doc(db, "users", id), {
-        isActive: true,
-        archivedAt: null,
-      });
-      setUsers(users.map(u => u.id === id ? {...u, isActive: true} : u));
-      setSelectedUser(null);
-    } catch (err) {
-      console.error("Restore error:", err);
-    }
-  };
-
-  // Fetch users from Firestore
+  //  FETCH USERS
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "users"), (snapshot) => {
       const list = snapshot.docs
@@ -50,11 +49,7 @@ const Users = () => {
           const data = docu.data();
           return {
             id: docu.id,
-            fullname:
-              `${data.parent?.firstname || ""} ${data.parent?.middlename || ""} ${data.parent?.lastname || ""}`.trim() ||
-              data.fullname ||
-              data.name ||
-              "No Name",
+            fullname: `${data.parent?.firstname || ""} ${data.parent?.middlename || ""} ${data.parent?.lastname || ""}`.trim() || data.fullname || data.name || "No Name",
             email: data.email,
             contact: data.parent?.contact || "",
             role: data.role,
@@ -62,177 +57,178 @@ const Users = () => {
             parent: data.parent || null,
             spouse: data.spouse || null,
             address: data.address || null,
-            isActive: data.isActive !== false, // default true
+            lastActive: data.lastActive || null,
           };
         })
         .filter((u) => (u.role || "").toLowerCase() !== "admin");
-      setUsers(list);
-      setTimeout(() => setLoading(false), 1000);
-    });
 
+      setUsers(list);
+
+      //selected user
+      setSelectedUser((currentSelected) => {
+        if (!currentSelected && list.length > 0) return list[0]; 
+        if (currentSelected) {
+        
+          const updatedData = list.find((u) => u.id === currentSelected.id);
+          return updatedData || list[0];
+        }
+        return null;
+      });
+
+      setLoading(false);
+    });
     return () => unsub();
+  }, []); 
+
+  //  HEARTBEAT ---
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (auth.currentUser) {
+        await updateDoc(doc(db, "users", auth.currentUser.uid), {
+          lastActive: serverTimestamp(),
+        });
+      }
+    }, 15000); 
+    return () => clearInterval(interval);
   }, []);
 
-  // Filter users depending on tab
-  const displayedUsers = users.filter(u => showArchived ? !u.isActive : u.isActive);
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this user? This action cannot be undone.")) return;
+    try {
+      await deleteDoc(doc(db, "users", id));
+     
+    } catch (err) { console.error("Delete error:", err); }
+  };
 
-  if (loading) {
-    return (
-      <div className="bg-white">
-        <h1 className="text-xl font-semibold mb-4">Users</h1>
-        <p>Loading...</p>
-      </div>
-    );
-  }
+  if (loading) return <div className="p-10 text-center font-bold text-[#2D5B60] animate-pulse">Loading Members...</div>;
 
   return (
-    <div className="bg-white p-4">
-      <h1 className="text-xl font-semibold mb-4">Users</h1>
-
-      {/* Tabs */}
-      <div className="flex gap-4 mb-4">
-        <button
-          className={`px-4 py-2 rounded ${!showArchived ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-          onClick={() => setShowArchived(false)}
-        >
-          Active Users
-        </button>
-        <button
-          className={`px-4 py-2 rounded ${showArchived ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-          onClick={() => setShowArchived(true)}
-        >
-          Archived Users
-        </button>
+    <div className="flex h-[90vh] bg-[#F8F9FA] overflow-hidden rounded-2xl shadow-lg border">
+      
+      {/* LEFT SIDEBAR */}
+      <div className="w-1/3 border-r bg-white flex flex-col">
+        <div className="p-5 border-b bg-gray-50/50">
+          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[2px]">Member Directory</h2>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {users.map((user) => {
+            const isOnline = user.lastActive?.toDate && Date.now() - user.lastActive.toDate().getTime() < 60000;
+            return (
+              <div 
+                key={user.id} 
+                onClick={() => setSelectedUser(user)}
+                className={`flex items-center gap-3 p-4 cursor-pointer border-b border-gray-50 transition-all ${
+                  selectedUser?.id === user.id ? "bg-[#F0F7F7] border-l-4 border-[#2D5B60]" : "hover:bg-gray-50"
+                }`}
+              >
+                <div className="relative flex-shrink-0">
+                  <img src={user.profilePicture} className="w-12 h-12 rounded-full object-cover shadow-sm border border-gray-100" alt="" />
+                  <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${isOnline ? "bg-green-500" : "bg-red-500"}`}></span>
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <p className="font-bold text-sm text-gray-800 truncate">{user.fullname}</p>
+                  <p className="text-[11px] text-gray-400 truncate">{user.email}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {displayedUsers.length === 0 ? (
-        <p>{showArchived ? "No archived users." : "No active users."}</p>
-      ) : (
-        <table className="w-full text-left border-collapse">
-          <thead className="text-neutral-500">
-            <tr>
-              <th className="border-b px-4 py-2">Picture</th>
-              <th className="border-b px-4 py-2">Name</th>
-              <th className="border-b px-4 py-2">Email</th>
-              <th className="border-b px-4 py-2">Contact</th>
-              <th className="border-b px-4 py-2">Action</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {displayedUsers.map((user) => (
-              <tr
-                key={user.id}
-                className="hover:bg-gray-100 cursor-pointer"
-                onClick={() => setSelectedUser(user)}
-              >
-                <td className="border-b px-4 py-2">
-                  <img
-                    src={user.profilePicture}
-                    alt={user.fullname}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                </td>
-                <td className="border-b px-4 py-2">{user.fullname}</td>
-                <td className="border-b px-4 py-2">{user.email}</td>
-                <td className="border-b px-4 py-2">{user.contact}</td>
-                <td
-                  className="border-b px-4 py-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {showArchived ? (
-                    <button
-                      onClick={() => handleRestore(user.id)}
-                      className="text-green-600 hover:underline"
-                    >
-                      Restore
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleArchive(user.id)}
-                      className="text-orange-600 hover:underline"
-                    >
-                      Archive
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {/* USER DETAILS MODAL */}
-      {selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start pt-20 z-40">
-          <div className="bg-white p-6 rounded shadow w-96 relative text-black">
-            <button
-              className="absolute top-2 right-2 text-xl font-bold"
-              onClick={() => setSelectedUser(null)}
-            >
-              ×
-            </button>
-
-            <div className="flex flex-col items-center">
-              <img
-                src={selectedUser.profilePicture || defaultPic}
-                alt={selectedUser.fullname}
-                className="w-24 h-24 rounded-full object-cover mb-2 cursor-pointer"
-                onClick={() => setSelectedPicture(selectedUser.profilePicture)}
-              />
-
-              <p className="text-sm text-gray-500 mb-2">
-                Click picture to view full size
-              </p>
-
-              <h2 className="text-xl font-semibold mb-2">{selectedUser.fullname}</h2>
-
-              <p><strong>Email:</strong> {selectedUser.email}</p>
-              <p><strong>Contact:</strong> {selectedUser.contact}</p>
-              <p><strong>Role:</strong> {selectedUser.role}</p>
-
-              {selectedUser.parent && (
-                <div className="mt-2 w-full text-left">
-                  <h3 className="font-semibold">Parent Details</h3>
-                  <p>{selectedUser.parent.firstname} {selectedUser.parent.middlename} {selectedUser.parent.lastname}</p>
-                  <p>{selectedUser.parent.occupation}</p>
-                  <p>{selectedUser.parent.contact}</p>
-                </div>
-              )}
-
-              {selectedUser.address && (
-                <div className="w-full">
-                  <h3 className="font-semibold">Address</h3>
-                  <p>{selectedUser.address.province}</p>
-                  <p>{selectedUser.address.city}</p>
-                  <p>{selectedUser.address.barangay}</p>
-                </div>
-              )}
-
-              {selectedUser.spouse && (
-                <div className="mt-2 w-full text-left">
-                  <h3 className="font-semibold">Spouse Details</h3>
-                  <p>{selectedUser.spouse.firstname} {selectedUser.spouse.middlename} {selectedUser.spouse.lastname}</p>
-                  <p>{selectedUser.spouse.occupation}</p>
-                  <p>{selectedUser.spouse.contact}</p>
-                </div>
-              )}
-            </div>
+      {/* RIGHT SIDE: DETAILS */}
+      <div className="flex-1 bg-[#F9FBFC] p-8 overflow-y-auto">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-2xl font-black text-gray-800">Profile Information</h1>
+            <button className="bg-white border text-[10px] font-bold px-4 py-2 rounded-lg shadow-sm hover:bg-gray-50 uppercase tracking-wider">Export Data</button>
           </div>
-        </div>
-      )}
 
-      {/* FULL IMAGE VIEW */}
+          {selectedUser ? (
+            <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-10 relative overflow-hidden">
+              {/* Header */}
+              <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-10">
+                <div className="flex gap-6 items-center">
+                  <div className="relative">
+                    <img src={selectedUser.profilePicture} className="w-24 h-24 rounded-[28px] object-cover shadow-md cursor-pointer hover:scale-105 transition-transform border-4 border-white" onClick={() => setSelectedPicture(selectedUser.profilePicture)} alt="" />
+                    <span className={`absolute -top-2 -right-2 w-6 h-6 rounded-full border-4 border-white flex items-center justify-center ${getLastSeen(selectedUser.lastActive) === "Active Now" ? "bg-green-500" : "bg-red-500"}`}>
+                        <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                    </span>
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-black text-gray-800 leading-none mb-1">{selectedUser.fullname}</h2>
+                    <p className="text-gray-400 font-medium text-sm">{selectedUser.email}</p>
+                    <div className="flex gap-2 mt-4">
+                      <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-green-200">{studentStats.enrolled} Enrolled</span>
+                      {studentStats.pending > 0 && <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-orange-200 animate-pulse">{studentStats.pending} For Approval</span>}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end">
+                   <div className={`flex items-center gap-2 px-4 py-1.5 rounded-xl text-xs font-black mb-2 uppercase border shadow-sm ${getLastSeen(selectedUser.lastActive) === "Active Now" ? "bg-green-50 text-green-700 border-green-100" : "bg-gray-50 text-gray-500 border-gray-100"}`}>
+                        {getLastSeen(selectedUser.lastActive) === "Active Now" && <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>}
+                        {getLastSeen(selectedUser.lastActive)}
+                   </div>
+                   <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">User Status</p>
+                </div>
+              </div>
+
+              {/* Data Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 bg-gray-50/80 p-6 rounded-[24px] mb-10 border border-gray-100">
+                <div><p className="text-[9px] text-gray-400 font-black uppercase mb-1">Occupation</p><p className="text-xs font-bold text-gray-700 truncate">{selectedUser.parent?.occupation || "N/A"}</p></div>
+                <div><p className="text-[9px] text-gray-400 font-black uppercase mb-1">Total Children</p><p className="text-sm font-black text-gray-800">{studentStats.enrolled + studentStats.pending}</p></div>
+                <div><p className="text-[9px] text-gray-400 font-black uppercase mb-1">City</p><p className="text-xs font-bold text-gray-700 truncate">{selectedUser.address?.city || "N/A"}</p></div>
+                <div><p className="text-[9px] text-gray-400 font-black uppercase mb-1">Contact</p><p className="text-xs font-bold text-gray-700 truncate">{selectedUser.contact || "N/A"}</p></div>
+                <div><p className="text-[9px] text-gray-400 font-black uppercase mb-1">Account</p><p className="text-xs font-black text-[#2D5B60] uppercase tracking-tighter">Verified</p></div>
+              </div>
+
+              {/* Family & Address */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t pt-10">
+                <div>
+                  <h3 className="text-xs font-black text-gray-300 uppercase mb-5 tracking-[2px]">Family Relations</h3>
+                  <div className="space-y-4">
+                    <div className="bg-white border p-4 rounded-2xl shadow-sm">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Father / Spouse</p>
+                        <p className="text-sm font-black text-gray-700">{selectedUser.spouse?.firstname} {selectedUser.spouse?.lastname || "None Recorded"}</p>
+                    </div>
+                    <div className="bg-white border p-4 rounded-2xl shadow-sm">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Mother / Parent</p>
+                        <p className="text-sm font-black text-gray-700">{selectedUser.parent?.firstname} {selectedUser.parent?.lastname}</p>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-gray-300 uppercase mb-5 tracking-[2px]">Primary Address</h3>
+                  <div className="bg-[#F8F9FB] p-6 rounded-[24px] border border-dashed border-gray-200">
+                    <p className="text-sm text-gray-600 leading-relaxed font-medium">
+                      {selectedUser.address ? `${selectedUser.address.purok || ""}, ${selectedUser.address.barangay}, ${selectedUser.address.city}, ${selectedUser.address.province}` : "No detailed address provided."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="mt-12 pt-8 border-t flex justify-between items-center">
+                 <div className="flex gap-4">
+                    <button className="bg-black text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase shadow-lg shadow-black/20 hover:scale-105 transition-all">Open Chat</button>
+                    <button className="border border-gray-200 px-6 py-2.5 rounded-xl text-xs font-black uppercase hover:bg-gray-50 transition-all">Enrollment Files</button>
+                 </div>
+                 <button onClick={() => handleDelete(selectedUser.id)} className="text-red-500 font-black text-[10px] uppercase tracking-widest hover:underline">Delete Member</button>
+              </div>
+
+            </div>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-gray-300 gap-4 mt-20">
+               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center italic text-4xl">👤</div>
+               <p className="font-bold uppercase tracking-widest text-[10px]">Select a parent to view profile</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* MODAL */}
       {selectedPicture && (
-        <div
-          className="fixed inset-0 backdrop-blur-sm bg-black/70 flex justify-center items-center z-50"
-          onClick={() => setSelectedPicture(null)}
-        >
-          <img
-            src={selectedPicture}
-            alt="Full Size"
-            className="max-w-[90%] max-h-[90%] rounded-lg"
-          />
+        <div className="fixed inset-0 backdrop-blur-md bg-black/60 flex justify-center items-center z-50 p-6" onClick={() => setSelectedPicture(null)}>
+          <img src={selectedPicture} alt="" className="max-w-full max-h-full rounded-[32px] shadow-2xl border-4 border-white object-contain" />
         </div>
       )}
     </div>
