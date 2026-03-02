@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { doc, getDoc, updateDoc, serverTimestamp, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp, setDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore'; 
 import { db, auth } from '../../services/firebase';
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
@@ -40,7 +40,9 @@ const Enrollment = () => {
     const [myStudents, setMyStudents] = useState([]);
     const [editingStudent, setEditingStudent] = useState(null);
 
-    // --- IDADAGDAG NA DATA PARA SA REAL-WORLD CALENDAR ---
+    // --- DYNAMIC SCHOOL YEAR STATE ---
+    const [currentSY, setCurrentSY] = useState("");
+
     const tuitionFees = {
         "Preschool": { 
             registration: 1000, misc: 500, books: 1200, instructional: 500, uniform: 800, pta: 200,
@@ -53,6 +55,17 @@ const Enrollment = () => {
             months: ["JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC", "JAN", "FEB", "MAR"]
         }
     };
+
+    // 1. LISTEN TO ACTIVE SCHOOL YEAR FROM SETTINGS
+    useEffect(() => {
+        const settingsRef = doc(db, "settings", "schoolYear");
+        const unsub = onSnapshot(settingsRef, (snap) => {
+            if (snap.exists()) {
+                setCurrentSY(snap.data().active);
+            }
+        });
+        return () => unsub();
+    }, []);
 
     useEffect(() => {
         let interval;
@@ -89,7 +102,8 @@ const Enrollment = () => {
             const snap = await getDocs(q);
             const studentList = await Promise.all(snap.docs.map(async (studentDoc) => {
                 const studentData = studentDoc.data();
-                const enrDoc = await getDoc(doc(db, "enrollments", `ENR-${studentData.studentID}`));
+                // Link enrollment checking to currentSY as well
+                const enrDoc = await getDoc(doc(db, "enrollments", `ENR-${currentSY}-${studentData.studentID}`));
                 return {
                     ...studentData,
                     paymentMethod: enrDoc.exists() ? enrDoc.data().payment.method : "N/A",
@@ -112,7 +126,7 @@ const Enrollment = () => {
             } else { navigate("/auth"); }
         });
         return () => unsubscribe();
-    }, [navigate]);
+    }, [navigate, currentSY]); // Re-fetch pag nagbago ang SY
 
     if (!userData) return <p>Loading...</p>;
 
@@ -138,13 +152,6 @@ const Enrollment = () => {
         setPage("personal");
     };
 
-    const getSchoolYear = () => {
-        const now = new Date();
-        let year = now.getFullYear();
-        if (now.getMonth() < 5) year = year - 1;
-        return `${year}-${year + 1}`;
-    };
-
     const handleSubmitEnrollment = async () => {
         if (!level || !childFirst || !childLast) {
             sileo.error({ title: "Missing Info", description: "Please fill up Student Info" });
@@ -152,13 +159,14 @@ const Enrollment = () => {
         }
         setIsSubmitting(true);
         try {
-            const studentID = editingStudent ? editingStudent.studentID : `2026-${childLast[0].toUpperCase()}${childFirst[0].toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+            // Document ID uses currentSY to avoid mixing years
+            const studentID = editingStudent ? editingStudent.studentID : `${currentSY}-${childLast[0].toUpperCase()}${childFirst[0].toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
             const [birthUrl, cardUrl, picUrl, gcashUrl] = await Promise.all([
                 uploadToCloudinary(files.birthCert), uploadToCloudinary(files.reportCard),
                 uploadToCloudinary(files.idPicture), uploadToCloudinary(paymentProof)
             ]);
 
-            // --- SAVE STUDENT (RETAINED ALL FIELDS) ---
+            // SAVE STUDENT
             await setDoc(doc(db, "students", studentID), {
                 studentID, parentUID: auth.currentUser.uid,
                 firstname: childFirst, middlename: childMiddle, lastname: childLast, suffix,
@@ -167,12 +175,12 @@ const Enrollment = () => {
                 isEnrolled: false, status: "Pending",
                 requirements: { birthCert: birthUrl, reportCard: cardUrl, idPicture: picUrl },
                 address: userData.address, father: userData.spouse, mother: userData.parent,
-                schoolYear: getSchoolYear(), createdAt: serverTimestamp()
+                schoolYear: currentSY, createdAt: serverTimestamp()
             });
 
-            // --- SAVE ENROLLMENT WITH MONTHLY CALENDAR DATA ---
-            await setDoc(doc(db, "enrollments", `ENR-${studentID}`), {
-                studentID, parentUID: auth.currentUser.uid, schoolYear: getSchoolYear(),
+            // SAVE ENROLLMENT WITH DYNAMIC SY ID
+            await setDoc(doc(db, "enrollments", `ENR-${currentSY}-${studentID}`), {
+                studentID, parentUID: auth.currentUser.uid, schoolYear: currentSY,
                 fees: tuitionFees[level],
                 monthlyTracking: tuitionFees[level].months.reduce((acc, month) => {
                     acc[month] = { status: "Unpaid", amount: tuitionFees[level].monthlyRate };
@@ -181,7 +189,7 @@ const Enrollment = () => {
                 payment: { method: paymentMethod, proofImage: gcashUrl, status: "Pending", dateEnrolled: serverTimestamp() }
             });
 
-            sileo.success({ title: "Enrollment Successful", description: "Pending Admin Approval" });
+            sileo.success({ title: "Enrollment Successful", description: `Pending Admin Approval for S.Y. ${currentSY}` });
             fetchMyStudents(auth.currentUser.uid);
             setEditingStudent(null);
             setPage("archive");
@@ -232,9 +240,8 @@ const Enrollment = () => {
 
                 {setpage === "personal" && (
                     <div className='flex flex-col gap-2'>
-                        {/* --- CHILD INFORMATION (RETAINED ALL YOUR ORIGINAL INPUTS) --- */}
                         <div className="bg-white p-6 border-t-8 border-[#2D5B60] rounded shadow ">
-                            <h2 className="text-xl font-semibold mb-4 text-[#2D5B60]">Enrollment Form (S.Y. {getSchoolYear()})</h2>
+                            <h2 className="text-xl font-semibold mb-4 text-[#2D5B60]">Enrollment Form (S.Y. {currentSY || "..."})</h2>
                             <h2 className='flex items-center text-lg gap-2 font-semibold'><img className='w-5' src={user} alt="" />Child Information</h2>
                             <div className='flex gap-5 mt-2'>
                                 <div className='flex flex-col gap-1'>
@@ -293,13 +300,12 @@ const Enrollment = () => {
                                     <label>Grade</label>
                                     <select className="border rounded-lg px-3 py-1" value={grade} onChange={(e) => setGrade(e.target.value)} disabled={!level}>
                                         <option value="">Select</option>
-                                        {level === "Preschool" ? <><option value="Nursery">Nursery</option><option value="Kinder">Kinder</option></> : <><option value="1">Grade 1</option><option value="2">Grade 2</option></>}
+                                        {level === "Preschool" ? <><option value="Nursery">Nursery</option><option value="Kinder">Kinder</option></> : <><option value="1">Grade 1</option><option value="2">Grade 2</option><option value="3">Grade 3</option><option value="4">Grade 4</option><option value="5">Grade 5</option><option value="6">Grade 6</option></>}
                                     </select>
                                 </div>
                             </div>
                         </div>
 
-                        {/* --- REQUIREMENTS SECTION (RETAINED) --- */}
                         <div className="bg-white p-6 border-t-8 border-[#2D5B60] rounded shadow mt-2">
                             <h2 className='text-lg font-bold mb-4 uppercase'>Requirements Upload</h2>
                             <div className='grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-bold'>
@@ -309,7 +315,6 @@ const Enrollment = () => {
                             </div>
                         </div>
 
-                        {/* --- TUITION & CALENDAR (DITO KO PINAGSAMANG ORIGINAL AT REAL-WORLD) --- */}
                         <div className="bg-white p-6 border-t-8 border-[#2D5B60] rounded shadow mt-2">
                             <h2 className='text-lg font-bold mb-4 uppercase'>Tuition & Payment Calendar</h2>
                             {level && (
@@ -324,7 +329,6 @@ const Enrollment = () => {
                                         </div>
                                     </div>
                                     
-                                    {/* --- REAL WORLD CALENDAR GRID --- */}
                                     <div className='grid grid-cols-5 gap-3'>
                                         {tuitionFees[level].months.map(m => (
                                             <div key={m} className='border p-2 rounded-lg text-center bg-neutral-50 shadow-sm'>
@@ -338,7 +342,6 @@ const Enrollment = () => {
                             )}
                         </div>
 
-                        {/* --- FATHER INFO (RETAINED) --- */}
                         <div className="bg-white p-6 border-t-8 border-[#2D5B60] rounded shadow mt-2">
                             <h2 className='flex items-center text-lg gap-2 font-semibold'><img className='w-5' src={user} alt="" /> Father Information</h2>
                             <div className='flex gap-5 mt-2'>
@@ -348,7 +351,6 @@ const Enrollment = () => {
                             </div>
                         </div>
 
-                        {/* --- MOTHER INFO (RETAINED) --- */}
                         <div className="bg-white p-6 border-t-8 border-[#2D5B60] rounded shadow mt-2">
                             <h2 className='flex items-center text-lg gap-2 font-semibold'><img className='w-5' src={user} alt="" /> Mother Information</h2>
                             <div className='flex gap-5 mt-2'>
@@ -358,7 +360,6 @@ const Enrollment = () => {
                             </div>
                         </div>
 
-                        {/* --- ADDRESS (RETAINED) --- */}
                         <div className="bg-white mt-2 p-6 border-t-8 border-[#2D5B60] rounded shadow w-full">
                             <h2 className='flex items-center text-lg gap-2 font-semibold'><img className='w-5' src={location} alt="" />Full Address</h2>
                             <div className='mt-2'><input className='rounded-lg border px-3 py-1 w-full' type="text" value={fullAddress} disabled /></div>

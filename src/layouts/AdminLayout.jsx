@@ -145,6 +145,14 @@ const AdminLayout = () => {
           >
             Students
           </NavLink>
+                    <NavLink
+            to="/admin/schoolyear"
+            className={({ isActive }) =>
+              `p-2 rounded ${isActive ? "bg-gray-200 text-black" : "hover:bg-gray-200"}`
+            }
+          >
+            SchoolYear
+          </NavLink>
     
         </nav>
       </aside>

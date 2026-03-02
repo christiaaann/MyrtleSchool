@@ -100,7 +100,7 @@ const Users = () => {
     } catch (err) { console.error("Delete error:", err); }
   };
 
-  if (loading) return <div className="p-10 text-center font-bold text-[#2D5B60] animate-pulse">Loading Members...</div>;
+  if (loading) return <div className="p-10 text-center font-bold text-[#2D5B60] animate-pulse">Loading Parents...</div>;
 
   return (
     <div className="flex h-[90vh] bg-[#F8F9FA] overflow-hidden rounded-2xl shadow-lg border">
@@ -108,7 +108,7 @@ const Users = () => {
       {/* LEFT SIDEBAR */}
       <div className="w-1/3 border-r bg-white flex flex-col">
         <div className="p-5 border-b bg-gray-50/50">
-          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[2px]">Member Directory</h2>
+          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[2px]">Parents</h2>
         </div>
         <div className="flex-1 overflow-y-auto">
           {users.map((user) => {
@@ -140,7 +140,7 @@ const Users = () => {
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-2xl font-black text-gray-800">Profile Information</h1>
-            <button className="bg-white border text-[10px] font-bold px-4 py-2 rounded-lg shadow-sm hover:bg-gray-50 uppercase tracking-wider">Export Data</button>
+           
           </div>
 
           {selectedUser ? (

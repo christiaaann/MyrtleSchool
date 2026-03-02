@@ -6,6 +6,7 @@ import Users from "../pages/admin/Users";
 import Students from "../pages/admin/Students";
 import Profile from "../pages/admin/Profile";
 import Settings from "../pages/admin/Settings";
+import SchoolYear from "../pages/admin/SchoolYear";
 
 const AdminRoutes = () => {
   return (
@@ -17,6 +18,7 @@ const AdminRoutes = () => {
         <Route path="students" element={<Students/>}/>
         <Route path="profile" element={<Profile/>}/>
         <Route path="settings" element={<Settings />} />
+        <Route path="schoolyear" element={<SchoolYear />} />
         <Route path="*" element={<Navigate to="/admin" />} />
       </Route>
     </Routes>

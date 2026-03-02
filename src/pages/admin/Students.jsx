@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { collection, onSnapshot, doc, updateDoc, query, orderBy, deleteDoc, getDoc } from 'firebase/firestore';
+// Nagdagdag ng getDocs at where para sa history search
+import { collection, onSnapshot, doc, updateDoc, query, orderBy, deleteDoc, getDoc, setDoc, getDocs, where } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 
 const Students = () => {
@@ -9,7 +10,18 @@ const Students = () => {
   const [showModal, setShowModal] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
-  // --- 1. REAL-TIME DATA FETCHING (Students List) ---
+  const [currentSY, setCurrentSY] = useState("2025-2026");
+
+  useEffect(() => {
+    const settingsRef = doc(db, "settings", "schoolYear");
+    const unsubSY = onSnapshot(settingsRef, (snap) => {
+      if (snap.exists()) {
+        setCurrentSY(snap.data().active || "2025-2026");
+      }
+    });
+    return () => unsubSY();
+  }, []);
+
   useEffect(() => {
     const q = query(collection(db, "students"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -19,11 +31,9 @@ const Students = () => {
     return () => unsubscribe();
   }, []);
 
-  // --- 2. FUNCTION PARA I-MARK AS PAID, UNPAID, O OPEN ---
   const handleMarkAsPaid = async (month, currentStatus, currentAmount, receiptImage) => {
     if (!selectedStudent) return;
     
-    // --- DAGDAG: CHECK KUNG MAY RESIBO GALING SA ARCHIVE ---
     if (receiptImage && currentStatus === "Pending Approval") {
       const viewReceipt = window.confirm(`Parent submitted a receipt for ${month}.\n\nClick OK to VIEW the receipt image.`);
       if (viewReceipt) {
@@ -36,7 +46,6 @@ const Students = () => {
       }
     }
 
-    // --- ORIGINAL PROMPT MO (HINDI PINALITAN) ---
     const action = window.prompt(
       `Set status for ${month}:\nType 'P' for PAID\nType 'U' for UNPAID\nType 'O' for OPEN (to let parents pay)\nType 'A' for PENDING`, 
       currentStatus === "Paid" ? "P" : (currentStatus === "Open" ? "O" : "U")
@@ -67,7 +76,10 @@ const Students = () => {
 
   const updateFirestoreData = async (month, status, amount) => {
     try {
-      const enrRef = doc(db, "enrollments", `ENR-${selectedStudent.studentID}`);
+      // Gumagamit ng schoolYear na naka-attach sa paymentInfo para sigurado kung anong taon ang ini-update
+      const targetSY = selectedStudent.paymentInfo?.schoolYear || currentSY;
+      const enrRef = doc(db, "enrollments", `ENR-${targetSY}-${selectedStudent.studentID}`);
+      
       await updateDoc(enrRef, {
         [`monthlyTracking.${month}.status`]: status,
         [`monthlyTracking.${month}.amount`]: amount
@@ -94,13 +106,32 @@ const Students = () => {
   };
 
   const handleApprove = async (id, studentID) => {
-    if(window.confirm("Approve this enrollment and payment?")) {
+    if(window.confirm(`Approve enrollment for SY ${currentSY}?`)) {
         try {
             await updateDoc(doc(db, "students", id), { isEnrolled: true, status: "Enrolled" });
-            const enrRef = doc(db, "enrollments", `ENR-${studentID}`);
+            const enrRef = doc(db, "enrollments", `ENR-${currentSY}-${studentID}`);
             const enrSnap = await getDoc(enrRef);
+            
             if(enrSnap.exists()) {
                 await updateDoc(enrRef, { "payment.status": "Approved" });
+            } else {
+                await setDoc(enrRef, {
+                  studentID: studentID,
+                  schoolYear: currentSY,
+                  payment: { status: "Approved", method: "Admin-Set" },
+                  monthlyTracking: {
+                    "JUN": { status: "Open", amount: 1100 },
+                    "JUL": { status: "Locked", amount: 1100 },
+                    "AUG": { status: "Locked", amount: 1100 },
+                    "SEP": { status: "Locked", amount: 1100 },
+                    "OCT": { status: "Locked", amount: 1100 },
+                    "NOV": { status: "Locked", amount: 1100 },
+                    "DEC": { status: "Locked", amount: 1100 },
+                    "JAN": { status: "Locked", amount: 1100 },
+                    "FEB": { status: "Locked", amount: 1100 },
+                    "MAR": { status: "Locked", amount: 1100 }
+                  }
+                });
             }
             alert("Student Enrolled Successfully!");
         } catch (error) { 
@@ -114,7 +145,7 @@ const Students = () => {
     if(window.confirm("Reject this enrollment?")) {
         try {
             await updateDoc(doc(db, "students", id), { isEnrolled: false, status: "Rejected" });
-            const enrRef = doc(db, "enrollments", `ENR-${studentID}`);
+            const enrRef = doc(db, "enrollments", `ENR-${currentSY}-${studentID}`);
             const enrSnap = await getDoc(enrRef);
             if(enrSnap.exists()) {
                 await updateDoc(enrRef, { "payment.status": "Rejected" });
@@ -135,19 +166,26 @@ const Students = () => {
     }
   };
 
+  // BINAGO: Ito ang kukuha ng lahat ng lumang records
   const handleViewDetails = async (student) => {
     setLoadingDetails(true);
     setSelectedStudent(student);
     setShowModal(true);
     try {
-      const enrRef = doc(db, "enrollments", `ENR-${student.studentID}`);
+      // 1. Kunin ang Current SY Enrollment
+      const enrRef = doc(db, "enrollments", `ENR-${currentSY}-${student.studentID}`);
       const enrSnap = await getDoc(enrRef);
-      if (enrSnap.exists()) {
-        setSelectedStudent(prev => ({
-          ...prev,
-          paymentInfo: enrSnap.data()
-        }));
-      }
+      
+      // 2. Kunin ang Lahat ng Records (History) ng bata gamit ang studentID
+      const historyQ = query(collection(db, "enrollments"), where("studentID", "==", student.studentID));
+      const historySnap = await getDocs(historyQ);
+      const historyList = historySnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      setSelectedStudent(prev => ({
+        ...prev,
+        paymentInfo: enrSnap.exists() ? enrSnap.data() : null,
+        enrollmentHistory: historyList // Dito nakatago ang mga lumang resibo
+      }));
     } catch (error) {
       console.error("Error fetching enrollment details:", error);
     } finally {
@@ -167,7 +205,9 @@ const Students = () => {
       <div className='flex flex-col md:flex-row justify-between items-center mb-6 gap-4'>
         <div>
           <h2 className="text-2xl font-bold text-[#2D5B60]">Student Management</h2>
-          <p className='text-sm text-gray-500 uppercase tracking-widest'>S.Y. 2025-2026 List</p>
+          <p className='text-sm text-gray-500 uppercase tracking-widest font-bold'>
+            CURRENT VIEW: <span className="text-red-600">{currentSY}</span>
+          </p>
         </div>
         <div className='relative w-full md:w-80'>
           <input 
@@ -215,7 +255,7 @@ const Students = () => {
                 </td>
                 <td className='px-4 py-4 text-center'>
                   <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${
-                    st.paymentInfo?.payment?.status === "Approved" || st.status === "Enrolled" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
+                    st.status === "Enrolled" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
                   }`}>
                     {st.status === "Enrolled" ? "PAID" : "PENDING"}
                   </span>
@@ -250,15 +290,13 @@ const Students = () => {
         <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 backdrop-blur-sm">
           <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative">
             <div className='bg-[#2D5B60] p-4 text-white flex justify-between items-center sticky top-0 z-10'>
-              <h2 className="text-lg font-bold uppercase tracking-wider">Student Profile Detail</h2>
+              <h2 className="text-lg font-bold uppercase tracking-wider">Student Profile Detail ({selectedStudent.paymentInfo?.schoolYear || currentSY})</h2>
               <button onClick={() => setShowModal(false)} className="text-2xl font-bold">&times;</button>
             </div>
             
             <div className="p-8">
               {loadingDetails ? <p className='text-center animate-pulse py-10'>Fetching records...</p> : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                  
-                  {/* 1. Child Information */}
                   <section className='bg-gray-50 p-4 rounded-lg border'>
                     <h3 className="text-[#2D5B60] font-black uppercase text-xs mb-3 border-b pb-2">1. Child Information</h3>
                     <div className='space-y-1 uppercase'>
@@ -269,7 +307,6 @@ const Students = () => {
                     </div>
                   </section>
 
-                  {/* 2. Initial Payment Proof */}
                   <section className='bg-yellow-50 p-4 rounded-lg border border-yellow-200'>
                     <h3 className="text-yellow-700 font-black uppercase text-xs mb-3 border-b border-yellow-200 pb-2">2. Initial Payment Proof</h3>
                     <div className='space-y-2'>
@@ -284,9 +321,24 @@ const Students = () => {
                     </div>
                   </section>
 
-                  {/* 3. Monthly Tuition Tracker */}
+                  {/* --- HISTORY SELECTOR (NEW) --- */}
+                  <section className='bg-blue-50 p-3 rounded-lg border border-blue-200 col-span-1 md:col-span-2'>
+                    <h3 className="text-blue-800 font-black uppercase text-[10px] mb-2">View Records From Other Years:</h3>
+                    <div className='flex flex-wrap gap-2'>
+                        {selectedStudent.enrollmentHistory?.map(history => (
+                            <button 
+                                key={history.id}
+                                onClick={() => setSelectedStudent(prev => ({ ...prev, paymentInfo: history }))}
+                                className={`px-3 py-1 rounded-full text-[10px] font-bold border ${selectedStudent.paymentInfo?.schoolYear === history.schoolYear ? 'bg-blue-600 text-white' : 'bg-white text-blue-600'}`}
+                            >
+                                SY {history.schoolYear}
+                            </button>
+                        ))}
+                    </div>
+                  </section>
+
                   <section className='bg-white p-4 rounded-lg border col-span-1 md:col-span-2 shadow-sm'>
-                    <h3 className="text-[#2D5B60] font-black uppercase text-xs mb-4 border-b pb-2">3. Monthly Tuition Tracker</h3>
+                    <h3 className="text-[#2D5B60] font-black uppercase text-xs mb-4 border-b pb-2">3. Monthly Tuition Tracker ({selectedStudent.paymentInfo?.schoolYear})</h3>
                     <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3'>
                       {selectedStudent.paymentInfo?.monthlyTracking ? (
                         Object.keys(selectedStudent.paymentInfo.monthlyTracking).map((month) => {
@@ -325,7 +377,6 @@ const Students = () => {
                     </div>
                   </section>
 
-                  {/* 4 & 5. Parents Info */}
                   <section className='bg-blue-50/40 p-4 rounded-lg border border-blue-100'>
                     <h3 className="text-blue-700 font-black uppercase text-xs mb-3 border-b border-blue-200 pb-2">4. Father Information</h3>
                     <p className='uppercase'><span className='text-gray-500'>Name:</span> <span className='font-bold'>{selectedStudent.father?.firstname} {selectedStudent.father?.lastname}</span></p>
@@ -335,7 +386,6 @@ const Students = () => {
                     <p className='uppercase'><span className='text-gray-500'>Name:</span> <span className='font-bold'>{selectedStudent.mother?.firstname} {selectedStudent.mother?.lastname}</span></p>
                   </section>
 
-                  {/* 6. Address */}
                   <section className='bg-gray-50 p-4 rounded-lg border col-span-1 md:col-span-2'>
                     <h3 className="text-[#2D5B60] font-black uppercase text-xs mb-3 border-b pb-2">6. Address</h3>
                     <p className='italic uppercase text-gray-700 font-medium'>{selectedStudent.address?.purok}, {selectedStudent.address?.barangay}, {selectedStudent.address?.city}, {selectedStudent.address?.province}</p>
