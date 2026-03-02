@@ -68,6 +68,15 @@ const EnrollmentArchive = ({
     return () => unsubscribes.forEach(u => u());
   }, [students.length, currentSY]); 
 
+    // ===== FORMAT STUDENT ID FOR MYRTLE CHRISTIAN SCHOOL =====
+  const formatSchoolID = (stud) => {
+    if (!stud?.studentID) return "";
+    const raw = String(stud.studentID).replace(/\D/g, "");
+    const last4 = raw.slice(-4).padStart(4, "0");
+    const year = stud.schoolYear ? stud.schoolYear.split("-")[1] : new Date().getFullYear();
+    return `MCS-${year}-${last4}`;
+  };
+
   // --- LOGIC: GROUP BY STUDENT ---
   const groupedStudents = (students || []).reduce((acc, current) => {
     const fullName = `${current.firstname}-${current.lastname}`.toLowerCase();
@@ -217,7 +226,7 @@ const EnrollmentArchive = ({
                     <img className="w-16 h-16 object-cover rounded-full border-2 border-white shadow-md" src={stud.requirements?.idPicture || "/default-avatar.png"} alt="Student" />
                     <div>
                       <h3 className="font-black text-lg uppercase text-gray-800 leading-tight">{stud.firstname} {stud.middlename} {stud.lastname}</h3>  
-                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-tighter">ID: {stud.studentID} • {stud.level} - Grade {stud.grade}</p>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-tighter"> ID: {formatSchoolID(stud)} • {stud.level} - Grade {stud.grade}</p>
                       
                       <div className="flex gap-3 mt-1">
                         <button 
