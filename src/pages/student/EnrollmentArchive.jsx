@@ -24,7 +24,7 @@ const EnrollmentArchive = ({
   const [students, setStudents] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
   const [currentSY, setCurrentSY] = useState(""); 
-  const [showHistory, setShowHistory] = useState({}); // Para sa toggle ng history
+  const [showHistory, setShowHistory] = useState({}); 
 
   const [showPayModal, setShowPayModal] = useState(false);
   const [selectedPay, setSelectedPay] = useState(null);
