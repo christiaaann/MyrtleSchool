@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { auth } from "../../services/firebase";
+import { sileo} from "sileo";
 import {
   updatePassword,
   EmailAuthProvider,
@@ -16,40 +17,60 @@ const Settings = () => {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSave = async () => {
-    try {
-      if (!form.currentPassword)
-        return alert("Current password required.");
-
-      if (!form.password)
-        return alert("Enter new password.");
-
-      if (form.password.length < 6)
-        return alert("Password must be at least 6 characters.");
-
-      if (form.password !== form.confirmPassword)
-        return alert("Passwords do not match.");
-
-      const credential = EmailAuthProvider.credential(
-        auth.currentUser.email,
-        form.currentPassword
-      );
-
-      await reauthenticateWithCredential(auth.currentUser, credential);
-
-      await updatePassword(auth.currentUser, form.password);
-
-      alert("Password updated successfully!");
-
-      setForm({
-        password: "",
-        confirmPassword: "",
-        currentPassword: "",
-      });
-    } catch (err) {
-      alert(err.message);
+ const handleSave = async () => {
+  // 🔎 Validation
+  if (!form.currentPassword) {
+    sileo.error({ title: "Current password required.", 
+      fill:"black",
     }
+    );
+    return;
+  }
+
+  if (!form.password) {
+    sileo.error({ title: "Enter new password.",
+       fill:"black"
+     });
+    return;
+  }
+
+  if (form.password.length < 6) {
+    sileo.error({ title: "Password must be at least 6 characters.",
+       fill:"black"
+     });
+    return;
+  }
+
+  if (form.password !== form.confirmPassword) {
+    sileo.error({ title: "Passwords do not match.",
+       fill:"black"
+     });
+    return;
+  }
+
+  const updateUserPassword = async () => {
+    const credential = EmailAuthProvider.credential(
+      auth.currentUser.email,
+      form.currentPassword
+    );
+
+    await reauthenticateWithCredential(auth.currentUser, credential);
+    await updatePassword(auth.currentUser, form.password);
   };
+
+  await sileo.promise(updateUserPassword(), {
+    loading: { title: "Updating Password..." },
+    success: { title: "Password Updated Successfully!" },
+    error: { title: "Update Failed" }
+  });
+
+  // clear form after success
+  setForm({
+    password: "",
+    confirmPassword: "",
+    currentPassword: "",
+  });
+};
 
   return (
     <div className="bg-white p-6 flex flex-col justify-center items-center rounded-xl shadow h-full">

@@ -186,13 +186,14 @@ const EnrollmentArchive = ({
   if (setpage !== "archive") return null;
 
   return (
-    <div className="bg-white p-6 border-t-8 border-[#2D5B60] rounded shadow max-w-5xl mx-auto relative">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-[#2D5B60]">ENROLLMENT ARCHIVE</h2>
-          <p className="text-[10px] font-bold text-gray-400">CURRENT SY: {currentSY || "Loading..."}</p>
-        </div>
-        <button onClick={handleAddNewChild} className="bg-green-600 text-white px-5 py-2 rounded text-sm font-bold hover:bg-black transition-all">
+    <div>
+      <div className="flex flex-col gap-2">
+      <h2 className="text-2xl font-black">Records/Archive</h2>
+      <p className="text-[10px] font-bold text-gray-400">CURRENT SY: {currentSY || "Loading..."}</p>
+   </div>
+    <div className="bg-white mt-5 p-6 rounded-xl shadow max-w-5xl mx-auto relative">
+      <div className="flex justify-end mb-6">
+        <button onClick={handleAddNewChild} className=" bg-gray-200 text-black/50 px-5 py-2 rounded-xl text-[14px] font-bold hover:bg-green-100 transition-all">
           + Add New Child
         </button>
       </div>
@@ -373,7 +374,7 @@ const EnrollmentArchive = ({
           </div>
         </div>
       )}
-    </div>
+    </div></div>
   );
 };
 

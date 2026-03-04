@@ -14,7 +14,7 @@ const Landing = () => {
   return (
     <>
     <Navbar />
-     <div id='home' className=' min-h-screen flex items-center bg-no-repeat bg-center bg-cover' style={{backgroundImage: `url(${bg})`}}>
+     <div id='home' className=' min-h-screen flex items-center bg-no-repeat bg-center' style={{backgroundImage: `url(${bg})`}}>
       <div className='px-10'>
       <div className=' flex-col flex justify-center'>   
       <h1  className='text-yellow-100  leading-10 text-[6rem] font-baloo drop-shadow-lg font-bold'>Welcome to</h1>
@@ -26,8 +26,6 @@ const Landing = () => {
       </div> 
       {/* <img className='w-1/2' src={flyingkid} alt="" /> */}
       </div>
-      
-      {/* <div className="absolute -bottom-28 w-full h-40 bg-white blur-xl"></div>       */}
      </div>
           
 

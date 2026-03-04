@@ -13,7 +13,7 @@ const App = () => {
   return (
     <AuthProvider>
       <BrowserRouter>
-      <Toaster />
+        <Toaster closeButton position="top-center" richColors={false} />
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/Auth" element={<Auth />} />

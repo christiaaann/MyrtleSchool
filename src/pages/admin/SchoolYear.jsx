@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
+import { sileo} from 'sileo';
 import { doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
+
 
 const SchoolYear = () => {
   const [currentSY, setCurrentSY] = useState("");
   const [newSY, setNewSY] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // 1. MAKINIG SA KASALUKUYANG TAON (Mula sa settings/schoolYear)
+  
   useEffect(() => {
     const settingsRef = doc(db, "settings", "schoolYear");
     const unsub = onSnapshot(settingsRef, (snap) => {
@@ -22,7 +24,12 @@ const SchoolYear = () => {
   const handleUpdateSY = async () => {
     // Basic validation para siguradong may nilagay si admin
     if (!newSY || newSY.length < 9) {
-      return alert("Please enter a valid School Year (e.g., 2026-2027)");
+       sileo.info({ title:"Please enter a valid School Year",
+        fill:"black",
+        description:"Note: Ang pagpalit dito ay mag-a-archive (itago) ng lumang payment views para magbigay daan sa bagong enrollment period.",
+        styles: {description:"text-white/75"}
+       });
+       return;
     }
 
     const confirmChange = window.confirm(

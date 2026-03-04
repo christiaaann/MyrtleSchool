@@ -4,7 +4,7 @@ const Navbar = () => {
   return (
 
     <div className='flex justify-center'>
-    <nav className=' bg-white z-10 fixed mt-5 overflow-hidden rounded-full px-6 flex items-center justify-between gap-56 py-2 shadow-md'>
+    <nav className=' bg-white z-10 fixed mt-2 w-full overflow-hidden rounded-xl px-6 flex items-center justify-between gap-56 py-2 shadow-md'>
      <div className='flex text-nowrap items-center gap-3'>
       <img className='w-14 object-contain' src={logo} alt="" />
       <h1 className='text-xl text-neutral-700 font-baloo font-bold'>MYRTLE CHRISTIAN SHCOOL INC.</h1>
