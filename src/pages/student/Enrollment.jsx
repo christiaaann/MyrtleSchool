@@ -215,9 +215,9 @@ const Enrollment = () => {
                 </div>
             </header>
 
-            <div className="max-w-5xl mx-auto py-5 px-6">
+            <div className="max-w-7xl mx-auto py-5 px-6">
                 
-                {/* --- ETO YUNG DINAGDAG NATIN (TABS MENU) --- */}
+                {/* (TABS MENU) --- */}
                 <div className='fixed top-20 left-1/2 -translate-x-1/2 z-20'>
                 <div className='flex gap-2 backdrop-blur-sm mb-5 bg-gray-200/50 p-1.5 rounded-2xl w-fit'>
                     <button 
