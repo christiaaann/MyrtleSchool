@@ -22,7 +22,7 @@ const App = () => {
           <Route
             path="/completeprofile"
             element={
-              <ProtectedRoute requiredRole="user">
+              <ProtectedRoute requiredRole="parent">
                 <CompleteProfile />
               </ProtectedRoute>
             }
@@ -31,7 +31,7 @@ const App = () => {
           <Route
             path="/Enrollment"
             element={
-              <ProtectedRoute requiredRole="user">
+              <ProtectedRoute requiredRole="user" >
                 <Enrollment />
               </ProtectedRoute>
             }

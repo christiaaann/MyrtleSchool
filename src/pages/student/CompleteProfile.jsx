@@ -13,6 +13,7 @@ const CompleteProfile = () => {
   const [parentLast, setParentLast] = useState("");
   const [contact, setContact] = useState("");
   const [occupation, setOccupation] = useState("");
+  const [profilePicture, setProfilePicture] = useState("");
 
   // Spouse state
   const [spouseFirst, setSpouseFirst] = useState("");
@@ -40,6 +41,7 @@ const CompleteProfile = () => {
           const data = docSnap.data();
 
           // Parent
+          setProfilePicture(data.profilePicture || auth.currentUser?.photoURL || "");
           setParentFirst(data.parent?.firstname || "");
           setParentMiddle(data.parent?.middlename || "");
           setParentLast(data.parent?.lastname || "");
@@ -110,6 +112,11 @@ const CompleteProfile = () => {
         {/* Parent Info */}
         <div>
           <h3 className="font-bold mb-2">Parent Information</h3>
+          <img
+    src={profilePicture}
+    alt="Profile"
+    className="w-24 h-24 rounded-full border object-cover"
+  />
           <div className="grid grid-cols-3 gap-3">
             <input
               className="border p-3 rounded"
