@@ -8,7 +8,7 @@ import PreSchool from "./pages/public/PreSchool";
 import Enrollment from "./pages/student/Enrollment";
 import AdminRoutes from "./routes/AdminRoutes";
 import ProtectedRoute from "./routes/ProtectedRoute";
-
+import CompleteProfile from "./pages/student/CompleteProfile";
 const App = () => {
   return (
     <AuthProvider>
@@ -18,6 +18,16 @@ const App = () => {
           <Route path="/" element={<Landing />} />
           <Route path="/Auth" element={<Auth />} />
           <Route path="/preschool" element={<PreSchool />} />
+          
+          <Route
+            path="/completeprofile"
+            element={
+              <ProtectedRoute requiredRole="user">
+                <CompleteProfile />
+              </ProtectedRoute>
+            }
+          />
+          
           <Route
             path="/Enrollment"
             element={

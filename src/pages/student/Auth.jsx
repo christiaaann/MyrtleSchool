@@ -24,12 +24,29 @@ const Auth = () => {
     const userDocRef = doc(db, "users", user.uid);
     const docSnap = await getDoc(userDocRef);
 
+    // Function to check if profile is complete
+    const isProfileComplete = (userDoc) => {
+      const parent = userDoc.parent;
+      const spouse = userDoc.spouse;
+      const address = userDoc.address;
+      return (
+        parent?.firstname && parent?.lastname &&
+        spouse?.firstname && spouse?.lastname &&
+        address?.barangay && address?.city && address?.province
+      );
+    };
+
     if (docSnap.exists()) {
-      // Existing account → diretso sa Enrollment
-      console.log("Existing user:", docSnap.data());
-      navigate("/Enrollment");
+      const userData = docSnap.data();
+      if (isProfileComplete(userData)) {
+      
+        navigate("/Enrollment");
+      } else {
+        
+        navigate("/completeprofile");
+      }
     } else {
-      // Wala pang account → gumawa ng bagong user document
+     
       const fullName = user.displayName || "";
       const nameParts = fullName.split(" ");
       const firstName = nameParts[0] || "";
@@ -59,8 +76,8 @@ const Auth = () => {
         address: { barangay: "", city: "", province: "", purok: "", fullAddress: "" },
       });
 
-      console.log("New user created with parent name:", firstName, middleName, lastName);
-      navigate("/Enrollment"); // punta sa Enrollment
+   
+      navigate("/completeprofile");
     }
 
   } catch (error) {
