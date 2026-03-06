@@ -22,7 +22,7 @@ const App = () => {
           <Route
             path="/completeprofile"
             element={
-              <ProtectedRoute requiredRole="parent">
+              <ProtectedRoute requiredRole="user">
                 <CompleteProfile />
               </ProtectedRoute>
             }

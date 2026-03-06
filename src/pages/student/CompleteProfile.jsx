@@ -69,40 +69,55 @@ const CompleteProfile = () => {
     fetchUserData();
   }, [uid]);
 
-  const handleSave = async () => {
+  useEffect(() => {
+  const checkProfile = async () => {
     if (!uid) return;
 
     try {
-      await updateDoc(doc(db, "users", uid), {
-        parent: {
-          firstname: parentFirst,
-          middlename: parentMiddle,
-          lastname: parentLast,
-          contact,
-          occupation,
-        },
-        spouse: {
-          firstname: spouseFirst,
-          middlename: spouseMiddle,
-          lastname: spouseLast,
-          contact: spouseContact,
-          occupation: spouseOccupation,
-        },
-        address: {
-          purok,
-          barangay,
-          city,
-          province,
-        },
-      });
+      const docSnap = await getDoc(doc(db, "users", uid));
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const isComplete = data.parent?.firstname && data.parent?.lastname &&
+                           data.spouse?.firstname && data.spouse?.lastname &&
+                           data.address?.barangay && data.address?.city && data.address?.province;
 
-      alert("Profile Completed!");
-      navigate("/Enrollment");
-    } catch (error) {
-      console.log(error);
-      alert("Error saving profile");
+        // Kung kumpleto na, puwede na i-redirect sa Enrollment
+        if (isComplete) {
+          navigate("/Enrollment", { replace: true });
+        }
+      }
+    } catch (err) {
+      console.log(err);
     }
   };
+
+  checkProfile();
+}, [uid, navigate]);
+
+ const handleSave = async () => {
+  if (
+    !parentFirst.trim() || !parentLast.trim() ||
+    !spouseFirst.trim() || !spouseLast.trim() ||
+    !barangay.trim() || !city.trim() || !province.trim()
+  ) {
+    alert("Please complete all required fields before proceeding!");
+    return; // hindi magpapatuloy
+  }
+
+  try {
+    await updateDoc(doc(db, "users", uid), {
+      parent: { firstname: parentFirst, middlename: parentMiddle, lastname: parentLast, contact, occupation },
+      spouse: { firstname: spouseFirst, middlename: spouseMiddle, lastname: spouseLast, contact: spouseContact, occupation: spouseOccupation },
+      address: { purok, barangay, city, province },
+    });
+
+    alert("Profile Completed!");
+    navigate("/Enrollment", { replace: true });
+  } catch (error) {
+    console.log(error);
+    alert("Error saving profile");
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-10">

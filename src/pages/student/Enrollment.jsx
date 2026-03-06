@@ -6,6 +6,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { sileo } from 'sileo';
 import EnrollmentArchive from './EnrollmentArchive';
 
+import plus from '../../assets/icons/plus.png'
 import deaf from '../../assets/default.png'
 import logo from '../../assets/logo.png'
 import user from '../../assets/icons/user.png'
@@ -39,6 +40,29 @@ const Enrollment = () => {
     const [myStudents, setMyStudents] = useState([]);
     const [editingStudent, setEditingStudent] = useState(null);
     const [currentSY, setCurrentSY] = useState("");
+   
+    // if user not complete back to complete profile
+   useEffect(() => {
+   const checkProfile = async () => {
+    if (!auth.currentUser) return;
+
+    const docSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      if (
+        !data.parent?.firstname || !data.parent?.lastname ||
+        !data.spouse?.firstname || !data.spouse?.lastname ||
+        !data.address?.barangay || !data.address?.city || !data.address?.province
+      ) {
+        navigate("/completeprofile", { replace: true });
+      }
+    } else {
+      navigate("/completeprofile", { replace: true });
+    }
+  };
+
+  checkProfile();
+}, [navigate]);
 
     const tuitionFees = {
         "Preschool": { 
@@ -138,8 +162,6 @@ const Enrollment = () => {
         setPaymentMethod(""); 
         setPaymentProof(null); 
         setEditingStudent(null);
-        
-        // ETO ANG KULANG: Lipat sa Enrollment Form page
         setPage("personal"); 
     };
 
@@ -187,7 +209,7 @@ const Enrollment = () => {
     const fullAddress = `${userData.address.purok}, ${userData.address.barangay}, ${userData.address.city}, ${userData.address.province}`;
 
     return (
-        <div className='min-h-screen  bg-gradient-to-l from-gray-200 via-yellow-50 to-stone-100 font-sans text-[#2D3748]'>
+        <div className='min-h-screen bg-gradient-to-l from-gray-200 via-yellow-50 to-stone-100 font-sans text-[#2D3748]'>
             
             {/* Minimal Header */}
             <header className='bg-white z-20 px-8 py-4 flex items-center justify-between border-b border-gray-100 sticky top-0 shadow-sm'>
@@ -218,13 +240,16 @@ const Enrollment = () => {
             <div className="max-w-7xl mx-auto py-5 px-6">
                 
                 {/* (TABS MENU) --- */}
-                <div className='fixed top-20 left-1/2 -translate-x-1/2 z-20'>
+                <div className='fixed left-1/2 -translate-x-1/2 z-20'>
                 <div className='flex gap-2 backdrop-blur-sm mb-5 bg-gray-200/50 p-1.5 rounded-2xl w-fit'>
                     <button 
                         onClick={() => setPage("personal")} 
                         className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${setpage === 'personal' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}
                     >
                         Enrollment Form
+                    </button>
+                    <button onClick={handleAddNewChild} className=' bg-black rounded-full w-10 h-10 flex items-center justify-center'>
+                    <img className=' w-5' src={plus} alt="" />
                     </button>
                     <button 
                         onClick={() => setPage("archive")} 
