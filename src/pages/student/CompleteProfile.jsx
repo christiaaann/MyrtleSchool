@@ -5,7 +5,6 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 const CompleteProfile = () => {
   const navigate = useNavigate();
-  const uid = auth.currentUser?.uid;
 
   // Parent state
   const [parentFirst, setParentFirst] = useState("");
@@ -28,96 +27,93 @@ const CompleteProfile = () => {
   const [city, setCity] = useState("");
   const [province, setProvince] = useState("");
 
-  // Fetch existing data on mount
+  const [uid, setUid] = useState(null);
+
+  // Watch for Firebase Auth state
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (!uid) return;
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        setUid(user.uid); // Set UID when available
 
-      try {
-        const docRef = doc(db, "users", uid);
-        const docSnap = await getDoc(docRef);
+        try {
+          const docSnap = await getDoc(doc(db, "users", user.uid));
+          if (docSnap.exists()) {
+            const data = docSnap.data();
 
-        if (docSnap.exists()) {
-          const data = docSnap.data();
+            // Set profile picture from Firestore or Google account
+            setProfilePicture(data.parent?.profilePicture || user.photoURL || "/default-profile.png");
 
-          // Parent
-          setProfilePicture(data.profilePicture || auth.currentUser?.photoURL || "");
-          setParentFirst(data.parent?.firstname || "");
-          setParentMiddle(data.parent?.middlename || "");
-          setParentLast(data.parent?.lastname || "");
-          setContact(data.parent?.contact || "");
-          setOccupation(data.parent?.occupation || "");
+            // Set parent info
+            setParentFirst(data.parent?.firstname || "");
+            setParentMiddle(data.parent?.middlename || "");
+            setParentLast(data.parent?.lastname || "");
+            setContact(data.parent?.contact || "");
+            setOccupation(data.parent?.occupation || "");
 
-          // Spouse
-          setSpouseFirst(data.spouse?.firstname || "");
-          setSpouseMiddle(data.spouse?.middlename || "");
-          setSpouseLast(data.spouse?.lastname || "");
-          setSpouseContact(data.spouse?.contact || "");
-          setSpouseOccupation(data.spouse?.occupation || "");
+            // Set spouse info
+            setSpouseFirst(data.spouse?.firstname || "");
+            setSpouseMiddle(data.spouse?.middlename || "");
+            setSpouseLast(data.spouse?.lastname || "");
+            setSpouseContact(data.spouse?.contact || "");
+            setSpouseOccupation(data.spouse?.occupation || "");
 
-          // Address
-          setPurok(data.address?.purok || "");
-          setBarangay(data.address?.barangay || "");
-          setCity(data.address?.city || "");
-          setProvince(data.address?.province || "");
-        }
-      } catch (error) {
-        console.log("Error fetching user data:", error);
-      }
-    };
+            // Set address
+            setPurok(data.address?.purok || "");
+            setBarangay(data.address?.barangay || "");
+            setCity(data.address?.city || "");
+            setProvince(data.address?.province || "");
 
-    fetchUserData();
-  }, [uid]);
+            // Redirect if profile complete
+            const isComplete =
+              data.parent?.firstname &&
+              data.parent?.lastname &&
+              data.spouse?.firstname &&
+              data.spouse?.lastname &&
+              data.address?.barangay &&
+              data.address?.city &&
+              data.address?.province;
 
-  useEffect(() => {
-  const checkProfile = async () => {
-    if (!uid) return;
-
-    try {
-      const docSnap = await getDoc(doc(db, "users", uid));
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        const isComplete = data.parent?.firstname && data.parent?.lastname &&
-                           data.spouse?.firstname && data.spouse?.lastname &&
-                           data.address?.barangay && data.address?.city && data.address?.province;
-
-        // Kung kumpleto na, puwede na i-redirect sa Enrollment
-        if (isComplete) {
-          navigate("/Enrollment", { replace: true });
+            if (isComplete) {
+              navigate("/Enrollment", { replace: true });
+            }
+          }
+        } catch (err) {
+          console.log("Error fetching user data:", err);
         }
       }
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  checkProfile();
-}, [uid, navigate]);
-
- const handleSave = async () => {
-  if (
-    !parentFirst.trim() || !parentLast.trim() ||
-    !spouseFirst.trim() || !spouseLast.trim() ||
-    !barangay.trim() || !city.trim() || !province.trim()
-  ) {
-    alert("Please complete all required fields before proceeding!");
-    return; // hindi magpapatuloy
-  }
-
-  try {
-    await updateDoc(doc(db, "users", uid), {
-      parent: { firstname: parentFirst, middlename: parentMiddle, lastname: parentLast, contact, occupation },
-      spouse: { firstname: spouseFirst, middlename: spouseMiddle, lastname: spouseLast, contact: spouseContact, occupation: spouseOccupation },
-      address: { purok, barangay, city, province },
     });
 
-    alert("Profile Completed!");
-    navigate("/Enrollment", { replace: true });
-  } catch (error) {
-    console.log(error);
-    alert("Error saving profile");
-  }
-};
+    return () => unsubscribe();
+  }, [navigate]);
+
+  const handleSave = async () => {
+    if (
+      !parentFirst.trim() ||
+      !parentLast.trim() ||
+      !spouseFirst.trim() ||
+      !spouseLast.trim() ||
+      !barangay.trim() ||
+      !city.trim() ||
+      !province.trim()
+    ) {
+      alert("Please complete all required fields before proceeding!");
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, "users", uid), {
+        parent: { firstname: parentFirst, middlename: parentMiddle, lastname: parentLast, contact, occupation, profilePicture },
+        spouse: { firstname: spouseFirst, middlename: spouseMiddle, lastname: spouseLast, contact: spouseContact, occupation: spouseOccupation },
+        address: { purok, barangay, city, province },
+      });
+
+      alert("Profile Completed!");
+      navigate("/Enrollment", { replace: true });
+    } catch (error) {
+      console.log(error);
+      alert("Error saving profile");
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-10">
@@ -128,10 +124,10 @@ const CompleteProfile = () => {
         <div>
           <h3 className="font-bold mb-2">Parent Information</h3>
           <img
-    src={profilePicture}
-    alt="Profile"
-    className="w-24 h-24 rounded-full border object-cover"
-  />
+            src={profilePicture || "https://via.placeholder.com/96"}
+            alt="Profile"
+            className="w-24 h-24 rounded-full border object-cover"
+          />
           <div className="grid grid-cols-3 gap-3">
             <input
               className="border p-3 rounded"
