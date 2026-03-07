@@ -161,10 +161,10 @@ const SignUpForm = () => {
 
   return (
     <div>
-      <form onSubmit={handleSubmit} className="flex w-[30rem] flex-col gap-4 overflow-y-auto h-[30rem]">
+      <form onSubmit={handleSubmit} className="flex w-[30rem] flex-col gap-4 overflow-y-auto h-[40rem]">
         {/* Profile */}
-        <div className="flex flex-col items-center gap-2">
-          <img src={preview || deaf} className="w-20 h-20 rounded-full border-4 object-cover" />
+        <div className="flex items-center gap-2">
+          <img src={preview || deaf} className="w-16 h-16 rounded-full border-4 object-cover" />
           <input type="file" id="upload_profile" hidden accept="image/*" onChange={handleImage} />
           <label htmlFor="upload_profile" className="bg-[#2D5B60] text-white px-4 py-1 rounded cursor-pointer">
             Upload Profile

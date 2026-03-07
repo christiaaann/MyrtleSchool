@@ -145,13 +145,21 @@ const AdminLayout = () => {
           >
             Students
           </NavLink>
+                    <NavLink
+            to="/admin/schoolyear"
+            className={({ isActive }) =>
+              `p-2 rounded ${isActive ? "bg-gray-200 text-black" : "hover:bg-gray-200"}`
+            }
+          >
+            SchoolYear
+          </NavLink>
     
         </nav>
       </aside>
 
       {/* Main */}
       <div className="flex-1 flex flex-col">
-        <header className="h-14 bg-white flex items-center">
+        <header className="h-14 bg-white z-10 flex items-center">
           <button className="text-[12px] border px-2 rounded-sm" onClick={() => setOpen(!open)}>View</button>
 
           {open && (

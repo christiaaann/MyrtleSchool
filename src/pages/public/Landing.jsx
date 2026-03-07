@@ -7,27 +7,60 @@ import flyingkid from '../../assets/flyingkid.png'
 import { useNavigate } from 'react-router-dom'
 import model1 from '../../assets/model1.png'
 import mission from '../../assets/icons/mission.png'
+import { auth, db } from "../../services/firebase";
+import { doc, getDoc } from "firebase/firestore";
 const Landing = () => {
   
   const navigate = useNavigate();
+  const handleEnrollNow = async () => {
+  const user = auth.currentUser;
 
+  if (!user) {
+    navigate("/Auth");
+    return;
+  }
+
+  // Fetch user doc
+  const docRef = doc(db, "users", user.uid);
+  const docSnap = await getDoc(docRef);
+
+  if (!docSnap.exists()) {
+    navigate("/Auth"); 
+    return;
+  }
+
+  const data = docSnap.data();
+
+  const isProfileComplete =
+    data.parent?.firstname &&
+    data.parent?.lastname &&
+    data.spouse?.firstname &&
+    data.spouse?.lastname &&
+    data.address?.barangay &&
+    data.address?.city &&
+    data.address?.province;
+
+  if (!isProfileComplete) {
+    navigate("/completeprofile"); 
+  } else {
+    navigate("/Enrollment"); 
+  }
+};
   return (
     <>
     <Navbar />
-     <div id='home' className=' min-h-screen flex items-center bg-no-repeat bg-center bg-cover' style={{backgroundImage: `url(${bg})`}}>
+     <div id='home' className=' min-h-screen flex items-center bg-no-repeat bg-cover bg-center' style={{backgroundImage: `url(${bg})`}}>
       <div className='px-10'>
       <div className=' flex-col flex justify-center'>   
       <h1  className='text-yellow-100  leading-10 text-[6rem] font-baloo drop-shadow-lg font-bold'>Welcome to</h1>
       <h1  className=' text-green-200 flex drop-shadow-xl gap-5 font-baloo font-bold text-[6rem]'>Myrtle<span className='text-white drop-shadow-lg'>School</span></h1>
       <div className='flex gap-5'>
-      <button onClick={() => navigate("/Auth")} className='bg-[#F3EFE4] border-2 px-10 py-4 rounded-full font-bold shadow-md text-[#2D5B60]'>Enroll Now</button>
+      <button onClick={handleEnrollNow}  className='bg-[#F3EFE4] border-2 px-10 py-4 rounded-full font-bold shadow-md text-[#2D5B60]'>Enroll Now</button>
       <button className=' border-2 text-white px-10 rounded-full backdrop-blur-sm font-bold'>Learn More</button>
       </div>
       </div> 
       {/* <img className='w-1/2' src={flyingkid} alt="" /> */}
       </div>
-      
-      {/* <div className="absolute -bottom-28 w-full h-40 bg-white blur-xl"></div>       */}
      </div>
           
 

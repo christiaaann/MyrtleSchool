@@ -15,7 +15,7 @@ const SignInForm = () => {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // kapag may user redirect to enrollment
+  // user redirect to enrollment
   useEffect(() => {
     if (!authLoading && user) {
       const userRole = role?.toLowerCase();
@@ -104,7 +104,7 @@ const SignInForm = () => {
           placeholder="your@gmail.com"
           className="px-5 py-2 border-2 rounded-lg outline-none"
           required
-          disabled={authLoading} // 🔹 disable if checking auth
+          disabled={authLoading} 
         />
         <input
           type="password"
