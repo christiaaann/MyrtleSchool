@@ -35,7 +35,8 @@ const SignInForm = () => {
     setMessage("");
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const fullEmail = `${email}@gmail.com`; 
+      const userCredential = await signInWithEmailAndPassword(auth, fullEmail, password);
       const user = userCredential.user;
 
       const docRef = doc(db, "users", user.uid);
@@ -96,22 +97,27 @@ const SignInForm = () => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-80">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-96">
+        <div className=" flex px-5  w-full justify-between border-2 py-4 rounded-2xl overflow-hidden">
         <input
-          type="email"
+          className=" outline-none w-full"
+          type="text"
+          placeholder="Email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="your@gmail.com"
-          className="px-5 py-2 border-2 rounded-lg outline-none"
+           onChange={(e) =>
+              setEmail(e.target.value.replace("@", "").replace(/\s/g, ""))
+            }
           required
           disabled={authLoading} 
         />
+        <span className=" text-neutral-500">@gmail.com</span>
+        </div>
         <input
           type="password"
-          value={password}
+          value={password}z
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
-          className="px-5 py-2 border-2 rounded-lg outline-none"
+          className="px-5 py-4 border-2 rounded-2xl outline-none"
           required
           disabled={authLoading}
         />
@@ -119,7 +125,7 @@ const SignInForm = () => {
         <button
           type="submit"
           disabled={loading || authLoading}
-          className={`py-2 rounded-lg font-semibold text-white transition-colors ${
+          className={`py-3 rounded-full font-semibold text-white transition-colors ${
             loading || authLoading ? "bg-gray-400 cursor-not-allowed" : " bg-[#2D5B60]  hover:bg-green-950"
           }`}
         >
