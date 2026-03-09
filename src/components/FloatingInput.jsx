@@ -1,6 +1,14 @@
 import React from "react";
 
-const FloatingInput = ({ label, type = "text", value, onChange, id }) => {
+const FloatingInput = ({
+  label,
+  type = "text",
+  value,
+  onChange,
+  id,
+  disabled,
+  ...props
+}) => {
   return (
     <div className="relative w-full">
       <input
@@ -9,7 +17,9 @@ const FloatingInput = ({ label, type = "text", value, onChange, id }) => {
         placeholder=" "
         value={value}
         onChange={onChange}
-        className="peer block px-3 py-5 w-full text-lg bg-transparent rounded-xl border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#2D5B60]"
+        disabled={disabled}
+        className="peer block px-3 py-4 w-full text-lg bg-transparent rounded-xl border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#2D5B60]"
+        {...props}
       />
 
       <label

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../../services/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
@@ -14,6 +14,23 @@ const SignUpForm = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const [showEmailHelp, setShowEmailHelp] = useState(false);
+  
+  const helpRef = useRef(null);
+  useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (helpRef.current && !helpRef.current.contains(event.target)) {
+      setShowEmailHelp(false);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -65,9 +82,9 @@ const SignUpForm = () => {
       <form onSubmit={handleSubmit} className="flex w-full flex-col gap-4">
          <Link className="" to="/Auth">Back</Link>
         <h2 className="text-3xl text-neutral-700 leading-10">Create Account</h2>
-        <p className=" text-neutral-500 text-xl">Create an account to access your child’s school information, enrollment, and important announcements.</p>
-       
-       <div className=" flex gap-4">
+        <p className=" text-neutral-500 text-xl">Create an account to access your child’s school information, enrollment, and important updates.</p>
+        <h1 className="font-semibold">Name</h1>
+        <div className=" flex gap-4">
         <div className=" flex w-full">
         <FloatingInput
           id="firstname"
@@ -93,7 +110,26 @@ const SignUpForm = () => {
           onChange={(e) => setLastname(e.target.value)}
           required
         />
-</div>
+       </div>
+      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 relative" ref={helpRef}>
+      <h1 className="font-semibold">Email</h1>
+      <button
+      type="button"
+      onClick={() => setShowEmailHelp(!showEmailHelp)}
+      className="border-2 border-black w-6 h-6 font-semibold text-black text-[12px] rounded-full flex items-center justify-center"
+      >
+      ?
+      </button>
+
+      {showEmailHelp && (
+      <div className="absolute left-20 top-0 z-10 font-semibold bg-white border shadow-lg rounded-lg p-3 w-64 text-sm text-black">
+      Please enter a valid email address. This email will be used for
+      login.
+      </div>
+      )}
+      </div>
+        </div>   
         <FloatingInput
           id="email"
           label="Email"
@@ -102,7 +138,7 @@ const SignUpForm = () => {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-
+        <h1 className="font-semibold">Password</h1>
         <FloatingInput
           id="password"
           type="password"

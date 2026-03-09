@@ -123,7 +123,11 @@ const Users = () => {
                 }`}
               >
                 <div className="relative flex-shrink-0">
-                  <img src={user.profilePicture} className="w-12 h-12 rounded-full object-cover shadow-sm border border-gray-100" alt="" />
+                  <img src={user.profilePicture} className="w-12 h-12 rounded-full object-cover shadow-sm border border-gray-100"
+                   alt="User Profile"
+                   referrerPolicy="no-referrer" 
+                   crossOrigin="anonymous"
+                   />
                   <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${isOnline ? "bg-green-500" : "bg-red-500"}`}></span>
                 </div>
                 <div className="flex flex-col min-w-0">

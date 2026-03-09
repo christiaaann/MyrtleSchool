@@ -228,7 +228,12 @@ const Enrollment = () => {
                         <p className='text-xs font-bold'>{userData.parent?.firstname} {userData.parent?.lastname}</p>
                         <span className='text-[9px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold uppercase'>Active</span>
                     </div>
-                    <img onClick={() => setOpen(!open)} className="w-10 h-10 rounded-full border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform" src={userData.profilePicture || deaf} alt="" />
+                    <img onClick={() => setOpen(!open)} className="w-10 h-10 rounded-full border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform"
+                     src={userData.profilePicture || deaf} alt="User Profile"
+                     referrerPolicy="no-referrer" 
+                     crossOrigin="anonymous"
+                      />
+                   
                     {open && (
                         <div className="absolute top-16 right-8 bg-white shadow-2xl border rounded-xl p-2 w-40 animate-in fade-in zoom-in-95">
                             <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className="text-red-500 text-xs font-bold w-full text-left px-4 py-3 hover:bg-red-50 rounded-lg">Logout Account</button>
