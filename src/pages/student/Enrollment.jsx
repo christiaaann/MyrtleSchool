@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { doc, getDoc, updateDoc, serverTimestamp, setDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore'; 
+import { doc, getDoc,
+         updateDoc, 
+         serverTimestamp, 
+         setDoc, collection, 
+         query, where, 
+         getDocs,
+         onSnapshot
+         } from 'firebase/firestore'; 
 import { db, auth } from '../../services/firebase';
 import { onAuthStateChanged } from "firebase/auth";
 import { sileo } from 'sileo';
@@ -9,8 +16,6 @@ import EnrollmentArchive from './EnrollmentArchive';
 import plus from '../../assets/icons/plus.png'
 import deaf from '../../assets/default.png'
 import logo from '../../assets/logo.png'
-import user from '../../assets/icons/user.png'
-import archive from '../../assets/icons/archive.png'
 
 const Enrollment = () => {
     // --- ALL ORIGINAL STATES PRESERVED ---
