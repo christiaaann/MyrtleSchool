@@ -14,6 +14,10 @@ const SignInForm = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // ✅ NEW
+  const [attempts, setAttempts] = useState(0);
+  const [lockUntil, setLockUntil] = useState(null);
+
   // redirect kapag logged in na
   useEffect(() => {
     if (!authLoading && user) {
@@ -29,29 +33,56 @@ const SignInForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (lockUntil && Date.now() < lockUntil) {
+      const seconds = Math.ceil((lockUntil - Date.now()) / 1000);
+
+      sileo.error({
+        title: "Too many login attempts",
+        fill:"black",
+        description: `Please wait ${seconds} seconds before trying again.`,
+        styles:{description:"text-white"}
+      });
+
+      return;
+    }
+
     // ===== VALIDATION =====
     if (!email.trim()) {
-      sileo.error({ title: "Validation Error", description: "Email is required" });
+      sileo.error({ title: "Email is required",
+        fill: "black",
+      });
       return;
     }
 
     if (email.length < 3) {
-      sileo.error({ title: "Validation Error", description: "Email must be at least 3 characters" });
+      sileo.error({ title: "Validation Error",
+       fill:"black", 
+      description: "Email must be at least 3 characters",
+      styles:{ description:"text-white"},
+    });
       return;
     }
 
     if (!/^[a-zA-Z0-9._]+$/.test(email)) {
-      sileo.error({ title: "Validation Error", description: "Email contains invalid characters" });
+      sileo.error({ title: "Email containd invalid characters",
+        fill:"black"
+       });
       return;
     }
 
     if (!password.trim()) {
-      sileo.error({ title: "Validation Error", description: "Password is required" });
+      sileo.error({ title: "Password is Required",
+        fill:"black"
+       });
       return;
     }
 
     if (password.length < 6) {
-      sileo.error({ title: "Validation Error", description: "Password must be at least 6 characters" });
+      sileo.error({ title: "Validation Error",
+      fill:"black",
+      description: "Password must be at least 6 characters",
+      styles:{description:"text-white"}
+    });
       return;
     }
 
@@ -63,11 +94,22 @@ const SignInForm = () => {
       const userCredential = await sileo.promise(
         signInWithEmailAndPassword(auth, fullEmail, password),
         {
-          loading: { title: "Logging in...", description: "Please wait while we verify your account." },
-          success: { title: "Login Successful", description: "Redirecting to your dashboard..." },
-          error: { title: "Login Failed", description: "Check your email or password." }
+          loading: {
+            title: "Logging in...",
+            description: "Please wait while we verify your account.",
+            fill: "black"
+          },
+          success: { title: "Login Successful" },
+          error: { title: "Login Failed",
+          fill:"black",  
+          description: "Check your email or password.",
+          styles:{description:"text-white"}
+         },
         }
       );
+
+      // ✅ RESET ATTEMPTS kapag success
+      setAttempts(0);
 
       const firebaseUser = userCredential.user;
 
@@ -92,7 +134,10 @@ const SignInForm = () => {
       }
     } catch (error) {
       console.log(error);
-      // Friendly Firebase error handling
+
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+
       let description = "Something went wrong. Please try again.";
 
       if (error.code === "auth/user-not-found") description = "No account found with this email.";
@@ -100,7 +145,23 @@ const SignInForm = () => {
       if (error.code === "auth/invalid-email") description = "Invalid email format.";
       if (error.code === "auth/too-many-requests") description = "Too many attempts. Try again later.";
 
-      sileo.error({ title: "Login Failed", description });
+      // ✅ LOCK after 5 attempts
+      if (newAttempts >= 5) {
+        const timeout = Date.now() + 60000;
+        setLockUntil(timeout);
+
+        sileo.error({
+          title: "Too many login attempts",
+          fill:"black",
+          description: "Login locked for 30 seconds.",
+          styles:{description:"text-white"}
+        });
+      } else {
+        sileo.error({
+          title: "Login Failed",
+          description: `${description} Attempts left: ${5 - newAttempts}`,
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -156,6 +217,7 @@ const SignInForm = () => {
         >
           {loading ? "Logging in..." : "Login"}
         </button>
+
       </form>
     </div>
   );
