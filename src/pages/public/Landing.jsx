@@ -1,12 +1,8 @@
 import React from 'react'
 import Navbar from '../../components/Navbar'
 import bg from '../../assets/myrtlebg.png'
-import kid from '../../assets/kid.png'
-import girl from '../../assets/girl.png'
-import flyingkid from '../../assets/flyingkid.png'
 import { useNavigate } from 'react-router-dom'
 import model1 from '../../assets/model1.png'
-import mission from '../../assets/icons/mission.png'
 import { auth, db } from "../../services/firebase";
 import { doc, getDoc } from "firebase/firestore";
 const Landing = () => {

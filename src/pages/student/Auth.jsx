@@ -14,7 +14,6 @@ import { useNavigate } from "react-router-dom";
 
 // icons
 import logo from "../../assets/logo.png";
-import video from "../../assets/video.mp4";
 import DepED from "../../assets/DepEDLogo.png";
 import facebook from "../../assets/icons/facebook.png";
 import google from "../../assets/icons/google.png";
