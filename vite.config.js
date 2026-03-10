@@ -4,11 +4,12 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/', // ✅ Important: kung i-deploy sa root ng domain
+  base: '/', 
   build: {
-    outDir: 'dist', // ✅ Default sa Vite, pero siguraduhin
+    outDir: 'dist',
+    chunkSizeWarningLimit: 1000, 
   },
   server: {
-    port: 5173, // optional: para sa local dev
+    port: 5173, 
   },
 })
