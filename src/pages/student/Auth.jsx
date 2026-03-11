@@ -152,10 +152,10 @@ const Auth = () => {
 
   return (
     <>
-      <div className="min-h-screen flex bg-gradient-to-l from-gray-200 via-green-100 to-stone-100">
-        <div className="flex w-full">
+      <div className="min-h-screen overflow-hidden flex bg-gradient-to-l from-gray-200 via-green-100 to-stone-100">
+        <div className="flex  w-full">
           {/* Left */}
-          <div className="w-full relative overflow-hidden">
+          <div className="w-full hidden duration-300 tablet:block relative overflow-hidden">
             <div className="flex items-center justify-center h-full gap-4 w-full absolute left-5">
               <img className="w-32 bottom-3" src={logo} alt="" />
               <img className="w-32 bottom-3" src={DepED} alt="" />
@@ -163,7 +163,7 @@ const Auth = () => {
           </div>
 
           {/* Right */}
-          <div className="bg-white w-[70rem] flex flex-col justify-center items-center border-l-4">
+          <div className="bg-white tablet:w-[70rem] w-full p-3 flex flex-col justify-center items-center border-l-4">
             <button
               onClick={() => navigate("/")}
               className="absolute top-5 right-5"
@@ -205,8 +205,8 @@ const Auth = () => {
       </div>
 
       <footer className="w-full bg-white p-5 border-t-4">
-        <div className="flex justify-around">
-          <div className="text-neutral-500 text-sm">
+        <div className="flex flex-col gap-1 tablet:gap-10 tablet:flex-row justify-around">
+          <div className="text-neutral-500 w-full leading-6 text-sm">
             <h1 className="text-xl font-bold text-neutral-500">
               Myrtle Christian School
             </h1>
@@ -216,7 +216,7 @@ const Auth = () => {
             </p>
           </div>
 
-          <div className="text-neutral-500 text-sm">
+          <div className="text-neutral-500 w-full text-sm">
             <p>School Telephone: +639919107871</p>
             <p>Email:</p>
             <p>Contact Admin:</p>

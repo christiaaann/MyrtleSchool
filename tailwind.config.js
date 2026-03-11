@@ -7,6 +7,7 @@ export default {
   ],
   theme: {
     screens: {
+      mini: "300px",
       phone: "400px",     // small mobile
       phablet: "550px",   // medium mobile
       tablet: "768px",    // normal tablet

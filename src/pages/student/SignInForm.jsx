@@ -14,7 +14,7 @@ const SignInForm = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ NEW
+
   const [attempts, setAttempts] = useState(0);
   const [lockUntil, setLockUntil] = useState(null);
 
@@ -180,7 +180,7 @@ const SignInForm = () => {
 
   return (
     <div className="w-full flex flex-col items-center justify-center mt-20">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-96">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full phone:w-96">
 
         {/* EMAIL */}
         <div className="flex px-5 w-full justify-between border-2 py-4 rounded-2xl overflow-hidden">

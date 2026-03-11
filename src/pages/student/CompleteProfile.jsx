@@ -182,14 +182,15 @@ const CompleteProfile = () => {
 
   return (
     <div className="min-h-screen p-4 font-sans text-slate-900">
-      <div className="max-w-6xl mx-auto gap-8">
-        <div className="flex justify-around gap-5">
+      <div className="max-w-6xl flex mx-auto gap-8">
+        <div className=" w-full">
         <div className="lg:col-span-8  w-full p-8">
           <h2 className="text-2xl font-bold mb-8">Complete Profile</h2>
 
           {/* Profile Picture Section with Google Fix */}
-          <div className="flex items-center space-x-6 mb-10">
-            <div className="relative">
+          <div className="flex flex-col mb-10">
+            <div className="flex">
+            <div className="flex items-center w-full gap-5">
               <img 
                 src={profilePicture} 
                 key={profilePicture}
@@ -199,7 +200,7 @@ const CompleteProfile = () => {
                 alt="Profile"
                 onError={(e) => { e.target.src = profilePlaceholder; }} 
               />
-            </div>
+          
             <div>
               <input type="file" id="cloudinaryInput" className="hidden" accept="image/*" onChange={handleImageChange} />
               <button 
@@ -211,6 +212,29 @@ const CompleteProfile = () => {
                 {isUploading ? "Uploading..." : "Change Photo"}
               </button>
             </div>
+            
+              </div>
+             <div className="flex tablet:hidden items-center relative">
+              <svg className="w-16 h-16 transform -rotate-90">
+                <circle cx="32" cy="32" r="20" stroke="#f1f5f9" strokeWidth="8" fill="transparent" />
+                <circle cx="32" cy="32" r="20" stroke="#22c55e" strokeWidth="8" fill="transparent"
+                  strokeDasharray="251" strokeDashoffset={strokeDashoffset} strokeLinecap="round"
+                  className="transition-all duration-700 ease-out"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-sm font-black text-slate-600">{progress}%</span>
+              </div>
+            </div>
+            </div>
+
+            {/* Progress */}
+            <div className="flex flex-col gap-2 tablet:hidden">
+             <StatusCheck label="Profile Photo" done={profilePicture !== profilePlaceholder && !String(profilePicture).includes('default.png')} />
+             <StatusCheck label="Personal Info" done={!!(parentFirst && parentLast && contact && occupation)} />
+             <StatusCheck label="Spouse Info" done={!!(spouseFirst && spouseLast && spouseContact && spouseOccupation)} />
+             <StatusCheck label="Location" done={!!(barangay && city && province && purok)} />
+         </div>
           </div>
 
           <div className="space-y-8">
@@ -218,7 +242,7 @@ const CompleteProfile = () => {
             <section className="space-y-4">
               <h3 className="font-bold text-slate-700">Personal Info (Parent)</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex gap-2">
+                <div className="flex flex-col tablet:flex-row gap-4">
                 <FloatingInput 
                 id="parentFirst"
                 label="First name"
@@ -264,7 +288,7 @@ const CompleteProfile = () => {
             {/* Spouse Info (Binalik ko na) */}
             <section className="space-y-4">
               <h3 className="font-bold text-slate-700">Spouse Info</h3>
-              <div className="flex gap-2">
+              <div className="flex flex-col tablet:flex-row gap-4">
                 <FloatingInput
                 id="spouseFirst"
                 label="First name"
@@ -325,7 +349,9 @@ const CompleteProfile = () => {
         </div>
 
         {/* Sidebar Status */}
-        <div className=" w-[20rem]">
+      
+      </div>
+      <div className=" w-[20rem] hidden tablet:block">
           <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 sticky top-10 text-center">
             <h3 className="font-bold text-slate-800 mb-8">Completion Status</h3>
             <div className="flex justify-center items-center relative mb-10">
@@ -348,8 +374,8 @@ const CompleteProfile = () => {
             </div>
           </div>
         </div>
-      </div>
-      </div>
+      </div>  
+  
     </div>
   );
 };

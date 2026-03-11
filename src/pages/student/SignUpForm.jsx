@@ -79,12 +79,12 @@ const SignUpForm = () => {
 
   return (
     <div className=" max-w-2xl flex mx-auto p-6">
-      <form onSubmit={handleSubmit} className="flex w-full flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex w-full flex-col overflow-hidden gap-4">
          <Link className="" to="/Auth">Back</Link>
         <h2 className="text-3xl text-neutral-700 leading-10">Create Account</h2>
         <p className=" text-neutral-500 text-xl">Create an account to access your child’s school information, enrollment, and important updates.</p>
         <h1 className="font-semibold">Name</h1>
-        <div className=" flex gap-4">
+        <div className=" flex flex-col tablet:flex-row gap-4">
         <div className=" flex w-full">
         <FloatingInput
           id="firstname"
