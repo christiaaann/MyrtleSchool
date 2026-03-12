@@ -8,12 +8,12 @@ export default {
   theme: {
     screens: {
       mini: "300px",
-      phone: "400px",     // small mobile
-      phablet: "550px",   // medium mobile
-      tablet: "768px",    // normal tablet
-      laptop: "1024px",   // laptop
-      desktop: "1280px",  // large screens
-      widescreen: "1536px"// very large
+      phone: "400px",
+      phablet: "550px",
+      tablet: "768px",
+      laptop: "1024px",
+      desktop: "1280px",
+      widescreen: "1536px"
     },
     fontFamily: {
       baloo: ['"Baloo 2"', 'cursive'],
@@ -22,6 +22,16 @@ export default {
       colors: {
         primary: "#7c0a02",
         secondary: "#111827"
+      },
+      // ✅ Custom keyframes & slower/smaller bounce
+      keyframes: {
+        smoothBounce: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' }, // 🔹 translateY mas maliit
+        },
+      },
+      animation: {
+        smoothBounce: 'smoothBounce 3s ease-in-out infinite', // 🔹 mas mabagal
       },
     },
   },

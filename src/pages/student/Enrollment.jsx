@@ -12,7 +12,7 @@ import { db, auth } from '../../services/firebase';
 import { onAuthStateChanged } from "firebase/auth";
 import { sileo } from 'sileo';
 import EnrollmentArchive from './EnrollmentArchive';
-
+import { useLocation } from 'react-router-dom';
 import plus from '../../assets/icons/plus.png'
 import deaf from '../../assets/default.png'
 import logo from '../../assets/logo.png'
@@ -46,6 +46,19 @@ const Enrollment = () => {
     const [editingStudent, setEditingStudent] = useState(null);
     const [currentSY, setCurrentSY] = useState("");
    
+    const location = useLocation();
+
+    useEffect(() => {
+    if (location.state?.loginSuccess) {
+    sileo.success({
+      title: "Login Successful",
+      description: "Welcome back!",
+      fill: "black",
+      styles:{description:"text-white"}
+    });
+  }
+}, []);
+
     // if user not complete back to complete profile
    useEffect(() => {
    const checkProfile = async () => {

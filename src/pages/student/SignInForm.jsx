@@ -13,20 +13,15 @@ const SignInForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
-
   const [attempts, setAttempts] = useState(0);
   const [lockUntil, setLockUntil] = useState(null);
 
-  // redirect kapag logged in na
   useEffect(() => {
     if (!authLoading && user) {
       const userRole = role?.toLowerCase();
-      if (userRole === "admin") {
-        navigate("/admin", { replace: true });
-      } else if (userRole === "user" || userRole === "parent") {
-        navigate("/Enrollment", { replace: true });
-      }
+      if (userRole === "admin") navigate("/admin", { replace: true });
+      else if (userRole === "user" || userRole === "parent")
+        navigate("/Enrollment", { replace: true, state: { loginSuccess: true } });
     }
   }, [user, role, authLoading, navigate]);
 
@@ -35,126 +30,90 @@ const SignInForm = () => {
 
     if (lockUntil && Date.now() < lockUntil) {
       const seconds = Math.ceil((lockUntil - Date.now()) / 1000);
-
       sileo.error({
         title: "Too many login attempts",
-        fill:"black",
+        fill: "black",
         description: `Please wait ${seconds} seconds before trying again.`,
-        styles:{description:"text-white"}
+        styles: { description: "text-white" },
       });
-
       return;
     }
 
     // ===== VALIDATION =====
     if (!email.trim()) {
-      sileo.error({ title: "Email is required",
+      sileo.error({ title: "Email is required", fill: "black" });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      sileo.error({
+        title: "Invalid Email",
         fill: "black",
+        description: "Please enter a valid email address",
+        styles: { description: "text-white" },
       });
       return;
     }
-
-    if (email.length < 3) {
-      sileo.error({ title: "Validation Error",
-       fill:"black", 
-      description: "Email must be at least 3 characters",
-      styles:{ description:"text-white"},
-    });
-      return;
-    }
-
-    if (!/^[a-zA-Z0-9._]+$/.test(email)) {
-      sileo.error({ title: "Email containd invalid characters",
-        fill:"black"
-       });
-      return;
-    }
-
     if (!password.trim()) {
-      sileo.error({ title: "Password is Required",
-        fill:"black"
-       });
+      sileo.error({ title: "Password is required", fill: "black" });
       return;
     }
-
     if (password.length < 6) {
-      sileo.error({ title: "Validation Error",
-      fill:"black",
-      description: "Password must be at least 6 characters",
-      styles:{description:"text-white"}
-    });
+      sileo.error({
+        title: "Validation Error",
+        fill: "black",
+        description: "Password must be at least 6 characters",
+        styles: { description: "text-white" },
+      });
       return;
     }
 
     setLoading(true);
 
     try {
-      const fullEmail = `${email.toLowerCase()}@gmail.com`;
-
-      const userCredential = await sileo.promise(
-        signInWithEmailAndPassword(auth, fullEmail, password),
-        {
-          loading: {
-            title: "Logging in...",
-            description: "Please wait while we verify your account.",
-            fill: "black"
-          },
-          success: { title: "Login Successful" },
-          error: { title: "Login Failed",
-          fill:"black",  
-          description: "Check your email or password.",
-          styles:{description:"text-white"}
-         },
-        }
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email.toLowerCase(),
+        password
       );
 
-      // ✅ RESET ATTEMPTS kapag success
       setAttempts(0);
 
       const firebaseUser = userCredential.user;
-
       const docRef = doc(db, "users", firebaseUser.uid);
       const docSnap = await getDoc(docRef);
 
       await updateDoc(docRef, { lastActive: serverTimestamp() });
 
-      if (docSnap.exists()) {
-        const userData = docSnap.data();
-        const role = userData.role?.toLowerCase();
-
-        if (role === "admin") {
-          navigate("/admin", { replace: true });
-        } else if (role === "user" || role === "parent") {
-          navigate("/Enrollment", { replace: true });
-        } else {
-          sileo.error({ title: "Login Error", description: "User role undefined" });
-        }
-      } else {
+      if (!docSnap.exists()) {
         sileo.error({ title: "Login Error", description: "User data not found" });
+        return;
       }
+
+      const role = docSnap.data().role?.toLowerCase();
+      if (role === "admin") navigate("/admin", { replace: true });
+      else if (role === "user" || role === "parent")
+        navigate("/Enrollment", { replace: true, state: { loginSuccess: true } });
+      else sileo.error({ title: "Login Error", description: "User role undefined" });
+
     } catch (error) {
       console.log(error);
-
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
 
       let description = "Something went wrong. Please try again.";
-
       if (error.code === "auth/user-not-found") description = "No account found with this email.";
       if (error.code === "auth/wrong-password") description = "Incorrect password.";
       if (error.code === "auth/invalid-email") description = "Invalid email format.";
       if (error.code === "auth/too-many-requests") description = "Too many attempts. Try again later.";
 
-      // ✅ LOCK after 5 attempts
       if (newAttempts >= 5) {
         const timeout = Date.now() + 60000;
         setLockUntil(timeout);
-
         sileo.error({
           title: "Too many login attempts",
-          fill:"black",
+          fill: "black",
           description: "Login locked for 30 seconds.",
-          styles:{description:"text-white"}
+          styles: { description: "text-white" },
         });
       } else {
         sileo.error({
@@ -167,35 +126,29 @@ const SignInForm = () => {
     }
   };
 
-  // update last active every 10 seconds
   useEffect(() => {
     const interval = setInterval(async () => {
       if (auth.currentUser) {
         await updateDoc(doc(db, "users", auth.currentUser.uid), { lastActive: serverTimestamp() });
       }
     }, 10000);
-
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="w-full flex flex-col items-center justify-center mt-20">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full phone:w-96">
-
-        {/* EMAIL */}
-        <div className="flex px-5 w-full justify-between border-2 py-4 rounded-2xl overflow-hidden">
+        <div className="px-5 w-full border-2 py-4 rounded-2xl">
           <input
             className="outline-none w-full"
-            type="text"
+            type="email"
             placeholder="Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value.replace("@", "").replace(/\s/g, ""))}
+            onChange={(e) => setEmail(e.target.value)}
             disabled={authLoading}
           />
-          <span className="text-neutral-500">@gmail.com</span>
         </div>
 
-        {/* PASSWORD */}
         <input
           type="password"
           value={password}
@@ -205,7 +158,6 @@ const SignInForm = () => {
           disabled={authLoading}
         />
 
-        {/* LOGIN BUTTON */}
         <button
           type="submit"
           disabled={loading || authLoading}
@@ -217,7 +169,6 @@ const SignInForm = () => {
         >
           {loading ? "Logging in..." : "Login"}
         </button>
-
       </form>
     </div>
   );
