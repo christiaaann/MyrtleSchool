@@ -59,19 +59,26 @@ const Enrollment = () => {
   }
 }, []);
 
-    // if user not complete back to complete profile
-   useEffect(() => {
-   const checkProfile = async () => {
+
+// if user not complete back to complete profile
+useEffect(() => {
+  const checkProfile = async () => {
     if (!auth.currentUser) return;
 
     const docSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
     if (docSnap.exists()) {
       const data = docSnap.data();
-      if (
-        !data.parent?.firstname || !data.parent?.lastname ||
-        !data.spouse?.firstname || !data.spouse?.lastname ||
-        !data.address?.barangay || !data.address?.city || !data.address?.province
-      ) {
+
+      const isProfileComplete =
+        data.parent?.firstname &&
+        data.parent?.lastname &&
+        data.address?.barangay &&
+        data.address?.city &&
+        data.address?.province &&
+        // spouse is optional: check only if it exists
+        (!data.spouse || (data.spouse.firstname && data.spouse.lastname));
+
+      if (!isProfileComplete) {
         navigate("/completeprofile", { replace: true });
       }
     } else {
@@ -407,81 +414,80 @@ const Enrollment = () => {
                                     </div>
                                 </div>
 
-                                {/* LEDGER VIEW */}
- {/* LEDGER VIEW */}
-<div className='bg-gray-50 rounded-3xl p-6'>
-    <div className='flex justify-between items-center mb-6'>
-        <h4 className='text-[10px] font-black uppercase text-gray-400 tracking-widest'>Financial Summary</h4>
-        <span className='text-[10px] font-bold text-orange-500'>S.Y. {currentSY}</span>
-    </div>
-    
-    {/* Breakdown of Fees */}
-    <div className='grid grid-cols-2 gap-y-3 mb-6 border-b border-gray-200 pb-6'>
-        {[
-            { label: 'Registration', key: 'registration' },
-            { label: 'Miscellaneous', key: 'misc' },
-            { label: 'Books', key: 'books' },
-            { label: 'Instructional', key: 'instructional' },
-            { label: 'Uniform', key: 'uniform' },
-            { label: 'PTA Fee', key: 'pta' }
-        ].map((item) => (
-            <React.Fragment key={item.key}>
-                <span className='text-[11px] font-bold text-gray-500 uppercase'>{item.label}</span>
-                <span className='text-[11px] font-black text-gray-800 text-right'>
-                    ₱{level ? tuitionFees[level][item.key].toLocaleString() : '0'}
-                </span>
-            </React.Fragment>
-        ))}
-    </div>
-
-    <div className='space-y-3'>
-        <div className='flex justify-between items-center'>
-            <span className='text-xs font-bold text-gray-500'>Total Initial Fees</span>
-            <span className='text-xl font-black text-orange-600 italic'>
-                ₱{level ? (
-                    tuitionFees[level].registration + 
-                    tuitionFees[level].misc + 
-                    tuitionFees[level].books + 
-                    tuitionFees[level].instructional + 
-                    tuitionFees[level].uniform + 
-                    tuitionFees[level].pta
-                ).toLocaleString() : '0'}
-            </span>
-        </div>
-
-        {/* Monthly Breakdown */}
-        <div className='grid grid-cols-5 gap-2 mt-4'>
-            {(level ? tuitionFees[level].months : ["JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC", "JAN", "FEB", "MAR"]).map(m => (
-                <div key={m} className='bg-white rounded-xl p-2 border border-gray-100 text-center flex flex-col shadow-sm'>
-                    <span className='text-[8px] font-bold text-gray-300'>{m}</span>
-                    <span className='text-[9px] font-black text-gray-700'>
-                        ₱{level ? tuitionFees[level].monthlyRate.toLocaleString() : '---'}
-                    </span>
+                    {/* LEDGER VIEW */}
+                    <div className='bg-gray-50 rounded-3xl p-6'>
+                    <div className='flex justify-between items-center mb-6'>
+                    <h4 className='text-[10px] font-black uppercase text-gray-400 tracking-widest'>Financial Summary</h4>
+                    <span className='text-[10px] font-bold text-orange-500'>S.Y. {currentSY}</span>
+                    </div>
+                
+                {/* Breakdown of Fees */}
+                <div className='grid grid-cols-2 gap-y-3 mb-6 border-b border-gray-200 pb-6'>
+                    {[
+                        { label: 'Registration', key: 'registration' },
+                        { label: 'Miscellaneous', key: 'misc' },
+                        { label: 'Books', key: 'books' },
+                        { label: 'Instructional', key: 'instructional' },
+                        { label: 'Uniform', key: 'uniform' },
+                        { label: 'PTA Fee', key: 'pta' }
+                    ].map((item) => (
+                        <React.Fragment key={item.key}>
+                            <span className='text-[11px] font-bold text-gray-500 uppercase'>{item.label}</span>
+                            <span className='text-[11px] font-black text-gray-800 text-right'>
+                                ₱{level ? tuitionFees[level][item.key].toLocaleString() : '0'}
+                            </span>
+                        </React.Fragment>
+                    ))}
                 </div>
-            ))}
-        </div>
-    </div>
-    
-    {/* Payment Method Section (Original) */}
-    <div className='mt-8 pt-6 border-t border-gray-200'>
-        <div className='flex flex-col gap-4'>
-            <div className='flex flex-col gap-2'>
-                <label className='text-[10px] font-black text-gray-400 uppercase'>Payment Method</label>
-                <select className='w-full bg-white border border-gray-200 rounded-2xl px-5 py-3 text-sm font-bold focus:ring-2 ring-orange-100 outline-none cursor-pointer' value={paymentMethod} onChange={(e)=>setPaymentMethod(e.target.value)}>
-                    <option value="">Choose Method</option>
-                    <option value="Cash">Cash Payment</option>
-                    <option value="GCash">GCash Transfer</option>
-                </select>
-            </div>
-            {paymentMethod === "GCash" && (
-                <div className='animate-in slide-in-from-top-2'>
-                    <label className='text-[10px] font-black text-gray-400 uppercase'>Proof of Transaction</label>
-                    <input type="file" className='w-full mt-2 text-xs bg-white p-2 rounded-xl border border-dashed border-orange-300' onChange={(e)=>setPaymentProof(e.target.files[0])} />
+
+                <div className='space-y-3'>
+                    <div className='flex justify-between items-center'>
+                        <span className='text-xs font-bold text-gray-500'>Total Initial Fees</span>
+                        <span className='text-xl font-black text-orange-600 italic'>
+                            ₱{level ? (
+                                tuitionFees[level].registration + 
+                                tuitionFees[level].misc + 
+                                tuitionFees[level].books + 
+                                tuitionFees[level].instructional + 
+                                tuitionFees[level].uniform + 
+                                tuitionFees[level].pta
+                            ).toLocaleString() : '0'}
+                        </span>
+                    </div>
+
+                    {/* Monthly Breakdown */}
+                    <div className='grid grid-cols-5 gap-2 mt-4'>
+                        {(level ? tuitionFees[level].months : ["JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC", "JAN", "FEB", "MAR"]).map(m => (
+                            <div key={m} className='bg-white rounded-xl p-2 border border-gray-100 text-center flex flex-col shadow-sm'>
+                                <span className='text-[8px] font-bold text-gray-300'>{m}</span>
+                                <span className='text-[9px] font-black text-gray-700'>
+                                    ₱{level ? tuitionFees[level].monthlyRate.toLocaleString() : '---'}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-            )}
-        </div>
-    </div>
-</div>
+    
+                    {/* Payment Method Section (Original) */}
+                    <div className='mt-8 pt-6 border-t border-gray-200'>
+                        <div className='flex flex-col gap-4'>
+                            <div className='flex flex-col gap-2'>
+                                <label className='text-[10px] font-black text-gray-400 uppercase'>Payment Method</label>
+                                <select className='w-full bg-white border border-gray-200 rounded-2xl px-5 py-3 text-sm font-bold focus:ring-2 ring-orange-100 outline-none cursor-pointer' value={paymentMethod} onChange={(e)=>setPaymentMethod(e.target.value)}>
+                                    <option value="">Choose Method</option>
+                                    <option value="Cash">Cash Payment</option>
+                                    <option value="GCash">GCash Transfer</option>
+                                </select>
+                            </div>
+                            {paymentMethod === "GCash" && (
+                                <div className='animate-in slide-in-from-top-2'>
+                                    <label className='text-[10px] font-black text-gray-400 uppercase'>Proof of Transaction</label>
+                                    <input type="file" className='w-full mt-2 text-xs bg-white p-2 rounded-xl border border-dashed border-orange-300' onChange={(e)=>setPaymentProof(e.target.files[0])} />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
                             </section>
 
                             {/* SECTION: Final Review */}

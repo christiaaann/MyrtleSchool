@@ -155,7 +155,7 @@ const Auth = () => {
       <div className="min-h-screen overflow-hidden flex bg-gradient-to-l from-gray-200 via-green-100 to-stone-100">
         <div className="flex  w-full">
           {/* Left */}
-          <div className="w-full hidden duration-300 tablet:block relative overflow-hidden">
+          <div className="w-full hidden duration-300 laptop:block relative overflow-hidden">
             <div className="flex items-center justify-center h-full gap-4 w-full absolute left-5">
               <img className="w-32 bottom-3" src={logo} alt="" />
               <img className="w-32 bottom-3" src={DepED} alt="" />

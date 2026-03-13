@@ -10,10 +10,10 @@ import iconcall from '../../assets/icons/call.png'
 import icongmail from '../../assets/icons/gmail.png'
 import sun from "../../assets/sun.png"
 import mountain from "../../assets/mountain.png"
-import img from "../../assets/img.png"
+import image1 from "../../assets/image1.png"
 import image2 from "../../assets/image2.png"
+import image3 from "../../assets/image3.png"
 import gif from '../../assets/gif.png'
-import logo from "../../assets/logo.png"
 import { useState } from 'react'
 const Landing = () => {
   const navigate = useNavigate("");
@@ -71,14 +71,20 @@ const Landing = () => {
 
   const data = docSnap.data();
 
-  const isProfileComplete =
-    data.parent?.firstname &&
-    data.parent?.lastname &&
-    data.spouse?.firstname &&
-    data.spouse?.lastname &&
-    data.address?.barangay &&
-    data.address?.city &&
-    data.address?.province;
+const isProfileComplete =
+  !!data.parent?.firstname &&
+  !!data.parent?.lastname &&
+  !!data.parent?.contact &&
+  !!data.parent?.occupation &&
+  !!data.address?.barangay &&
+  !!data.address?.city &&
+  !!data.address?.province &&
+  (data.noSpouse || (
+    !!data.spouse?.firstname &&
+    !!data.spouse?.lastname &&
+    !!data.spouse?.contact &&
+    !!data.spouse?.occupation
+  ));
 
   if (!isProfileComplete) {
     navigate("/completeprofile"); 
@@ -91,15 +97,15 @@ const Landing = () => {
   return (
     <>
     <Navbar />
-    <div className='bg-[#C8E6C9]'>
+    <div className=''>
     <div className=' overflow-hidden'>
-     <div id='home' className=' min-h-screen flex items-center bg-no-repeat bg-cover bg-center' style={{backgroundImage: `url(${bg})`}}>
+     <div id='home' className=' min-h-screen flex items-center justify-center phone:justify-start bg-cover bg-no-repeat bg-center' style={{backgroundImage: `url(${bg})`}}>
       <div className='px-10'>
       <div className=' flex-col flex justify-center'>   
-      <h1  className='text-yellow-100  leading-10 text-[6rem] font-baloo drop-shadow-lg font-bold'>Welcome to</h1>
-      <h1  className=' text-green-200 flex drop-shadow-xl gap-5 font-baloo font-bold text-[6rem]'>Myrtle<span className='text-white drop-shadow-lg'>School</span></h1>
-      <div className='flex gap-5'>
-      <button onClick={handleEnrollNow}  className='bg-[#F3EFE4] border-2 px-10 py-4 rounded-full font-bold shadow-md text-[#2D5B60]'>Enroll Now</button>
+      <h1  className='text-yellow-100  leading-10  font-baloo drop-shadow-lg font-bold text-6xl tablet:text-[6rem]'>Welcome to</h1>
+      <h1  className=' text-green-200 flex drop-shadow-xl gap-5 font-baloo font-bold text-6xl tablet:text-[6rem]'>Myrtle<span className='text-white drop-shadow-lg'>School</span></h1>
+      <div className='flex mt-5 gap-5'>
+      <button onClick={handleEnrollNow} className='bg-[#F3EFE4] border-2 px-10 py-4 rounded-full font-bold shadow-md text-[#2D5B60]'>Enroll Now</button>
       <button className=' border-2 text-white px-10 rounded-full backdrop-blur-sm font-bold'>Learn More</button>
       </div>
       </div> 
@@ -113,45 +119,86 @@ const Landing = () => {
       
       {/* about */}
     <div id='about' className='min-h-screen relative flex flex-col justify-center items-center phone:p-2 mini:p-2 tablet:p-5'> 
-       <h1 className=' text-center text-4xl text-neutral-500 font-semibold'>About</h1>
-      <div className='flex  flex-col tablet:flex-row phone:gap-5 tablet:gap-2 mini:gap-2  mt-10'>
-       <div className=' bg-white rounded-lg w-full'>
-        <img className='rounded-lg' src={image2} alt="" />
-        <div className='p-5'>
-        <h1 className=' text-3xl font-semibold'>MISSION</h1>
-        <p className='text-justify text-neutral-500'>MSCI strive to prepare lifelong
-         learning and responsible citizens
-         ready to meet to challenges of the future
-         In partnership of families and community to perform Godly
-         character in a society 
-        </p>
-        </div>
-       </div>
-        <div className=' bg-white rounded-lg w-full'>
-        <img className='rounded-lg' src={img} alt="" />
-        <div className='p-5'>
-        <h1 className=' text-3xl font-semibold'>VISSION</h1>
-        <p className='text-justify text-neutral-500'>MSCI is dedicated to a continuing tradition of excellence
+       {/* <h1 className=' text-center text-4xl text-neutral-500 font-semibold'>About</h1> */}
+       
+      <div className='flex  flex-col laptop:flex-row phone:gap-5 tablet:gap-2 mini:gap-2  mt-10'>
+    <div className="relative w-full rounded-2xl overflow-hidden shadow">
+     <img
+      className="w-full h-[450px] object-cover" 
+      src={image1}
+      alt="Mission image"
+      />
+     <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-gradient-to-t from-white via-white/95 to-transparent px-8 pb-8 pt-12 flex flex-col justify-end">
+    <span className="text-4xl font-serif text-black leading-none mb-1 opacity-80">
+      “
+    </span>
+
+    <h1 className="text-2xl font-bold drop-shadow-lg text-red-600 leading-relaxed text-justify mb-4">
+      MISSION
+    </h1>
+    <p className="text-sm font-semibold text-justify">
+      MSCI strive to prepare lifelong learning and responsible citizens
+      ready to meet the challenges of the future. In partnership of
+      families and community to perform Godly character in a society.
+    </p>
+    <div className="mt-5 text-right">
+      <p className="text-xs text-neutral-400">— MSCI</p>
+    </div>
+   </div>
+   </div>
+     <div className="relative w-full rounded-2xl overflow-hidden shadow">
+     <img
+      className="w-full h-[450px] object-cover" 
+      src={image2}
+      alt="Mission image"
+      />
+     <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-gradient-to-t from-white via-white/95 to-transparent px-8 pb-8 pt-12 flex flex-col justify-end">
+    <span className="text-4xl font-serif text-black leading-none mb-1 opacity-80">
+      “
+    </span>
+
+    <h1 className="text-2xl font-bold drop-shadow-lg text-yellow-300 leading-relaxed text-justify mb-4">
+      VISSION
+    </h1>
+    <p className="text-sm font-semibold text-justify">
+        MSCI is dedicated to a continuing tradition of excellence
         in a new ever-changing world, to empower students to believe on
         God's given ability,to Embrace learning and demonstrate a life long learning.
-        </p>
-        </div>
-       </div>
-         <div className=' bg-white rounded-lg w-full'>
-        <img className='rounded-lg' src={img} alt="" />
-        <div className='p-5'>
-        <h1 className=' text-3xl font-semibold'>PHILOSOPHY</h1>
-        <p className='text-justify text-neutral-500'>Children need to be care for, provided with a healthy relationship,
+    </p>
+    <div className="mt-5 text-right">
+      <p className="text-xs text-neutral-400">— MSCI</p>
+    </div>
+   </div>
+   </div>
+     <div className="relative w-full rounded-2xl overflow-hidden shadow">
+     <img
+      className="w-full h-[450px] object-cover" 
+      src={image3}
+      alt="Mission image"
+      />
+     <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-gradient-to-t from-white via-white/95 to-transparent px-8 pb-8 pt-12 flex flex-col justify-end">
+    <span className="text-4xl font-serif text-black leading-none mb-1 opacity-80">
+      “
+    </span>
+
+    <h1 className="text-2xl font-bold drop-shadow-md text-green-900 leading-relaxed text-justify mb-4">
+      PHILOSOPHY
+    </h1>
+    <p className="text-sm font-semibold text-justify">
+        Children need to be care for, provided with a healthy relationship,
         lead them into the Image of God,make them feel
         the unconditional Love and help them develop their lives as a total person: Body, Soul, and Spirit. 
-        </p>
-        </div>
-       </div>
+    </p>
+    <div className="mt-5 text-right">
+      <p className="text-xs text-neutral-400">— MSCI</p>
+    </div>
+   </div>
+   </div>
       </div>
    
 </div>
 
-<div className =" min-h-screen relative">
+<div id='contact' className =" min-h-screen relative">
     <img className=' absolute -left-2 w-[10rem] tablet:w-[15rem] laptop:w-[24rem] laptop:top-2 z-0 ' src={gif} alt="" />
     <div className='max-w-4xl relative mx-auto z-10 p-6'>
         <div className='flex flex-col gap-2 w-full items-center'>
@@ -165,8 +212,8 @@ const Landing = () => {
                 onClick={() => toggleFAQ(index)}
                 className='w-full flex justify-between duration-300 items-center px-4 py-3 text-left text-lg font-medium focus:outline-none'
               >
-                <span className='text-gray-700'>{item.question}</span>
-                <span className='text-xl text-white bg-neutral-400 w-8 h-8 flex justify-center rounded-full'>{openIndex === index ? "−" : "+"}</span>
+                <span className='text-gray-700 '>{item.question}</span>
+                <span className='text-xl text-white bg-neutral-400 w-8 h-8 flex justify-center rounded-full flex-shrink-0'>{openIndex === index ? "−" : "+"}</span>
               </button>
              
               {openIndex === index && (
@@ -209,9 +256,6 @@ const Landing = () => {
 
 
 <div className=" tablet:h-[20rem] h-[10rem] w-full relative">
-  
- 
-
   <div className=" w-full">
     {/* Sun */}
     <img

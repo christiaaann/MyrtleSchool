@@ -35,7 +35,7 @@ const SignUpForm = () => {
   const validate = () => {
     const newErrors = {};
     if (!firstname.trim()) newErrors.firstname = "First name is required.";
-    if (!middlename.trim()) newErrors.middlename = "Middle name is required"
+    // if (!middlename.trim()) newErrors.middlename = "Middle name is required"
     if (!lastname.trim()) newErrors.lastname = "Last name is required.";
 
     if (!email.trim()) newErrors.email = "Email is required.";
@@ -126,9 +126,9 @@ const SignUpForm = () => {
               value={middlename}
               onChange={(e) => setMiddlename(e.target.value)}
             />
-            {errors.middlename && (
+            {/* {errors.middlename && (
               <p className="text-red-500 text-sm">{errors.middlename}</p>
-            )}
+            )} */}
           </div>
 
           <div className="flex w-full flex-col">

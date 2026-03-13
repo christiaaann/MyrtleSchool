@@ -92,7 +92,7 @@ const AdminLayout = () => {
   return (
     <div className="flex h-screen p-3 bg-gray-200">
       {/* Sidebar */}
-      <aside className="w-48 bg-white rounded-l-lg text-white flex flex-col p-4">
+      <aside className="w-48 bg-white relative rounded-l-lg text-white flex flex-col p-4">
      <div className="flex items-center gap-3 mb-4">
      {/* Profile Picture */}
      <img
@@ -153,8 +153,8 @@ const AdminLayout = () => {
           >
             SchoolYear
           </NavLink>
-    
         </nav>
+        <button onClick={ async () => {await auth.signOut(); navigate("/auth")}} className=" mt-auto rounded-2xl text-sm py-1 bg-red-600 text-white w-full">Logout</button>
       </aside>
 
       {/* Main */}

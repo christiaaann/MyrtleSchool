@@ -23,15 +23,15 @@ export default {
         primary: "#7c0a02",
         secondary: "#111827"
       },
-      // ✅ Custom keyframes & slower/smaller bounce
+     
       keyframes: {
         smoothBounce: {
           '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-10px)' }, // 🔹 translateY mas maliit
+          '50%': { transform: 'translateY(-10px)' }, 
         },
       },
       animation: {
-        smoothBounce: 'smoothBounce 3s ease-in-out infinite', // 🔹 mas mabagal
+        smoothBounce: 'smoothBounce 3s ease-in-out infinite', 
       },
     },
   },

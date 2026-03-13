@@ -31,6 +31,37 @@ const CompleteProfile = () => {
 
   const [uid, setUid] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  
+  const [noSpouse, setNoSpouse] = useState(null);
+  // validation
+  const [errors, setErrors] = useState({});
+  const validateProfile = () => {
+  const newErrors = {};
+
+  // Parent info
+  if (!parentFirst.trim()) newErrors.parentFirst = "First name is required.";
+  if (!parentLast.trim()) newErrors.parentLast = "Last name is required.";
+  if (!contact.trim()) newErrors.contact = "Contact is required.";
+  if (!occupation.trim()) newErrors.occupation = "Occupation is required.";
+
+  // Spouse info (only if spouse exists)
+  if (!noSpouse) {
+    if (!spouseFirst.trim()) newErrors.spouseFirst = "First name is required.";
+    if (!spouseLast.trim()) newErrors.spouseLast = "Last name is required.";
+    if (!spouseContact.trim()) newErrors.spouseContact = "Contact is required";
+    if (!spouseOccupation.trim()) newErrors.spouseOccupation = "Occupation is required.";
+  }
+
+  // Address
+  if (!barangay.trim()) newErrors.barangay = "Barangay is required.";
+  if (!city.trim()) newErrors.city = "City is required.";
+  if (!province.trim()) newErrors.province = "Province is required.";
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+
+
 
   // --- PROGRESS CALCULATION ---
   const calculateProgress = () => {
@@ -40,8 +71,10 @@ const CompleteProfile = () => {
     if (parentFirst && parentLast) completedFields++;
     if (contact) completedFields++;
     if (occupation) completedFields++;
-    if (spouseFirst && spouseLast) completedFields++;
-    if (spouseOccupation) completedFields++;
+    
+    if (noSpouse || (spouseFirst && spouseLast)) completedFields++;
+    if (noSpouse || spouseOccupation) completedFields++;
+
     if (barangay && city && province) completedFields++;
     
     const isValidPhoto = profilePicture && 
@@ -114,7 +147,7 @@ const CompleteProfile = () => {
 
           if (docSnap.exists()) {
             const data = docSnap.data();
-            
+            setNoSpouse(data.noSpouse || false);
             // Priority: Firestore > Google > Placeholder
             const finalPhoto = (data.profilePicture && data.profilePicture.trim() !== "") 
                                ? data.profilePicture 
@@ -149,29 +182,34 @@ const CompleteProfile = () => {
 
   // --- SAVE FUNCTION  ---
   const handleSave = async () => {
+    if (!validateProfile()) return;
     if (!parentFirst.trim() || !parentLast.trim() || !barangay.trim() || !city.trim() || !province.trim()) {
       alert("Please complete the required fields!");
       return;
     }
     try {
-      await updateDoc(doc(db, "users", uid), {
-        parent: { 
-          firstname: parentFirst, 
-          middlename: parentMiddle, 
-          lastname: parentLast, 
-          contact, 
-          occupation 
-        },
-        spouse: { 
-          firstname: spouseFirst, 
-          middlename: spouseMiddle, 
-          lastname: spouseLast, 
-          contact: spouseContact, 
-          occupation: spouseOccupation 
-        },
-        address: { purok, barangay, city, province },
-        profilePicture: profilePicture 
-      });
+   await updateDoc(doc(db, "users", uid), {
+   parent: { 
+    firstname: parentFirst, 
+    middlename: parentMiddle, 
+    lastname: parentLast, 
+    contact, 
+    occupation 
+  },
+
+  spouse: noSpouse ? null : {
+    firstname: spouseFirst,
+    middlename: spouseMiddle,
+    lastname: spouseLast,
+    contact: spouseContact,
+    occupation: spouseOccupation
+  },
+
+  noSpouse: noSpouse,
+
+  address: { purok, barangay, city, province },
+  profilePicture: profilePicture 
+});
       alert("Profile Completed!");
       navigate("/Enrollment", { replace: true });
     } catch (error) {
@@ -229,10 +267,13 @@ const CompleteProfile = () => {
             </div>
 
             {/* Progress */}
-            <div className="flex flex-col gap-2 tablet:hidden">
+            <div className="flex mt-2 flex-col gap-2 tablet:hidden">
              <StatusCheck label="Profile Photo" done={profilePicture !== profilePlaceholder && !String(profilePicture).includes('default.png')} />
              <StatusCheck label="Personal Info" done={!!(parentFirst && parentLast && contact && occupation)} />
-             <StatusCheck label="Spouse Info" done={!!(spouseFirst && spouseLast && spouseContact && spouseOccupation)} />
+             {!noSpouse && (
+             <StatusCheck label="Spouse Info"
+              done={!!(spouseFirst && spouseLast && spouseContact && spouseOccupation)} />
+             )}
              <StatusCheck label="Location" done={!!(barangay && city && province && purok)} />
          </div>
           </div>
@@ -243,30 +284,35 @@ const CompleteProfile = () => {
               <h3 className="font-bold text-slate-700">Personal Info (Parent)</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex flex-col tablet:flex-row gap-4">
+               <div className="flex flex-col w-full">
                 <FloatingInput 
                 id="parentFirst"
                 label="First name"
                 required
-                disabled
                 value={parentFirst}
                 onChange={(e) => setParentFirst(e.target.value)}
                  />
+                {errors.parentFirst && <p className="text-red-500 text-sm mt-1">{errors.parentFirst}</p>}
+                </div>
+                <div className="flex flex-col w-full">
                 <FloatingInput
                 id="parentMiddle"
                 label="Middle name"
                 required
-                disabled
                 value={parentMiddle} 
                 onChange={(e) =>setParentMiddle(e.target.value)}
                  />
+                </div>
+                <div className="flex flex-col w-full">
                 <FloatingInput
                 id="parentLast"
                 label="Last name"
                 required
-                disabled
                 value={parentLast} 
                 onChange={(e) => setParentLast(e.target.value)}
-                  />
+                />
+                {errors.parentLast && <p className="text-red-500 text-sm">{errors.parentLast}</p>}
+                </div>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -277,35 +323,71 @@ const CompleteProfile = () => {
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
                  />
+                 {errors.contact && <p className="text-red-500 text-sm">{errors.contact}</p>}
                 <FloatingInput
                  id="occupation"
                  label="Occupation"
                  value={occupation}
                  onChange={(e) =>setOccupation(e.target.value)} />
+                 {errors.occupation && <p className=" text-red-500 text-sm">{errors.occupation}</p>}
               </div>
             </section>
 
+          <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Do you have a spouse?</span>
+  
+            {/* Custom Yes / No toggle */}
+          <div className="flex items-center gap-1">
+          <button
+          onClick={() => setNoSpouse(false)}
+          className={`px-3 py-1 rounded-l-full border border-gray-400 text-xs font-bold transition-colors ${
+          !noSpouse ? "bg-green-500 text-white" : "bg-white text-gray-600"
+          }`}
+          >
+           Yes
+        </button>
+         <button
+          onClick={() => setNoSpouse(true)}
+          className={`px-3 py-1 rounded-r-full border border-gray-400 text-xs font-bold transition-colors ${
+          noSpouse ? "bg-red-500 text-white" : "bg-white text-gray-600"
+          }`}
+          >
+          No
+         </button>
+         </div>
+         </div>
+
             {/* Spouse Info (Binalik ko na) */}
+            {!noSpouse && (
             <section className="space-y-4">
               <h3 className="font-bold text-slate-700">Spouse Info</h3>
               <div className="flex flex-col tablet:flex-row gap-4">
+                <div className="flex flex-col w-full">
                 <FloatingInput
                 id="spouseFirst"
                 label="First name"
+                disabled={noSpouse}
                 value={spouseFirst} 
                 onChange={(e) =>setSpouseFirst(e.target.value)} 
                  />
+                 {errors.spouseFirst && <p className="text-sm text-red-500">{errors.spouseFirst}</p>}
+                 </div>
+                 <div className=" w-full">
                 <FloatingInput
                 id="spouseMiddle"
                 label="Middle name"
                 value={spouseMiddle} 
                 onChange={(e) =>setSpouseMiddle(e.target.value)} />
+               </div>
+               <div className=" flex flex-col w-full">
                 <FloatingInput
                 id="spouseLast"
                 label="Last name"
                 value={spouseLast} 
                 onChange={(e) =>setSpouseLast(e.target.value)}
                  />
+                {errors.spouseLast && <p className="text-red-500 text-sm">{errors.spouseLast}</p>} 
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FloatingInput
@@ -313,34 +395,39 @@ const CompleteProfile = () => {
                 label="Contact" 
                 value={spouseContact} 
                 onChange={(e) =>setSpouseContact(e.target.value)} />
-               
+               {errors.spouseContact && <p className="text-sm text-red-500">{errors.spouseContact}</p>}
                 <FloatingInput
                 id="spouseOccupation"
                 label="Occupation"
                 value={spouseOccupation} 
                 onChange={(e) =>setSpouseOccupation(e.target.value)} />
+                {errors.spouseOccupation && <p className="text-red-500 text-sm">{errors.spouseOccupation}</p>}
               </div>
             </section>
-
+)}
             {/* Address */}
             <div className="flex flex-col gap-2">
             <h3 className="font-bold text-slate-700">Full address</h3>
-<AddressPicker
-  purok={purok}
-  setPurok={setPurok}
-  province={province}
-  setProvince={setProvince}
-  city={city}
-  setCity={setCity}
-  barangay={barangay}
-  setBarangay={setBarangay}
-  onChange={({purok, barangay, city, province}) => {
-    setPurok(purok);
-    setBarangay(barangay);
-    setCity(city);
-    setProvince(province);
-  }}
-/>
+            <AddressPicker
+            purok={purok}
+            setPurok={setPurok}
+            province={province}
+            setProvince={setProvince}
+            city={city}
+            setCity={setCity}
+            barangay={barangay}
+            setBarangay={setBarangay}
+            onChange={({purok, barangay, city, province}) => {
+            setPurok(purok);
+            setBarangay(barangay);
+            setCity(city);
+            setProvince(province);
+            }}
+            />
+             {errors.purok && <p className="text-red-500 text-sm">{errors.purok}</p>}
+             {errors.barangay && <p className="text-red-500 text-sm">{errors.barangay}</p>}
+             {errors.city && <p className="text-red-500 text-sm">{errors.city}</p>}
+             {errors.province && <p className="text-red-500 text-sm">{errors.province}</p>}
            </div>
             <button onClick={handleSave} className="w-full bg-black text-white py-2 rounded-full font-bold shadow-lg transition-all active:scale-[0.98]">
               Save Profile
@@ -368,7 +455,10 @@ const CompleteProfile = () => {
             </div>
             <div className="space-y-3">
                <StatusCheck label="Personal Info" done={!!(parentFirst && parentLast && contact && occupation)} />
-               <StatusCheck label="Spouse Info" done={!!(spouseFirst && spouseLast && spouseContact && spouseOccupation)} />
+               {!noSpouse && (
+               <StatusCheck label="Spouse Info"
+               done={!!(spouseFirst && spouseLast && spouseContact && spouseOccupation)} />
+               )}
                <StatusCheck label="Profile Photo" done={profilePicture !== profilePlaceholder && !String(profilePicture).includes('default.png')} />
                <StatusCheck label="Location" done={!!(barangay && city && province && purok)} />
             </div>
