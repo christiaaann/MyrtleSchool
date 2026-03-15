@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import logo from "../assets/logo.png";
 import { Menu, X } from "lucide-react";
-
+import { User } from "lucide-react";
 const Navbar = () => {
   const [open, setOpen] = useState(false);
 
@@ -11,7 +11,7 @@ const Navbar = () => {
     <>
       {/* NAVBAR */}
       <header className="fixed top-4 w-full flex justify-center z-50">
-        <nav className="w-[92%] max-w-7xl bg-white/80 backdrop-blur-md shadow-lg rounded-2xl px-6 py-3 flex items-center justify-between">
+        <nav className="w-[92%] max-w-7xl bg-white/80 backdrop-blur-md shadow-lg rounded-2xl px-6 py-2 flex items-center justify-between">
 
           {/* Logo */}
           <div className="flex items-center gap-3">
@@ -41,8 +41,9 @@ const Navbar = () => {
           </ul>
 
           {/* Desktop Button */}
-          <button className="hidden laptop:block bg-[#2D5B60] hover:bg-[#24494d] transition text-white px-5 py-2 rounded-full shadow-md">
-            Enroll Now
+          <button className="hidden laptop:flex gap-2 bg-[#2D5B60] hover:bg-[#24494d] transition text-white px-10 py-1 rounded-full shadow-md">
+            <User/>
+            Login
           </button>
 
           {/* Mobile Menu Button */}

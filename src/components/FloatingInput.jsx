@@ -18,7 +18,7 @@ const FloatingInput = ({
         value={value}
         onChange={onChange}
         disabled={disabled}
-        className="peer block px-3 py-4 w-full text-lg bg-transparent rounded-xl border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#2D5B60]"
+        className="peer block px-3 py-3 pr-11 w-full text-lg bg-transparent rounded-xl border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#2D5B60]"
         {...props}
       />
 

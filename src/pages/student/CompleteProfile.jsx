@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { auth, db } from "../../services/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import profilePlaceholder from '../../assets/default.png';
+
 import FloatingInput from "../../components/FloatingInput";
 import AddressPicker from "../../components/AddressPicker";
+import CompleteSkeleton from "../../components/Skeleton/CompleteSkeleton";
 
 const CompleteProfile = () => {
   const navigate = useNavigate();
@@ -129,56 +131,57 @@ const CompleteProfile = () => {
   };
 
   // --- DATA FETCHING (AUTH & FIRESTORE) ---
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        setUid(user.uid);
-        
-        // Anti-CORS Fix for Google Photos
-        const cleanURL = (url) => url ? url.replace("http://", "https://") : null;
+const [loading, setLoading] = useState(true); // <-- bago fetching
 
-        if (user.photoURL) {
-          setProfilePicture(cleanURL(user.photoURL));
+useEffect(() => {
+  const unsubscribe = auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      setUid(user.uid);
+
+      const cleanURL = (url) => url ? url.replace("http://", "https://") : null;
+      if (user.photoURL) setProfilePicture(cleanURL(user.photoURL));
+
+      try {
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setNoSpouse(data.noSpouse || false);
+
+          const finalPhoto = (data.profilePicture && data.profilePicture.trim() !== "") 
+                             ? data.profilePicture 
+                             : cleanURL(user.photoURL);
+          setProfilePicture(finalPhoto || profilePlaceholder);
+
+          setParentFirst(data.parent?.firstname || user.displayName?.split(" ")[0] || "");
+          setParentMiddle(data.parent?.middlename || "");
+          setParentLast(data.parent?.lastname || user.displayName?.split(" ").slice(1).join(" ") || "");
+          setContact(data.parent?.contact || "");
+          setOccupation(data.parent?.occupation || "");
+          
+          setSpouseFirst(data.spouse?.firstname || "");
+          setSpouseMiddle(data.spouse?.middlename || "");
+          setSpouseLast(data.spouse?.lastname || "");
+          setSpouseContact(data.spouse?.contact || "");
+          setSpouseOccupation(data.spouse?.occupation || "");
+
+          setPurok(data.address?.purok || "");
+          setBarangay(data.address?.barangay || "");
+          setCity(data.address?.city || "");
+          setProvince(data.address?.province || "");
         }
-
-        try {
-          const docRef = doc(db, "users", user.uid);
-          const docSnap = await getDoc(docRef);
-
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            setNoSpouse(data.noSpouse || false);
-            // Priority: Firestore > Google > Placeholder
-            const finalPhoto = (data.profilePicture && data.profilePicture.trim() !== "") 
-                               ? data.profilePicture 
-                               : cleanURL(user.photoURL);
-            
-            setProfilePicture(finalPhoto || profilePlaceholder);
-
-            setParentFirst(data.parent?.firstname || user.displayName?.split(" ")[0] || "");
-            setParentMiddle(data.parent?.middlename || "");
-            setParentLast(data.parent?.lastname || user.displayName?.split(" ").slice(1).join(" ") || "");
-            setContact(data.parent?.contact || "");
-            setOccupation(data.parent?.occupation || "");
-            
-            setSpouseFirst(data.spouse?.firstname || "");
-            setSpouseMiddle(data.spouse?.middlename || "");
-            setSpouseLast(data.spouse?.lastname || "");
-            setSpouseContact(data.spouse?.contact || "");
-            setSpouseOccupation(data.spouse?.occupation || "");
-
-            setPurok(data.address?.purok || "");
-            setBarangay(data.address?.barangay || "");
-            setCity(data.address?.city || "");
-            setProvince(data.address?.province || "");
-          }
-        } catch (err) {
-          console.error("Error fetching data:", err);
-        }
+      } catch (err) {
+        console.error("Error fetching data:", err);
       }
-    });
-    return () => unsubscribe();
-  }, []);
+    }
+     setTimeout(() => {
+     setLoading(false);
+     }, 1000);
+     });
+
+  return () => unsubscribe();
+}, []);
 
   // --- SAVE FUNCTION  ---
   const handleSave = async () => {
@@ -208,7 +211,8 @@ const CompleteProfile = () => {
   noSpouse: noSpouse,
 
   address: { purok, barangay, city, province },
-  profilePicture: profilePicture 
+  profilePicture: profilePicture, 
+  isProfileComplete: true
 });
       alert("Profile Completed!");
       navigate("/Enrollment", { replace: true });
@@ -217,7 +221,7 @@ const CompleteProfile = () => {
       alert("Error saving profile");
     }
   };
-
+    if (loading) return <CompleteSkeleton />;
   return (
     <div className="min-h-screen p-4 font-sans text-slate-900">
       <div className="max-w-6xl flex mx-auto gap-8">

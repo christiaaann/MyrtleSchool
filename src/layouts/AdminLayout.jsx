@@ -3,6 +3,14 @@ import { auth, db } from "../services/firebase";
 import { doc, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
+import { LayoutDashboard, 
+         UsersRound,
+         Baby,
+         CalendarSync,
+         LogOut,
+         ChevronDown,
+         Settings2
+        } from "lucide-react";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -87,12 +95,12 @@ const AdminLayout = () => {
     }
   };
 
-  if (!userData) return <p>Loading...</p>;
+  if (!userData) return;
 
   return (
     <div className="flex h-screen p-3 bg-gray-200">
       {/* Sidebar */}
-      <aside className="w-48 bg-white relative rounded-l-lg text-white flex flex-col p-4">
+      <aside className="w-52 bg-white relative rounded-l-lg text-white flex flex-col p-4">
      <div className="flex items-center gap-3 mb-4">
      {/* Profile Picture */}
      <img
@@ -121,45 +129,85 @@ const AdminLayout = () => {
 
         <nav className="flex text-neutral-500 flex-col gap-2 mt-4">
           <NavLink
+          
             to="/admin"
             end
             className={({ isActive }) =>
-              `p-2 rounded ${isActive ? "bg-gray-200 text-black" : "hover:bg-gray-200"}`
+              `p-2 rounded-xl flex gap-2 ${isActive ? "bg-gray-200 text-black" : "hover:bg-gray-200"}`
             }
           >
+          <LayoutDashboard className="text-black"/>
             Dashboard
           </NavLink>
+      
           <NavLink
             to="/admin/users"
             className={({ isActive }) =>
-              `p-2 rounded ${isActive ? "bg-gray-200 text-black" : "hover:bg-gray-200"}`
+              `p-2 rounded-xl flex gap-2 ${isActive ? "bg-gray-200 text-black" : "hover:bg-gray-200"}`
             }
           >
+            <UsersRound  className="text-black" />
             Parents
           </NavLink>
           <NavLink
             to="/admin/students"
             className={({ isActive }) =>
-              `p-2 rounded ${isActive ? "bg-gray-200 text-black" : "hover:bg-gray-200"}`
+              `p-2 rounded-xl flex gap-2 ${isActive ? "bg-gray-200 text-black" : "hover:bg-gray-200"}`
             }
-          >
+          > 
+           <Baby className="text-black" />
             Students
           </NavLink>
                     <NavLink
             to="/admin/schoolyear"
             className={({ isActive }) =>
-              `p-2 rounded ${isActive ? "bg-gray-200 text-black" : "hover:bg-gray-200"}`
+              `p-2 rounded-xl flex gap-2 ${isActive ? "bg-gray-200 text-black" : "hover:bg-gray-200"}`
             }
-          >
+          >       
+          <CalendarSync className="text-black" />
             SchoolYear
           </NavLink>
+
+          <button
+        onClick={() => setOpen(!open)}
+        className="p-2 rounded-xl flex gap-2 "
+      >
+        <Settings2 className="text-black"/>
+        Settings
+        <ChevronDown className="text-black"/>
+      </button>
+
+      {open && (
+        <div className="flex flex-col ml-6 text-sm">
+          <NavLink
+            to="/admin/profile"
+            className="p-2 rounded-xl hover:bg-gray-200"
+          >
+            Profile
+          </NavLink>
+
+          <NavLink
+            to="/admin/settings"
+            className="p-2 rounded-xl hover:bg-gray-200"
+          >
+            Settings
+          </NavLink>
+
+          <NavLink
+            to="/admin/sdsd"
+            className="p-2 rounded-xl hover:bg-gray-200"
+          >
+            Role Management
+          </NavLink>
+        </div>
+      )}
         </nav>
-        <button onClick={ async () => {await auth.signOut(); navigate("/auth")}} className=" mt-auto rounded-2xl text-sm py-1 bg-red-600 text-white w-full">Logout</button>
+        <button onClick={ async () => {await auth.signOut(); navigate("/auth")}} className=" mt-auto rounded-2xl text-sm py-1 bg-red-600 text-white w-full flex gap-2 justify-center"><LogOut/>Logout</button>
       </aside>
 
       {/* Main */}
       <div className="flex-1 flex flex-col">
-        <header className="h-14 bg-white z-10 flex items-center">
+        {/* <header className="h-14 bg-white z-10 flex items-center">
           <button className="text-[12px] border px-2 rounded-sm" onClick={() => setOpen(!open)}>View</button>
 
           {open && (
@@ -191,7 +239,7 @@ const AdminLayout = () => {
             
             </div>
           )}
-        </header>
+        </header> */}
 
         <main className="flex-1 p-2 bg-gray-100 overflow-auto">
           <Outlet context={{ userData }} />

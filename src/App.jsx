@@ -17,7 +17,7 @@ const App = () => {
     <AuthProvider>
       <BrowserRouter>
         <Toaster closeButton position="top-center" richColors={false} />
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense>
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/Auth" element={<Auth />} />

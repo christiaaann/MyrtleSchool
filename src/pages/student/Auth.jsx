@@ -22,28 +22,30 @@ const Auth = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const handleNavigation = (userData) => {
-    const role = (userData.role || "parent").toLowerCase();
+ const handleNavigation = (userData) => {
+  const role = (userData.role || "parent").toLowerCase();
 
-    if (role === "admin") {
-      navigate("/admin/dashboard", { replace: true });
-      return;
-    }
+  // Admin
+  if (role === "admin") {
+    navigate("/admin/dashboard", { replace: true });
+    return;
+  }
 
-    if (
-      !userData.parent?.firstname ||
-      !userData.parent?.lastname ||
-      !userData.spouse?.firstname ||
-      !userData.spouse?.lastname ||
-      !userData.address?.barangay ||
-      !userData.address?.city ||
-      !userData.address?.province
-    ) {
-      navigate("/completeprofile", { replace: true });
-    } else {
-      navigate("/Enrollment", { replace: true });
-    }
-  };
+  // Compute dynamically if profile is complete
+  const profileComplete =
+    !!userData.isProfileComplete ||
+    (!!userData.parent?.firstname &&
+     !!userData.parent?.lastname &&
+     !!userData.address?.barangay &&
+     !!userData.address?.city &&
+     !!userData.address?.province);
+
+  if (!profileComplete) {
+    navigate("/completeprofile", { replace: true });
+  } else {
+    navigate("/enrollment", { replace: true });
+  }
+};
 
   const createNewUserDoc = async (user) => {
     const fullName = user.displayName || "";
@@ -89,58 +91,59 @@ const Auth = () => {
     return newUserData;
   };
 
-  const handleOAuthLogin = async (provider) => {
+  // google account
+ const handleOAuthLogin = async (provider) => {
+  try {
+    if (provider instanceof GoogleAuthProvider) {
+      provider.setCustomParameters({ prompt: "select_account" });
+    }
+
+    await signInWithPopup(auth, provider);
+
+  } catch (error) {
+    console.error("OAuth login error:", error);
+    alert(error.message);
+  }
+};
+
+  const handleFacebookLogin = () =>
+        handleOAuthLogin(new FacebookAuthProvider());
+
+  const handleGoogleLogin = () =>
+        handleOAuthLogin(new GoogleAuthProvider());
+
+ useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     try {
-      if (provider instanceof GoogleAuthProvider) {
-        provider.setCustomParameters({ prompt: "select_account" });
-      }
-
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
       const userDocRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(userDocRef);
 
+      let userData;
       if (docSnap.exists()) {
-        handleNavigation(docSnap.data());
+        userData = docSnap.data();
       } else {
-        await createNewUserDoc(user);
-        navigate("/completeprofile", { replace: true });
+        userData = await createNewUserDoc(user);
       }
-    } catch (error) {
-      console.error("OAuth login error:", error);
-      alert(error.message);
-    }
-  };
 
-  const handleFacebookLogin = () =>
-    handleOAuthLogin(new FacebookAuthProvider());
-
-  const handleGoogleLogin = () =>
-    handleOAuthLogin(new GoogleAuthProvider());
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          const userDocRef = doc(db, "users", user.uid);
-          const docSnap = await getDoc(userDocRef);
-
-          if (docSnap.exists()) {
-            handleNavigation(docSnap.data());
-          } else {
-            await createNewUserDoc(user);
-            navigate("/completeprofile", { replace: true });
-          }
-        } catch (err) {
-          console.error("Auth state error:", err);
-        }
+      // Wait until userData is fully ready
+      if (userData) {
+        handleNavigation(userData);
       }
+
+    } catch (err) {
+      console.error("Auth state error:", err);
+    } finally {
       setLoading(false);
-    });
+    }
+  });
 
-    return () => unsubscribe();
-  }, [navigate]);
+  return () => unsubscribe();
+}, [navigate]);
 
   if (loading) {
     return (

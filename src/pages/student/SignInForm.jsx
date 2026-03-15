@@ -5,6 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { useAuth } from "../../context/AuthContext";
 import { sileo } from "sileo";
+import { Eye,
+       EyeClosed, 
+       } from "lucide-react";
 
 const SignInForm = () => {
   const navigate = useNavigate();
@@ -15,7 +18,7 @@ const SignInForm = () => {
   const [loading, setLoading] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [lockUntil, setLockUntil] = useState(null);
-
+  const [showPassword, setShowPassword] = useState(false);
   useEffect(() => {
     if (!authLoading && user) {
       const userRole = role?.toLowerCase();
@@ -138,25 +141,34 @@ const SignInForm = () => {
   return (
     <div className="w-full flex flex-col items-center justify-center mt-20">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full phone:w-96">
-        <div className="px-5 w-full border-2 py-4 rounded-2xl">
+        <div className="px-5 w-full border-2 py-3 rounded-2xl">
           <input
             className="outline-none w-full"
             type="email"
             placeholder="Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)} 
             disabled={authLoading}
           />
         </div>
-
+        
+        <div  className=" flex gap-2 items-center justify-center px-5 py-3 border-2 rounded-2xl">
         <input
-          type="password"
+          type={showPassword ? "text" : "password"}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
-          className="px-5 py-4 border-2 rounded-2xl outline-none"
+         className="outline-none w-full"
           disabled={authLoading}
         />
+        <button
+        className="outline-none" 
+        type="button"
+        onClick={() => setShowPassword(!showPassword)}
+        >
+          {showPassword ? <Eye className="text-black"/> :<EyeClosed className="text-black"/>}
+        </button>
+        </div>
 
         <button
           type="submit"

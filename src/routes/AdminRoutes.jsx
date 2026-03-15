@@ -12,7 +12,7 @@ const SchoolYear = lazy(() => import("../pages/admin/SchoolYear"));
 
 const AdminRoutes = () => {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense>
       <Routes>
         {/* Parent route must have path="/*" */}
         <Route path="/*" element={<AdminLayout />}>

@@ -2,13 +2,14 @@ import React, { useEffect, useState } from "react";
 import { collection, doc, deleteDoc, onSnapshot, updateDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore";
 import { auth, db } from "../../services/firebase";
 import defaultPic from "../../assets/default.png";
-
+import UsersSkeleton from "../../components/Skeleton/UsersSkeleton";
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedPicture, setSelectedPicture] = useState(null);
   const [studentStats, setStudentStats] = useState({ enrolled: 0, pending: 0 });
+  
 
   function getLastSeen(ts) {
     if (!ts) return "Offline";
@@ -76,7 +77,9 @@ const Users = () => {
         return null;
       });
 
-      setLoading(false);
+       setTimeout(() => {
+    setLoading(false);
+  }, 1000);
     });
     return () => unsub();
   }, []); 
@@ -101,7 +104,7 @@ const Users = () => {
     } catch (err) { console.error("Delete error:", err); }
   };
 
-  if (loading) return <div className="p-10 text-center font-bold text-[#2D5B60] animate-pulse">Loading Parents...</div>;
+ if (loading) return <UsersSkeleton/>;
 
   return (
     <div className="flex h-[90vh] bg-[#F8F9FA] overflow-hidden rounded-2xl shadow-lg border">

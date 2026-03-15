@@ -5,6 +5,7 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { useNavigate, Link } from "react-router-dom";
 import FloatingInput from "../../components/FloatingInput";
 import { sileo } from "sileo";
+import { Eye, EyeClosed } from "lucide-react";
 const SignUpForm = () => {
   const navigate = useNavigate();
 
@@ -14,7 +15,7 @@ const SignUpForm = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
+  const [showPassword, setShowPassword ] = useState("")
   const [errors, setErrors] = useState({});
   const [showEmailHelp, setShowEmailHelp] = useState(false);
 
@@ -174,10 +175,10 @@ const SignUpForm = () => {
         </div>
 
         <h1 className="font-semibold">Password</h1>
-        <div className="flex w-full flex-col">
+        <div className="flex relative w-full">
           <FloatingInput
             id="password"
-            type="password"
+            type={showPassword ? "text" : "password" }
             label="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -185,6 +186,13 @@ const SignUpForm = () => {
           {errors.password && (
             <p className="text-red-500 text-sm mt-1">{errors.password}</p>
           )}
+          <button
+          className="absolute right-3 gap-2  top-1/2 -translate-y-1/2"
+          type="button"
+          onClick={() =>setShowPassword(!showPassword)}
+          >
+            {showPassword ? <Eye/> : <EyeClosed/>}
+          </button>
         </div>
 
         <button type="submit" className="bg-[#2D5B60] text-white py-3 rounded-full">

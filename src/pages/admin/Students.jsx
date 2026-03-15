@@ -2,14 +2,28 @@ import React, { useEffect, useState } from 'react';
 // Nagdagdag ng getDocs at where para sa history search
 import { collection, onSnapshot, doc, updateDoc, query, orderBy, deleteDoc, getDoc, setDoc, getDocs, where } from 'firebase/firestore';
 import { db } from '../../services/firebase';
-
+import UsersSkeleton from '../../components/Skeleton/UsersSkeleton';
+import StudentsSkeleton from '../../components/Skeleton/StudentsSkeleton';
 const Students = () => {
   const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [loading, setLoading] = useState(true);
 
+
+useEffect(() => {
+  const q = query(collection(db, "students"), orderBy("createdAt", "desc"));
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    setStudents(data);
+        setTimeout(() => {
+    setLoading(false);
+  }, 1000); // <-- loading false after data fetch
+  });
+  return () => unsubscribe();
+}, []);
   const [currentSY, setCurrentSY] = useState("2025-2026");
 
   useEffect(() => {
@@ -104,7 +118,7 @@ const Students = () => {
       alert("Update failed: " + error.message);
     }
   };
-
+ if (loading) return <StudentsSkeleton/>;
   const handleApprove = async (id, studentID) => {
     if(window.confirm(`Approve enrollment for SY ${currentSY}?`)) {
         try {

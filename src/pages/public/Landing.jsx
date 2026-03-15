@@ -14,7 +14,9 @@ import image1 from "../../assets/image1.png"
 import image2 from "../../assets/image2.png"
 import image3 from "../../assets/image3.png"
 import gif from '../../assets/gif.png'
-import { useState } from 'react'
+import DepedLogo from "../../assets/DepEDLogo.png"
+import logo from "../../assets/logo.png"
+import { useState, useEffect } from 'react'
 const Landing = () => {
   const navigate = useNavigate("");
   const faqData = [
@@ -60,36 +62,41 @@ const Landing = () => {
     return;
   }
 
-  // Fetch user doc
   const docRef = doc(db, "users", user.uid);
   const docSnap = await getDoc(docRef);
 
   if (!docSnap.exists()) {
-    navigate("/Auth"); 
+    navigate("/Auth");
     return;
   }
 
   const data = docSnap.data();
 
-const isProfileComplete =
-  !!data.parent?.firstname &&
-  !!data.parent?.lastname &&
-  !!data.parent?.contact &&
-  !!data.parent?.occupation &&
-  !!data.address?.barangay &&
-  !!data.address?.city &&
-  !!data.address?.province &&
-  (data.noSpouse || (
-    !!data.spouse?.firstname &&
-    !!data.spouse?.lastname &&
-    !!data.spouse?.contact &&
-    !!data.spouse?.occupation
-  ));
+  // ✅ ADMIN GOES DIRECT TO DASHBOARD
+  if (data.role === "admin") {
+    navigate("/admin");
+    return;
+  }
+
+  const isProfileComplete =
+    !!data.parent?.firstname &&
+    !!data.parent?.lastname &&
+    !!data.parent?.contact &&
+    !!data.parent?.occupation &&
+    !!data.address?.barangay &&
+    !!data.address?.city &&
+    !!data.address?.province &&
+    (data.noSpouse || (
+      !!data.spouse?.firstname &&
+      !!data.spouse?.lastname &&
+      !!data.spouse?.contact &&
+      !!data.spouse?.occupation
+    ));
 
   if (!isProfileComplete) {
-    navigate("/completeprofile"); 
+    navigate("/completeprofile");
   } else {
-    navigate("/Enrollment"); 
+    navigate("/Enrollment");
   }
 };
 
@@ -97,9 +104,9 @@ const isProfileComplete =
   return (
     <>
     <Navbar />
-    <div className=''>
+    <div className='bg-yellow-100/10'>
     <div className=' overflow-hidden'>
-     <div id='home' className=' min-h-screen flex items-center justify-center phone:justify-start bg-cover bg-no-repeat bg-center' style={{backgroundImage: `url(${bg})`}}>
+     {/* <div id='home' className=' min-h-screen flex items-center justify-center phone:justify-start bg-cover bg-no-repeat bg-center'>
       <div className='px-10'>
       <div className=' flex-col flex justify-center'>   
       <h1  className='text-yellow-100  leading-10  font-baloo drop-shadow-lg font-bold text-6xl tablet:text-[6rem]'>Welcome to</h1>
@@ -109,12 +116,38 @@ const isProfileComplete =
       <button className=' border-2 text-white px-10 rounded-full backdrop-blur-sm font-bold'>Learn More</button>
       </div>
       </div> 
-      {/* <img className='w-1/2' src={flyingkid} alt="" /> */}
       </div>
-     </div>
+     </div> */}
+
+<div className="h-[50rem] bg-gradient-to-tr relative  from-white via-green-100 to-white flex items-center"> 
+  <div className=" flex ml-40 flex-col h-full justify-center w-full gap-5 ">
+    <h1 className="text-6xl font-bold"> Start Your Child’s </h1>
+    <h1 className="text-7xl text-[#2D5B60] font-bold"> Future Today!</h1>
+    <div className="flex">
+   <button className="bg-[#2D5B60] mt-2 text-white px-20 py-2 rounded-2xl">Enroll Now</button> 
+   <div className="flex gap-2 absolute bottom-0">
+     <img className=" w-48 object-contain bottom-0" src={DepedLogo} alt="" />
+      <img className="w-28 object-contain bottom-0" src={logo} alt="" />    
+    </div>  
+    </div>
+  </div>
+  <div className="w-full h-full flex items-center justify-center relative p-2">
+   <img className="absolute bottom-0 drop-shadow-lg" src={model1} alt="" />
+  </div>
+</div>
           
 
      {/* programs */}
+     {/* <div className="h-screen max-w-4xl mx-auto ">
+     <h1 className="text-center text-5xl">Our Program</h1>
+     <div className=" bg-yellow-100/20 p-10 rounded-3xl shadow-lg border-e-4 border-b-4 border-black w-full flex flex-col">
+      <span  className="border-b-4 border-black bg-orange-400 font-bold w-10 h-10 rounded-full flex justify-center items-center">1</span>
+      <span  className="border-b-4 border-black bg-orange-400 font-bold w-10 h-10 rounded-full flex justify-center items-center">2</span>
+      <span  className="border-b-4 border-black bg-orange-400 font-bold w-10 h-10 rounded-full flex justify-center items-center">3</span>
+      <span  className="border-b-4 border-black bg-orange-400 font-bold w-10 h-10 rounded-full flex justify-center items-center">4</span>
+      <span  className="border-b-4 border-black bg-orange-400 font-bold w-10 h-10 rounded-full flex justify-center items-center">5</span>
+     </div>
+     </div> */}
 
       
       {/* about */}
