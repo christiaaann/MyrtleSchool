@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-
+import FloatingInput from "../../components/FloatingInput";
+import { Mail, Check, Key  } from "lucide-react";
 export default function ForgotPasswordStepper() {
   const [step, setStep] = useState(1); // 1 = email, 2 = OTP, 3 = new password
   const [email, setEmail] = useState("");
@@ -8,7 +10,7 @@ export default function ForgotPasswordStepper() {
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const navigate = useNavigate();
   const totalSteps = 3;
 
   // Step 1: Send OTP
@@ -53,6 +55,8 @@ export default function ForgotPasswordStepper() {
       setEmail("");
       setOtp("");
       setNewPassword("");
+
+      navigate("/Auth")
     } catch (err) {
       setMessage(err.response?.data?.message || "Error resetting password");
     } finally {
@@ -61,39 +65,68 @@ export default function ForgotPasswordStepper() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-6 border rounded-lg shadow-lg flex flex-col gap-6">
+    <div className=" min-h-screen max-w-6xl mx-auto p-10">
+  <Link to="/Auth" >Back</Link>
+        {/* -------- STEPPER -------- */}
+ <ol className="flex justify-between items-center mt-3   relative">
+  {[1, 2, 3].map((s, i) => (
+    <li key={s} className="relative flex-1 flex flex-col items-center">
+      
+      {/* Circle */}
+      <span
+        className={`w-8 h-8 rounded-full flex justify-center items-center text-sm z-10
+          ${step === s ? "bg-green-950 text-white" : step > s ? "bg-green-600 text-white" : "bg-gray-50 border-2 border-gray-200 text-gray-600"}`}
+      >
+  {step > s ? (
+    <Check className="w-4 h-4" /> // kung natapos na step, check icon
+  ) : s === 1 ? (
+    <Mail className="w-4 h-4" />
+  ) : s === 2 ? (
+    <h1 className="font-bold text-[11px]">OTP</h1>
+  ) : (
+    <Key className="w-4 h-4" />
+  )}
+      </span>
 
-      {/* -------- STEPPER -------- */}
-      <div className="flex items-center justify-between mb-4">
-        {[1, 2, 3].map((s) => (
-          <div key={s} className="flex-1 flex items-center">
-            {/* Circle */}
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold
-              ${step >= s ? "bg-blue-600" : "bg-gray-300"}`}>
-              {s}
-            </div>
-            {/* Line */}
-            {s < totalSteps && (
-              <div className={`flex-1 h-1 ${step > s ? "bg-blue-600" : "bg-gray-300"}`}></div>
-            )}
-          </div>
-        ))}
+      {/* Connecting line */}
+      {i < 3 && (
+        <div className="absolute top-4 right-0 border w-full bg-gray-300 z-0"></div>
+      )}
+
+      {/* Step Content */}
+      <div className="text-center mt-6">
+        <h4 className={`text-base mb-1 ${step >= s ? "text-green-600" : "text-gray-900"}`}>
+          {s === 1 && "Enter Email"}
+          {s === 2 && "Verify Code"}
+          {s === 3 && "Reset Password"}
+        </h4>
+        <p className="text-sm text-gray-600 max-w-xs">
+          {s === 1 && "Type your email to receive a password reset link."}
+          {s === 2 && "Open your email and click the verification link."}
+          {s === 3 && "Enter your new password and confirm it."}
+        </p>
       </div>
+    </li>
+  ))}
+</ol>
 
+<div className="flex justify-center">
+      <div className=" h-96 flex  flex-col gap-2 w-96 justify-center">
       {/* -------- FORM CONTENT -------- */}
       {step === 1 && (
         <>
-          <h2 className="text-xl font-semibold">Forgot Password</h2>
-          <input
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="border px-3 py-2 rounded w-full"
+          <h1 className="flex gap-1"><span className=" text-red-600 ">*</span>Enter your email</h1>
+          <FloatingInput
+          label="Email"
+          type="email"
+          id="lastname"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+            
           />
           <button
             onClick={handleSendOTP}
-            className="bg-blue-600 text-white py-2 rounded mt-2 disabled:bg-gray-400"
+            className="bg-green-950 px-6 text-white py-2 w-full rounded-2xl mt-2 disabled:bg-gray-400"
             disabled={loading}
           >
             {loading ? "Sending OTP..." : "Send OTP"}
@@ -104,16 +137,16 @@ export default function ForgotPasswordStepper() {
       {step === 2 && (
         <>
           <h2 className="text-xl font-semibold">Verify OTP</h2>
-          <input
+          <FloatingInput
             type="text"
-            placeholder="Enter OTP"
+            id="otp"
+            label="Enter OTP"
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
-            className="border px-3 py-2 rounded w-full"
           />
           <button
             onClick={handleVerifyOTP}
-            className="bg-green-600 text-white py-2 rounded mt-2 disabled:bg-gray-400"
+            className="bg-green-950 px-6 text-white py-2 rounded-2xl w-full mt-2 disabled:bg-gray-400"
             disabled={loading}
           >
             {loading ? "Verifying..." : "Verify OTP"}
@@ -129,17 +162,17 @@ export default function ForgotPasswordStepper() {
 
       {step === 3 && (
         <>
-          <h2 className="text-xl font-semibold">Reset Password</h2>
-          <input
+          <h2 className="flex gap-1"><span className="text-red-600">*</span>Reset Password</h2>
+          <FloatingInput
             type="password"
-            placeholder="Enter new password"
+            label="Newpassword"
+            id="newPassword"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="border px-3 py-2 rounded w-full"
           />
           <button
             onClick={handleResetPassword}
-            className="bg-purple-600 text-white py-2 rounded mt-2 disabled:bg-gray-400"
+            className="bg-green-950 text-white py-2 rounded-2xl mt-2 disabled:bg-gray-400"
             disabled={loading}
           >
             {loading ? "Resetting..." : "Reset Password"}
@@ -154,6 +187,8 @@ export default function ForgotPasswordStepper() {
       )}
 
       {message && <p className="text-red-600 mt-2">{message}</p>}
+      </div>
+      </div>
     </div>
   );
 }
