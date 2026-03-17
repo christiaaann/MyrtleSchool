@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import FloatingInput from "../../components/FloatingInput";
 import { Mail, Check, Key  } from "lucide-react";
+import { sileo } from "sileo";
 export default function ForgotPasswordStepper() {
   const [step, setStep] = useState(1); // 1 = email, 2 = OTP, 3 = new password
   const [email, setEmail] = useState("");
@@ -44,53 +45,63 @@ export default function ForgotPasswordStepper() {
     };
 
   // Step 3: Reset Password
-  const handleResetPassword = async () => {
-    if (!newPassword || newPassword.length < 6)
-      return setMessage("Password must be at least 6 characters.");
-    setLoading(true);
-    try {
-      const res = await axios.post("https://myrtlebackend.vercel.app/reset-password", { email, newPassword });
-      setMessage(res.data.message);
-      setStep(1);
-      setEmail("");
-      setOtp("");
-      setNewPassword("");
+ const handleResetPassword = async () => {
+  if (!newPassword || newPassword.length < 6) {
+    return toast.error("Password must be at least 6 characters."); // direct toast na lang
+  }
 
-      navigate("/Auth")
-    } catch (err) {
-      setMessage(err.response?.data?.message || "Error resetting password");
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    await axios.post("https://myrtlebackend.vercel.app/reset-password", { email, newPassword });
+
+    // Show success toast
+    sileo.success("Password successfully changed!");
+
+    // Clear form
+    setEmail("");
+    setOtp("");
+    setNewPassword("");
+
+    // Redirect to Auth page after 2 seconds
+    setTimeout(() => {
+      navigate("/Auth");
+    }, 2000);
+
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Error resetting password");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
-    <div className=" min-h-screen max-w-6xl mx-auto p-10">
+  <div className=" min-h-screen flex">
+  <div className="max-w-6xl  mx-auto p-10">
   <Link to="/Auth" >Back</Link>
         {/* -------- STEPPER -------- */}
- <ol className="flex justify-between items-center mt-3   relative">
+ <ol className="flex justify-between items-center mt-3 relative">
   {[1, 2, 3].map((s, i) => (
     <li key={s} className="relative flex-1 flex flex-col items-center">
       
       {/* Circle */}
       <span
-        className={`w-8 h-8 rounded-full flex justify-center items-center text-sm z-10
+        className={`w-8 h-8  rounded-full flex justify-center items-center text-sm z-10
           ${step === s ? "bg-green-950 text-white" : step > s ? "bg-green-600 text-white" : "bg-gray-50 border-2 border-gray-200 text-gray-600"}`}
       >
-  {step > s ? (
-    <Check className="w-4 h-4" /> // kung natapos na step, check icon
-  ) : s === 1 ? (
-    <Mail className="w-4 h-4" />
-  ) : s === 2 ? (
-    <h1 className="font-bold text-[11px]">OTP</h1>
-  ) : (
-    <Key className="w-4 h-4" />
-  )}
+      {step > s ? (
+        <Check className="w-4 h-4" /> 
+      ) : s === 1 ? (
+        <Mail className="w-4 h-4" />
+      ) : s === 2 ? (
+        <h1 className="font-bold text-[11px]">OTP</h1>
+      ) : (
+        <Key className="w-4 h-4" />
+      )}
       </span>
 
       {/* Connecting line */}
-      {i < 3 && (
-        <div className="absolute top-4 right-0 border w-full bg-gray-300 z-0"></div>
+      {i < 2 && (
+        <div className="absolute top-4 left-1/2  border w-full bg-gray-300 z-0"></div>
       )}
 
       {/* Step Content */}
@@ -110,8 +121,9 @@ export default function ForgotPasswordStepper() {
   ))}
 </ol>
 
-<div className="flex justify-center">
+<div className="flex justify-center items-center mt-10">
       <div className=" h-96 flex  flex-col gap-2 w-96 justify-center">
+        <h1 className="text-center text-3xl relative mb-10">Fotgot Password?</h1>
       {/* -------- FORM CONTENT -------- */}
       {step === 1 && (
         <>
@@ -189,6 +201,6 @@ export default function ForgotPasswordStepper() {
       {message && <p className="text-red-600 mt-2">{message}</p>}
       </div>
       </div>
-    </div>
+    </div></div>
   );
 }
