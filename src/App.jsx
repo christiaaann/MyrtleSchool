@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { Toaster } from "sileo";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import ForgotPasswordStepper from "./pages/student/ForgotPasswordStepper";
 
 const Landing = lazy(() => import("./pages/public/Landing"));
 const Auth = lazy(() => import("./pages/student/Auth"));
@@ -23,6 +24,7 @@ const App = () => {
             <Route path="/Auth" element={<Auth />} />
             <Route path="/preschool" element={<PreSchool />} />
             <Route path="/signup" element={<SignUpForm />} />
+            <Route path="/forgotpassword" element={<ForgotPasswordStepper/>} />
 
             <Route
               path="/completeprofile"

@@ -175,7 +175,7 @@ const SignUpForm = () => {
         </div>
 
         <h1 className="font-semibold">Password</h1>
-        <div className="flex relative w-full">
+        <div className="flex flex-col relative w-full">
           <FloatingInput
             id="password"
             type={showPassword ? "text" : "password" }
@@ -187,7 +187,7 @@ const SignUpForm = () => {
             <p className="text-red-500 text-sm mt-1">{errors.password}</p>
           )}
           <button
-          className="absolute right-3 gap-2  top-1/2 -translate-y-1/2"
+          className="absolute right-3 gap-2 top-[1.5rem] -translate-y-1/2"
           type="button"
           onClick={() =>setShowPassword(!showPassword)}
           >

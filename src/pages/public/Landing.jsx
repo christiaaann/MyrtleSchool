@@ -124,7 +124,7 @@ const Landing = () => {
     <h1 className="text-6xl font-bold"> Start Your Child’s </h1>
     <h1 className="text-7xl text-[#2D5B60] font-bold"> Future Today!</h1>
     <div className="flex">
-   <button className="bg-[#2D5B60] mt-2 text-white px-20 py-2 rounded-2xl">Enroll Now</button> 
+   <button onClick={handleEnrollNow} className="bg-[#2D5B60] mt-2 text-white px-20 py-2 rounded-2xl">Enroll Now</button> 
    <div className="flex gap-2 absolute bottom-0">
      <img className=" w-48 object-contain bottom-0" src={DepedLogo} alt="" />
       <img className="w-28 object-contain bottom-0" src={logo} alt="" />    

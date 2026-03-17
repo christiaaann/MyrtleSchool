@@ -8,7 +8,7 @@ import { sileo } from "sileo";
 import { Eye,
        EyeClosed, 
        } from "lucide-react";
-
+import { Link } from "react-router-dom";
 const SignInForm = () => {
   const navigate = useNavigate();
   const { user, role, loading: authLoading } = useAuth();
@@ -169,7 +169,7 @@ const SignInForm = () => {
           {showPassword ? <Eye className="text-black"/> :<EyeClosed className="text-black"/>}
         </button>
         </div>
-
+        <Link to="/forgotpassword" className="text-neutral-600 text-cente text-center leading-4" >Forgot Password ?</Link>
         <button
           type="submit"
           disabled={loading || authLoading}
