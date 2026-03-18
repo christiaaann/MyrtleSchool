@@ -17,6 +17,16 @@ import plus from '../../assets/icons/plus.png'
 import deaf from '../../assets/default.png'
 import logo from '../../assets/logo.png'
 
+import { Archive,
+      BookOpenCheck, 
+      Check, 
+      CreditCard, 
+      FileUser,
+      UserPen } from 'lucide-react';
+import FloatingInput from '../../components/FloatingInput';
+import FloatingSelect from '../../components/FloatingSelect';
+import UploadBox from '../../components/UploadBox';
+
 const Enrollment = () => {
     // --- ALL ORIGINAL STATES PRESERVED ---
     const [isOpen, setIsOpen] = useState(false);
@@ -47,17 +57,39 @@ const Enrollment = () => {
     const [currentSY, setCurrentSY] = useState("");
    
     const location = useLocation();
+    
+    const [step, setStep] = useState(1);
+    const totalSteps = 3;
+    const nextStep = () => {
+    if (step < totalSteps) setStep(step + 1);
+    };
+    const prevStep = () => {
+    if (step > 1) setStep(step - 1);
+    };
 
     useEffect(() => {
     if (location.state?.loginSuccess) {
-    sileo.success({
-      title: "Login Successful",
-      description: "Welcome back!",
-      fill: "black",
-      styles:{description:"text-white"}
-    });
-  }
-}, []);
+        sileo.success({
+        title: "Login Successful",
+        description: "Welcome back!",
+        fill: "black",
+        styles: { description: "text-white" }
+        });
+
+        navigate(location.pathname, { replace: true, state: {} });
+    }
+    }, []);
+
+  const gradeOptions =
+    level === "Preschool"
+      ? ["Nursery", "Kinder"]
+      : level === "Elementary"
+      ? ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"]
+      : [];
+
+      const [birthCert, setBirthCert] = useState(null);
+      const [reportCard, setReportCard] = useState(null);
+      const [idPicture, setIdPicture] = useState(null);
 
 
 // if user not complete back to complete profile
@@ -234,7 +266,7 @@ useEffect(() => {
     const fullAddress = `${userData.address.purok}, ${userData.address.barangay}, ${userData.address.city}, ${userData.address.province}`;
 
     return (
-        <div className='min-h-screen bg-gradient-to-l from-gray-200 via-yellow-50 to-stone-100 font-sans text-[#2D3748]'>
+        <div className='min-h-screen font-sans text-[#2D3748]'>
             
             {/* Minimal Header */}
             <header className='bg-white z-20 px-8 py-4 flex items-center justify-between border-b border-gray-100 sticky top-0 shadow-sm'>
@@ -243,7 +275,7 @@ useEffect(() => {
                         <img className='w-10' src={logo} alt="Logo" />
                         <div>
                             <h1 className='text-sm font-black tracking-tight text-gray-800 uppercase'>Myrtle Christian School</h1>
-                            <p className='text-[10px] text-orange-500 font-bold tracking-widest uppercase'>Parent Portal</p>
+                            <p className='text-[10px] text-green-950 font-bold tracking-widest uppercase'>Parent Portal</p>
                         </div>
                     </div>
                 </div>
@@ -251,7 +283,7 @@ useEffect(() => {
                 <div className='flex items-center gap-4'>
                     <div className='text-right'>
                         <p className='text-xs font-bold'>{userData.parent?.firstname} {userData.parent?.lastname}</p>
-                        <span className='text-[9px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold uppercase'>Active</span>
+                      
                     </div>
                     <img onClick={() => setOpen(!open)} className="w-10 h-10 rounded-full border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform"
                      src={userData.profilePicture || deaf} alt="User Profile"
@@ -266,12 +298,15 @@ useEffect(() => {
                     )}
                 </div>
             </header>
+            
 
-            <div className="max-w-7xl mx-auto py-5 px-6">
+            <div className="flex">
+ 
                 
                 {/* (TABS MENU) --- */}
-                <div className='fixed left-1/2 -translate-x-1/2 z-20'>
-                <div className='flex gap-2 backdrop-blur-sm mb-5 bg-gray-200/50 p-1.5 rounded-2xl w-fit'>
+
+                <div className=' border w-[13rem] flex flex-col gap-2'>
+                {/* <div className='flex gap-2 backdrop-blur-sm mb-5 bg-gray-200/50 p-1.5 rounded-2xl w-fit'>
                     <button 
                         onClick={() => setPage("personal")} 
                         className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${setpage === 'personal' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}
@@ -287,8 +322,15 @@ useEffect(() => {
                     >
                         Records / Archive
                     </button>
-                </div>
-                 </div>
+                </div> */}
+                <button className=' hover:bg-gray-100 px-6 flex gap-2 w-full items-center py-1' 
+                onClick={() => setPage("persoanal")}><FileUser className='w-5 h-5'/>Enrollment</button>
+
+                <button className=' hover:bg-gray-100 px-6 py-1 w-full flex items-center gap-2'
+                onClick={() => setPage("archive")}
+                ><Archive className='w-5 h-5'/>Records</button>
+                 </div> 
+ 
                 {setpage === "archive" ? (
                     <EnrollmentArchive {...{setpage, 
                         myStudents, 
@@ -308,117 +350,214 @@ useEffect(() => {
                         setEditingStudent, 
                         setPage}} />
                 ) : (
-                    <div className='space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700'>
-                        
-                        {/* Stepper Heading */}
-                        <div className='flex items-center gap-10 mb-12'>
-                            <div className='flex-1'>
-                                <h2 className='text-3xl font-black'>Student Enrollment</h2>
-                                <p className='text-gray-400 text-sm mt-1 font-medium'>S.Y. {currentSY} • Information & Assessment</p>
-                            </div>
-                        </div>
+        <div className='space-y-2 animate-in border w-full fade-in slide-in-from-bottom-4 duration-700'>
+        {/* stepper */}
+        <ol className="flex justify-between items-center mt-1 relative">
+        {[1, 2, 3].map((s, i) => (
+        <li key={s} className="relative flex-1 flex flex-col items-center">
+                
+        {/* Circle */}
+        <span
+        className={`w-8 h-8  rounded-full flex justify-center items-center text-sm z-10
+        ${step === s ? "bg-green-950 text-white" : step > s ? "bg-green-600 text-white" : "bg-gray-50 border-2 border-gray-200 text-gray-600"}`}
+        >
+        {step > s ? (
+        <Check className='w-4 h-4'/>
+        ) : s === 1 ? (
+        <UserPen className=' w-4 h-4'/>
+        ) : s === 2 ? (
+        <BookOpenCheck className='w-4 h-4'/>
+        ) : (
+        <CreditCard className='w-4 h-4'/>
+        )}
+        </span>
 
-                        {/* FORM CONTENT (YUNG DATING CODE MO NA HINDI BINAGO) */}
-                        <div className='bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12 space-y-12'>
-                            
-                            {/* SECTION: Pupil Information */}
-                            <section>
-                                <div className='flex items-center gap-3 mb-8'>
-                                    <div className='w-1 h-6 bg-yellow-500 rounded-full'></div>
-                                    <h3 className='font-bold text-gray-800 uppercase tracking-widest text-sm'>Child Information</h3>
-                                </div>
+        {/* Connecting line */}
+        {i < 2 && (
+        <div className="absolute top-4 left-1/2  border w-full bg-gray-300 z-0"></div>
+        )}
+
+        {/* Step Content */}
+        <div className="text-center mt-6">
+        <h4 className={`text-base mb-1 ${step >= s ? "text-green-600" : "text-gray-900"}`}>
+        {s === 1 && "Child Info"}
+        {s === 2 && "Upload Requirements"}
+        {s === 3 && "Payment"}
+        </h4>
+        <p className="text-sm text-gray-600 max-w-xs">
+        {s === 1 && ""}
+        {s === 2 && ""}
+        {s === 3 && ""}
+        </p>
+        </div>
+        </li>
+        ))}
+
+        </ol>
+
+        {/* FORM CONTENT */}
+        <div className=' borde p-5'>
+        {/* SECTION: CHILD */}
+        { step === 1 && (
+        <section>
+        <div className='flex gap-2 items-center'>
+        <div className='w-1 h-6 bg-green-950 rounded-full'></div>
+        <h3 className='font-bold uppercase tracking-widest text-sm'>Child Information</h3>
+        </div>
                                 
-                                <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-                                    <div className='flex flex-col gap-2'>
-                                        <label className='text-[10px] font-black text-gray-400 uppercase ml-1'>First Name</label>
-                                        <input className='bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 ring-orange-100 outline-none transition-all placeholder:text-gray-300' type="text" placeholder='Juan' value={childFirst} onChange={(e)=>setChildFirst(e.target.value)} />
-                                    </div>
-                                    <div className='flex flex-col gap-2'>
-                                        <label className='text-[10px] font-black text-gray-400 uppercase ml-1'>Middle Name</label>
-                                        <input className='bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 ring-orange-100 outline-none transition-all placeholder:text-gray-300' type="text" placeholder='Dela Cruz' value={childMiddle} onChange={(e)=>setChildMiddle(e.target.value)} />
-                                    </div>
-                                    <div className='flex flex-col gap-2'>
-                                        <label className='text-[10px] font-black text-gray-400 uppercase ml-1'>Last Name</label>
-                                        <input className='bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 ring-orange-100 outline-none transition-all placeholder:text-gray-300' type="text" placeholder='Santos' value={childLast} onChange={(e)=>setChildLast(e.target.value)} />
-                                    </div>
-                                </div>
+        <div className='flex gap-2'>
+         <div className='flex flex-col w-full gap-2'>
+         <label className='flex gap-2'><span className='text-red-600'>*</span>First name</label>
+         <FloatingInput
+         type="text"
+         label="First name"
+         id="childFirst"
+         value={childFirst} 
+         onChange={(e)=>setChildFirst(e.target.value)} />
+         </div>
+            
+         <div className='flex flex-col w-full gap-2'>
+         <label className='flex gap-1'>Middle Name</label>
+         <FloatingInput
+         type="text"
+         label="Middle name"
+         id="childMiddle"
+         value={childMiddle} 
+         onChange={(e)=>setChildMiddle(e.target.value)} />
+         </div>
+            
+         <div className='flex flex-col w-full gap-2'>
+         <label className='flex gap-1'><span className='text-red-500'>*</span>Last Name</label>
+         <FloatingInput
+          type="text"
+          label="Last name" 
+          id="childLast"
+          value={childLast} 
+          onChange={(e)=>setChildLast(e.target.value)} />
+          </div>
+          </div>
 
-                                <div className='grid grid-cols-2 md:grid-cols-4 gap-6 mt-6'>
-                                    <div className='flex flex-col gap-2'>
-                                        <label className='text-[10px] font-black text-gray-400 uppercase ml-1'>Suffix</label>
-                                        <select className="bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 ring-orange-100 outline-none cursor-pointer" value={suffix} onChange={(e)=>setSuffix(e.target.value)}>
-                                            <option value="none">None</option><option value="Jr.">Jr.</option><option value="Sr.">Sr.</option>
-                                        </select>
-                                    </div>
-                                    <div className='flex flex-col gap-2'>
-                                        <label className='text-[10px] font-black text-gray-400 uppercase ml-1'>Age</label>
-                                        <input type="number" className="bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 ring-orange-100 outline-none" value={age} onChange={(e)=>setAge(e.target.value)} />
-                                    </div>
-                                    <div className='flex flex-col gap-2'>
-                                        <label className='text-[10px] font-black text-gray-400 uppercase ml-1'>Sex</label>
-                                        <select className="bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 ring-orange-100 outline-none cursor-pointer" value={sex} onChange={(e)=>setSex(e.target.value)}>
-                                            <option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option>
-                                        </select>
-                                    </div>
-                                    <div className='flex flex-col gap-2'>
-                                        <label className='text-[10px] font-black text-gray-400 uppercase ml-1'>Student Type</label>
-                                        <select className="bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 ring-orange-100 outline-none cursor-pointer" value={studentType} onChange={(e) => setStudentType(e.target.value)}>
-                                            <option value="">Choose</option><option value="New">New Student</option><option value="Old">Old Student</option><option value="Transferee">Transferee</option>
-                                        </select>
-                                    </div>
-                                </div>
+          <div className='grid grid-cols-2 md:grid-cols-4 gap-6 mt-6'>
+          <div className='flex flex-col gap-2'>
+          <label>Suffix</label>
+          <FloatingSelect
+          id="suffix"
+          label="Suffix"
+          value={suffix}
+          onChange={(e) => setSuffix(e.target.value)}
+          options={["None", "Jr.", "Sr."]}
+          />
+          </div>
+            
+          <div className='flex flex-col gap-2'>
+          <label className="flex gap-1"><span className='text-red-600'>*</span>Age</label>
+          <FloatingInput
+          label="Age"
+          id="age" 
+          type="number" 
+          value={age}
+          onChange={(e)=>setAge(e.target.value)} />
+          </div>
+            
+          <div className='flex flex-col gap-2'>
+          <label className="flex gap-1"><span className='text-red-600'>*</span>Sex</label>
+          <FloatingSelect
+          label="Select"
+          id="sex"
+          value={sex} 
+          onChange={(e)=>setSex(e.target.value)}
+          options={["Male", "Female"]}
+          />
+          </div>
+          
+          <div className='flex flex-col gap-2'>
+          <label className="flex gap-1"><span className='text-red-600'>*</span>Student Type</label>
+          <FloatingSelect 
+          label="Select"
+          value={studentType} 
+          onChange={(e) => setStudentType(e.target.value)}
+          options={["New Student", "Old", "Transferee"]}
+          />
+         </div>
+         </div>
 
-                                {studentType === "Transferee" && (
-                                    <div className='mt-6 animate-in slide-in-from-top-2'>
-                                        <label className='text-[10px] font-black text-gray-400 uppercase ml-1'>Previous School Attended</label>
-                                        <input type="text" className="w-full mt-2 bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 ring-orange-100 outline-none" placeholder="Enter School Name" value={prevSchool} onChange={(e) => setPrevSchool(e.target.value)} />
-                                    </div>
-                                )}
-                            </section>
+          {studentType === "Transferee" && (
+          <div className='flex flex-col mt-5 gap-2'>
+          <label className='flex gap-1'><span className='text-red-600'>*</span>Previous School Attended</label>
+          <FloatingInput 
+          type="text" 
+          id="prevSchool"
+          label="Previous School"
+          value={prevSchool} 
+          onChange={(e) => setPrevSchool(e.target.value)} />
+          </div>
+          )}
 
-                            <hr className='border-gray-50' />
+          <div className='flex gap-5 mt-5'>
+          <div className='flex flex-col w-full gap-2'>
+          <label className='flex gap-1'><span className='text-red-600'>*</span>Level</label>
+          <FloatingSelect 
+          label="Select"
+          id="level"
+          value={level} 
+          onChange={(e) => {setLevel(e.target.value); setGrade("");}}
+          options={["Preschool", "Elementary"]}
+          />
+         </div>
 
-                            {/* SECTION: Academic Level */}
-                            <section className='grid grid-cols-1 md:grid-cols-2 gap-10'>
-                                <div className='space-y-6'>
-                                    <div className='flex items-center gap-3 mb-2'>
-                                        <div className='w-1 h-6 bg-yellow-500 rounded-full'></div>
-                                        <h3 className='font-bold text-gray-800 uppercase tracking-widest text-sm'>Academic Info</h3>
-                                    </div>
-                                    <div className='grid grid-cols-2 gap-4'>
-                                        <div className='flex flex-col gap-2'>
-                                            <label className='text-[10px] font-black text-gray-400 uppercase ml-1'>Level</label>
-                                            <select className="bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 ring-orange-100 cursor-pointer" value={level} onChange={(e) => {setLevel(e.target.value); setGrade("");}}>
-                                                <option value="">Select</option><option value="Preschool">Preschool</option><option value="Elementary">Elementary</option>
-                                            </select>
-                                        </div>
-                                        <div className='flex flex-col gap-2'>
-                                            <label className='text-[10px] font-black text-gray-400 uppercase ml-1'>Grade</label>
-                                            <select className="bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 ring-orange-100 cursor-pointer" value={grade} onChange={(e) => setGrade(e.target.value)} disabled={!level}>
-                                                <option value="">Select</option>
-                                                {level === "Preschool" ? <><option value="Nursery">Nursery</option><option value="Kinder">Kinder</option></> : <><option value="1">Grade 1</option><option value="2">Grade 2</option><option value="3">Grade 3</option><option value="4">Grade 4</option><option value="5">Grade 5</option><option value="6">Grade 6</option></>}
-                                            </select>
-                                        </div>
-                                    </div>
+         <div className='flex flex-col w-full gap-2'>
+         <label className='flex gap-1'><span className='text-red-600'>*</span>Grade</label>
+         <FloatingSelect 
+         label="select"
+         id="grade"
+         value={grade} 
+         onChange={(e) => setGrade(e.target.value)} disabled={!level}
+         options={gradeOptions}
+         />
+         </div>
+         </div>
+         </section>
+         )}
+        
+         {/* Upload Requirments */}
+         { step === 2 && (
+         <section className="space-y-4">
+         <h3 className="font-bold text-slate-700">Upload Requirements</h3>
+        <div className='flex justify-center'>
+        <div className='flex w-96'>
+        <UploadBox
+         label="ID Picture 2x2"
+         file={files.idPicture}
+         setFile={(file) => setFiles(prev => ({ ...prev, idPicture: file }))}
+         validateSize={true}
+         />
+        </div>
+        </div>
+         <div className="flex gap-5">
+         <UploadBox
+         label="Birth Certificate"
+         file={files.birthCert}
+         setFile={(file) => setFiles(prev => ({ ...prev, birthCert: file }))}
+         />
 
-                                    <div className='p-6 bg-yellow-50/50 rounded-3xl space-y-4'>
-                                        <h4 className='text-[10px] font-black uppercase text-yellow-600 tracking-widest'>Upload Requirements</h4>
-                                        <div className='space-y-3'>
-                                            {['birthCert', 'reportCard', 'idPicture'].map((docType) => (
-                                                <div key={docType} className='flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-orange-100'>
-                                                    <span className='text-xs font-bold text-gray-600 uppercase'>{docType.replace(/([A-Z])/g, ' $1')}</span>
-                                                    <input className='text-[10px] w-32 outline-none file:mr-4 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100' type="file" onChange={(e)=>setFiles({...files, [docType]: e.target.files[0]})} />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
+         <UploadBox
+         label="Report Card"
+         file={files.reportCard}
+         setFile={(file) => setFiles(prev => ({ ...prev, reportCard: file }))}
+         />
+
+
+         </div>
+         </section>
+         )}
 
                     {/* LEDGER VIEW */}
+                    { step == 3 && (
+                    <section>
                     <div className='bg-gray-50 rounded-3xl p-6'>
                     <div className='flex justify-between items-center mb-6'>
                     <h4 className='text-[10px] font-black uppercase text-gray-400 tracking-widest'>Financial Summary</h4>
-                    <span className='text-[10px] font-bold text-orange-500'>S.Y. {currentSY}</span>
+                    <span className='text-[10px] font-bold text-green-950'>S.Y. {currentSY}</span>
                     </div>
                 
                 {/* Breakdown of Fees */}
@@ -443,7 +582,7 @@ useEffect(() => {
                 <div className='space-y-3'>
                     <div className='flex justify-between items-center'>
                         <span className='text-xs font-bold text-gray-500'>Total Initial Fees</span>
-                        <span className='text-xl font-black text-orange-600 italic'>
+                        <span className='text-xl font-black text-green-950 italic'>
                             ₱{level ? (
                                 tuitionFees[level].registration + 
                                 tuitionFees[level].misc + 
@@ -488,8 +627,9 @@ useEffect(() => {
                         </div>
                     </div>
                 </div>
-                            </section>
 
+                        </section>   
+)}
                             {/* SECTION: Final Review */}
                             <section className='pt-10 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center gap-8'>
                                 <div className='bg-gray-50 p-6 rounded-3xl flex-1 w-full'>
@@ -512,14 +652,36 @@ useEffect(() => {
 
                                 <div className='flex flex-col items-center md:items-end gap-4 w-full md:w-auto'>
                                     <p className='text-[10px] text-gray-400 italic text-center md:text-right max-w-[250px]'>By clicking submit, you agree to MCS terms for S.Y. {currentSY}.</p>
-                                    <button 
-                                        onClick={handleSubmitEnrollment} 
-                                        disabled={isSubmitting} 
-                                        className={`w-full md:w-auto px-12 py-4 rounded-2xl font-black uppercase tracking-widest text-sm transition-all shadow-xl shadow-orange-100 flex items-center justify-center gap-3 ${isSubmitting ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#1a1a1a] text-white hover:bg-yellow-500 hover:-translate-y-1'}`}
-                                    >
-                                        {isSubmitting ? "Processing..." : "Submit Enrollment"}
-                                        {!isSubmitting && <span className='text-lg'>→</span>}
-                                    </button>
+
+<section className='pt-10 border-t border-gray-50 flex justify-between items-center gap-4'>
+  {step > 1 && (
+    <button
+      onClick={prevStep}
+      className="px-6 py-2 rounded-xl bg-gray-200"
+    >
+      Previous
+    </button>
+  )}
+
+  {step < 3 && (
+    <button
+      onClick={nextStep}
+      className="px-6 py-2 rounded-xl bg-green-900 text-white"
+    >
+      Next
+    </button>
+  )}
+
+  {step === 3 && (
+    <button
+      onClick={handleSubmitEnrollment}
+      disabled={isSubmitting}
+      className={`px-6 py-2 rounded-xl bg-[#1a1a1a] text-white font-black ${isSubmitting ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'hover:bg-yellow-500'}`}
+    >
+      {isSubmitting ? "Processing..." : "Submit Enrollment"}
+    </button>
+  )}
+</section>
                                 </div>
                             </section>
                         </div>

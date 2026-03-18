@@ -119,20 +119,20 @@ const Landing = () => {
       </div>
      </div> */}
 
-<div className="h-[50rem] bg-gradient-to-tr relative  from-white via-green-100 to-white flex items-center"> 
-  <div className=" flex ml-40 flex-col h-full justify-center w-full gap-5 ">
-    <h1 className="text-6xl font-bold"> Start Your Child’s </h1>
-    <h1 className="text-7xl text-[#2D5B60] font-bold"> Future Today!</h1>
+<div className="h-[50rem] bg-gradient-to-tr relative from-white via-green-100 to-white flex items-center"> 
+  <div className='flex  h-full w-[80rem] p-5 mx-auto tablet:justify-between justify-center items-end'>
+  <div className="flex flex-col h-full justify-center items-center gap-5 tablet:items-start">
+    <h1 className="tablet:text-6xl font-bold text-4xl tablet:text-nowrap"> Start Your Child’s </h1>
+    <h1 className="tablet:text-7xl text-[#2D5B60] font-bold text-5xl"> Future Today!</h1>
     <div className="flex">
    <button onClick={handleEnrollNow} className="bg-[#2D5B60] mt-2 text-white px-20 py-2 rounded-2xl">Enroll Now</button> 
-   <div className="flex gap-2 absolute bottom-0">
-     <img className=" w-48 object-contain bottom-0" src={DepedLogo} alt="" />
-      <img className="w-28 object-contain bottom-0" src={logo} alt="" />    
-    </div>  
     </div>
+       <div className="flex gap-2 absolute bottom-0 left-5 duration-300 tablet:left-20">
+     <img className=" tablet:w-48 w-28 object-contain bottom-0" src={DepedLogo} alt="" />
+      <img className="tablet:w-28 w-20 object-contain bottom-0" src={logo} alt="" />    
+    </div>  
   </div>
-  <div className="w-full h-full flex items-center justify-center relative p-2">
-   <img className="absolute bottom-0 drop-shadow-lg" src={model1} alt="" />
+    <img className='w-96 hidden tablet:block object-contain' src={model1} alt="" />
   </div>
 </div>
           

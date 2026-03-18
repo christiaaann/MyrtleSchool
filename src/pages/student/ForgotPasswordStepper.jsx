@@ -12,11 +12,34 @@ export default function ForgotPasswordStepper() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [errors, setErrors] = useState({});
   const totalSteps = 3;
+
+const handleEmailChange = (e) => {
+  const value = e.target.value;
+  setEmail(value);
+
+  const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+  setErrors((prev) => ({
+    ...prev,
+    email: isValid || value === "" ? undefined : "Invalid email format.",
+  }));
+};
 
   // Step 1: Send OTP
   const handleSendOTP = async () => {
     if (!email) return setMessage("Please enter your email.");
+ 
+     if (errors.email) {
+     sileo.error({
+      title: "Invalid Email Format",
+      fill: "black"
+     }
+     );
+     return;
+}
+    
     setLoading(true);
     try {
       const res = await axios.post("https://myrtlebackend.vercel.app/send-otp", { email });
@@ -47,7 +70,7 @@ export default function ForgotPasswordStepper() {
   // Step 3: Reset Password
  const handleResetPassword = async () => {
   if (!newPassword || newPassword.length < 6) {
-    return toast.error("Password must be at least 6 characters."); // direct toast na lang
+    return toast.error("Password must be at least 6 characters.");
   }
 
   setLoading(true);
@@ -55,17 +78,20 @@ export default function ForgotPasswordStepper() {
     await axios.post("https://myrtlebackend.vercel.app/reset-password", { email, newPassword });
 
     // Show success toast
-    sileo.success("Password successfully changed!");
+    sileo.success({
+      title: "Password Changed",
+      fill: "black"
+    });
 
     // Clear form
     setEmail("");
     setOtp("");
     setNewPassword("");
 
-    // Redirect to Auth page after 2 seconds
+    // Redirect to Auth page after 1 seconds
     setTimeout(() => {
       navigate("/Auth");
-    }, 2000);
+    }, 1000);
 
   } catch (err) {
     toast.error(err.response?.data?.message || "Error resetting password");
@@ -133,9 +159,12 @@ export default function ForgotPasswordStepper() {
           type="email"
           id="lastname"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
-            
+          onChange={handleEmailChange}
           />
+          {errors.email && (
+         <p className="text-red-500 text-sm">{errors.email}</p>
+          )
+          }
           <button
             onClick={handleSendOTP}
             className="bg-green-950 px-6 text-white py-2 w-full rounded-2xl mt-2 disabled:bg-gray-400"

@@ -186,18 +186,16 @@ const EnrollmentArchive = ({
   if (setpage !== "archive") return null;
 
   return (
-    <div className="min-h-screen">  
-      <div className="flex flex-col gap-2">
-      <h2 className="text-2xl font-black">Records/Archive</h2>
+    <div className="h-screen p-5 w-full">  
+      <div className="flex items-center flex-co justify-between gap-2">
+      <h2 className="text-2xl">Records</h2>
       <p className="text-[10px] font-bold text-gray-400">CURRENT SY: {currentSY || "Loading..."}</p>
-   </div>
-    <div className="bg-white mt-5 p-6 rounded-xl shadow max-w-5xl mx-auto relative">
-      <div className="flex justify-end mb-6">
-        <button onClick={handleAddNewChild} className=" bg-gray-200 text-black/50 px-5 py-2 rounded-xl text-[14px] font-bold hover:bg-green-100 transition-all">
-          + Add New Child
-        </button>
+      <button onClick={handleAddNewChild} className=" bg-gray-200 text-black/50 px-5 py-2 rounded-xl text-[14px] font-bold hover:bg-green-100 transition-all">
+      + Add New Child
+      </button>
       </div>
 
+    <div className=" relative mt-2">
       <div className="grid grid-cols-1 gap-6">
         {uniqueStudentList && uniqueStudentList.length > 0 ? (
           uniqueStudentList.map((stud) => {
