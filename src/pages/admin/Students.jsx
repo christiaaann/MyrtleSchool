@@ -1,9 +1,19 @@
 import React, { useEffect, useState } from 'react';
-// Nagdagdag ng getDocs at where para sa history search
-import { collection, onSnapshot, doc, updateDoc, query, orderBy, deleteDoc, getDoc, setDoc, getDocs, where } from 'firebase/firestore';
+import { collection, 
+         onSnapshot, 
+         doc, 
+         updateDoc, 
+         query, 
+         orderBy, 
+         deleteDoc, 
+         getDoc, 
+         setDoc, 
+         getDocs, 
+         where } from 'firebase/firestore';
 import { db } from '../../services/firebase';
-import UsersSkeleton from '../../components/Skeleton/UsersSkeleton';
 import StudentsSkeleton from '../../components/Skeleton/StudentsSkeleton';
+import axios from 'axios';
+
 const Students = () => {
   const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -148,37 +158,48 @@ useEffect(() => {
                 });
             }
             alert("Student Enrolled Successfully!");
-        } catch (error) { 
-            console.error("Approval Error:", error); 
-            alert("Error: " + error.message);
-        }
-    }
-  };
-
-  const handleReject = async (id, studentID) => {
-    if(window.confirm("Reject this enrollment?")) {
-        try {
-            await updateDoc(doc(db, "students", id), { isEnrolled: false, status: "Rejected" });
-            const enrRef = doc(db, "enrollments", `ENR-${currentSY}-${studentID}`);
-            const enrSnap = await getDoc(enrRef);
-            if(enrSnap.exists()) {
-                await updateDoc(enrRef, { "payment.status": "Rejected" });
+            
+            //  === SEND EMAIL NOTIFICATION via backend ===
+            try {
+              await axios.post("https://myrtlebackend.vercel.app/send-enrollment", { studentID });
+              alert("Email notification sent to parent!");
+            } catch(emailError) {
+              console.error("Email sending failed:", emailError);
+              alert("Student enrolled, but email failed to send.");
             }
-            alert("Student Enrollment Rejected!");
-        } catch (error) {
-            console.error("Reject Error:", error);
-            alert("Error: " + error.message);
-        }
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if(window.confirm("Are you sure you want to delete this record?")) {
-      try {
-        await deleteDoc(doc(db, "students", id));
-      } catch (error) { console.error("Delete Error:", error); }
-    }
-  };
+              } catch (error) { 
+                  console.error("Approval Error:", error); 
+                  alert("Error: " + error.message);
+              }
+          }
+        };
+        
+        // === if students rejected ===
+        const handleReject = async (id, studentID) => {
+          if(window.confirm("Reject this enrollment?")) {
+              try {
+                  await updateDoc(doc(db, "students", id), { isEnrolled: false, status: "Rejected" });
+                  const enrRef = doc(db, "enrollments", `ENR-${currentSY}-${studentID}`);
+                  const enrSnap = await getDoc(enrRef);
+                  if(enrSnap.exists()) {
+                      await updateDoc(enrRef, { "payment.status": "Rejected" });
+                  }
+                  alert("Student Enrollment Rejected!");
+              } catch (error) {
+                  console.error("Reject Error:", error);
+                  alert("Error: " + error.message);
+              }
+          }
+        };
+         
+        // === delete record ====
+        const handleDelete = async (id) => {
+          if(window.confirm("Are you sure you want to delete this record?")) {
+            try {
+              await deleteDoc(doc(db, "students", id));
+            } catch (error) { console.error("Delete Error:", error); }
+          }
+        };
 
   // BINAGO: Ito ang kukuha ng lahat ng lumang records
   const handleViewDetails = async (student) => {

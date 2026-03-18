@@ -101,8 +101,8 @@ const handleEmailChange = (e) => {
 };
 
   return (
-  <div className=" min-h-screen flex">
-  <div className="max-w-6xl  mx-auto p-10">
+  <div className=" min-h-screen overflow-hidden flex">
+  <div className="max-w-5xl mx-auto w-full p-5 mt-10">
   <Link to="/Auth" >Back</Link>
         {/* -------- STEPPER -------- */}
  <ol className="flex justify-between items-center mt-3 relative">
@@ -131,13 +131,13 @@ const handleEmailChange = (e) => {
       )}
 
       {/* Step Content */}
-      <div className="text-center mt-6">
-        <h4 className={`text-base mb-1 ${step >= s ? "text-green-600" : "text-gray-900"}`}>
+      <div className="text-center  mt-6">
+        <h4 className={` mb-1 text-nowrap text-[10px] phone:text-base ${step >= s ? "text-green-600" : "text-gray-900"}`}>
           {s === 1 && "Enter Email"}
           {s === 2 && "Verify Code"}
           {s === 3 && "Reset Password"}
         </h4>
-        <p className="text-sm text-gray-600 max-w-xs">
+        <p className="text-sm text-gray-600 hidden phone:block max-w-xs">
           {s === 1 && "Type your email to receive a password reset link."}
           {s === 2 && "Open your email and click the verification link."}
           {s === 3 && "Enter your new password and confirm it."}

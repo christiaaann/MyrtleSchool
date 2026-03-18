@@ -115,13 +115,13 @@ const SignInForm = () => {
         sileo.error({
           title: "Too many login attempts",
           fill: "black",
-          description: "Login locked for 30 seconds.",
+          description: "Locked for 30 seconds.",
           styles: { description: "text-white" },
         });
       } else {
         sileo.error({
           title: "Login Failed",
-          description: `${description} Attempts left: ${5 - newAttempts}`,
+          fill: "black"
         });
       }
     } finally {

@@ -57,21 +57,40 @@ const Enrollment = () => {
     const [currentSY, setCurrentSY] = useState("");
    
     const location = useLocation();
+    const [errors, setErrors] = useState({});
     
+    //  === Validations For Stepper 1 ====
+    const validateStep1 = () => {
+    const newErrors = {};
+    if (!childFirst.trim()) newErrors.childFirst = "First name is required";
+    if (!childLast.trim()) newErrors.childLast = "Last name is required";
+    if (!age) newErrors.age = "Age is required";
+    if (!sex) newErrors.sex = "Sex is required";
+    if (!studentType) newErrors.studentType = "Student type is required";
+    if (!level) newErrors.level = "Level is required";
+    if (!grade) newErrors.grade = "Grade is required";
+
+    if (studentType === "Transferee" && !prevSchool.trim()) {
+        newErrors.prevSchool = "Previous school is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+    };
+    // ==== stepper ====
     const [step, setStep] = useState(1);
     const totalSteps = 3;
     const nextStep = () => {
-    if (step < totalSteps) setStep(step + 1);
-    };
-    const prevStep = () => {
-    if (step > 1) setStep(step - 1);
-    };
+   if (step === 1) {
+   if (!validateStep1()) return; // STOP kung may error
+   }
+   if (step < totalSteps) setStep(step + 1);
+   };
 
     useEffect(() => {
     if (location.state?.loginSuccess) {
         sileo.success({
         title: "Login Successful",
-        description: "Welcome back!",
         fill: "black",
         styles: { description: "text-white" }
         });
@@ -79,7 +98,8 @@ const Enrollment = () => {
         navigate(location.pathname, { replace: true, state: {} });
     }
     }, []);
-
+  
+    // ====== Grade level Options ======
   const gradeOptions =
     level === "Preschool"
       ? ["Nursery", "Kinder"]
@@ -87,61 +107,55 @@ const Enrollment = () => {
       ? ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"]
       : [];
 
-      const [birthCert, setBirthCert] = useState(null);
-      const [reportCard, setReportCard] = useState(null);
-      const [idPicture, setIdPicture] = useState(null);
+        // ==== if user not complete back to complete profile ====
+        useEffect(() => {
+        const checkProfile = async () => {
+            if (!auth.currentUser) return;
 
+            const docSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+            if (docSnap.exists()) {
+            const data = docSnap.data();
 
-// if user not complete back to complete profile
-useEffect(() => {
-  const checkProfile = async () => {
-    if (!auth.currentUser) return;
+            const isProfileComplete =
+                data.parent?.firstname &&
+                data.parent?.lastname &&
+                data.address?.barangay &&
+                data.address?.city &&
+                data.address?.province &&
+                // === spouse is optional: check only if it exists ===
+                (!data.spouse || (data.spouse.firstname && data.spouse.lastname));
 
-    const docSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
-    if (docSnap.exists()) {
-      const data = docSnap.data();
+                if (!isProfileComplete) {
+                navigate("/completeprofile", { replace: true });
+                }
+                } else {
+                navigate("/completeprofile", { replace: true });
+                }
+                };checkProfile();
+                }, [navigate]);
+                
+                // For Calculations ===
+                const tuitionFees = {
+                    "Preschool": { 
+                        registration: 500, misc: 1000, books: 2500, instructional: 500, uniform: 1500, pta: 200,
+                        monthlyRate: 900,
+                        months: ["JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC", "JAN", "FEB", "MAR"]
+                    },
+                    "Elementary": { 
+                        registration: 500, misc: 2000, books: 2500, instructional: 700, uniform: 1500, pta: 200,
+                        monthlyRate: 1100,
+                        months: ["JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC", "JAN", "FEB", "MAR"]
+                    }
+                };
 
-      const isProfileComplete =
-        data.parent?.firstname &&
-        data.parent?.lastname &&
-        data.address?.barangay &&
-        data.address?.city &&
-        data.address?.province &&
-        // spouse is optional: check only if it exists
-        (!data.spouse || (data.spouse.firstname && data.spouse.lastname));
-
-      if (!isProfileComplete) {
-        navigate("/completeprofile", { replace: true });
-      }
-    } else {
-      navigate("/completeprofile", { replace: true });
-    }
-  };
-
-  checkProfile();
-}, [navigate]);
-
-    const tuitionFees = {
-        "Preschool": { 
-            registration: 500, misc: 1000, books: 2500, instructional: 500, uniform: 1500, pta: 200,
-            monthlyRate: 900,
-            months: ["JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC", "JAN", "FEB", "MAR"]
-        },
-        "Elementary": { 
-            registration: 500, misc: 2000, books: 2500, instructional: 700, uniform: 1500, pta: 200,
-            monthlyRate: 1100,
-            months: ["JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC", "JAN", "FEB", "MAR"]
-        }
-    };
-
-    // --- ALL ORIGINAL LOGIC PRESERVED ---
-    useEffect(() => {
-        const settingsRef = doc(db, "settings", "schoolYear");
-        const unsub = onSnapshot(settingsRef, (snap) => {
-            if (snap.exists()) setCurrentSY(snap.data().active);
-        });
-        return () => unsub();
-    }, []);
+                // --- ALL ORIGINAL LOGIC PRESERVED ---
+                useEffect(() => {
+                    const settingsRef = doc(db, "settings", "schoolYear");
+                    const unsub = onSnapshot(settingsRef, (snap) => {
+                        if (snap.exists()) setCurrentSY(snap.data().active);
+                    });
+                    return () => unsub();
+                }, []);
 
     useEffect(() => {
         let interval;
@@ -413,7 +427,11 @@ useEffect(() => {
          label="First name"
          id="childFirst"
          value={childFirst} 
-         onChange={(e)=>setChildFirst(e.target.value)} />
+         onChange={(e)=>setChildFirst(e.target.value)} 
+         />
+         {errors.childFirst && (
+         <p className="text-red-600 text-sm">{errors.childFirst}</p>
+         )}
          </div>
             
          <div className='flex flex-col w-full gap-2'>
@@ -433,7 +451,11 @@ useEffect(() => {
           label="Last name" 
           id="childLast"
           value={childLast} 
-          onChange={(e)=>setChildLast(e.target.value)} />
+          onChange={(e)=>setChildLast(e.target.value)} 
+          />
+          {errors.childLast && (
+            <p className="text-red-600 text-sm">{errors.childLast}</p>
+          )}
           </div>
           </div>
 
@@ -456,7 +478,11 @@ useEffect(() => {
           id="age" 
           type="number" 
           value={age}
-          onChange={(e)=>setAge(e.target.value)} />
+          onChange={(e)=>setAge(e.target.value)} 
+          />
+          {errors.age && (
+          <p className="text-red-600 text-sm">{errors.age}</p>
+          )}
           </div>
             
           <div className='flex flex-col gap-2'>
@@ -468,6 +494,9 @@ useEffect(() => {
           onChange={(e)=>setSex(e.target.value)}
           options={["Male", "Female"]}
           />
+          {errors.sex && (
+          <p className="text-red-600 text-sm">{errors.sex}</p>
+          )}
           </div>
           
           <div className='flex flex-col gap-2'>
@@ -478,6 +507,9 @@ useEffect(() => {
           onChange={(e) => setStudentType(e.target.value)}
           options={["New Student", "Old", "Transferee"]}
           />
+          {errors.studentType && (
+          <p className="text-red-600 text-sm">{errors.studentType}</p>
+          )}
          </div>
          </div>
 
@@ -489,7 +521,11 @@ useEffect(() => {
           id="prevSchool"
           label="Previous School"
           value={prevSchool} 
-          onChange={(e) => setPrevSchool(e.target.value)} />
+          onChange={(e) => setPrevSchool(e.target.value)} 
+          />
+          {errors.prevSchool && (
+          <p className="text-red-600 text-sm">{errors.prevSchool}</p>  
+          )}
           </div>
           )}
 
@@ -503,6 +539,9 @@ useEffect(() => {
           onChange={(e) => {setLevel(e.target.value); setGrade("");}}
           options={["Preschool", "Elementary"]}
           />
+          {errors.level && (
+          <p className="text-red-600 text-sm">{errors.level}</p>  
+          )}
          </div>
 
          <div className='flex flex-col w-full gap-2'>
@@ -514,6 +553,9 @@ useEffect(() => {
          onChange={(e) => setGrade(e.target.value)} disabled={!level}
          options={gradeOptions}
          />
+         {errors.grade && (
+         <p className="text-red-600 text-sm">{errors.grade}</p>   
+         )}
          </div>
          </div>
          </section>
