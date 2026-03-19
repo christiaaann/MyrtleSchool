@@ -22,6 +22,10 @@ import { Archive,
       Check, 
       CreditCard, 
       FileUser,
+      LogOut,
+      Menu,
+      Settings,
+      User,
       UserPen } from 'lucide-react';
 import FloatingInput from '../../components/FloatingInput';
 import FloatingSelect from '../../components/FloatingSelect';
@@ -77,13 +81,50 @@ const Enrollment = () => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
     };
+
+    // === Validations For Stepper 2 ===
+    const validateStep2 = () => {
+    const newErrors = {};
+    if (!files.idPicture) newErrors.idPicture = "Upload 2x2 Picture";
+    if (!files.birthCert) newErrors.birthCert = "Upload Birth Certificate";
+
+    // optional: Report Card required lang if studentType != New
+    if ((studentType === "Old" || studentType === "Transferee") && !files.reportCard) {
+        newErrors.reportCard = "Upload Report Card";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+    };
+
+    const validateStep3 = () => {
+    const newErrors = {};
+    if (!paymentMethod) {
+    newErrors.paymentMethod = "Please select payment method";
+    }
+    if (paymentMethod === "GCash" && !paymentProof) {
+    newErrors.paymentProof = "Please upload proof of payment";
+    }
+
+  setErrors(newErrors);
+
+  return Object.keys(newErrors).length === 0;
+};
+
     // ==== stepper ====
     const [step, setStep] = useState(1);
     const totalSteps = 3;
     const nextStep = () => {
-   if (step === 1) {
-   if (!validateStep1()) return; // STOP kung may error
-   }
+    if (step === 1) {
+    if (!validateStep1()) return; // STOP kung may error
+    }
+    
+    if (step === 2) {
+    if (!validateStep2()) return; // check lahat ng files
+    }
+    if (step === 3) {
+    if (!validateStep3()) return; // check if user upload payment proof
+    }
    if (step < totalSteps) setStep(step + 1);
    };
 
@@ -98,6 +139,12 @@ const Enrollment = () => {
         navigate(location.pathname, { replace: true, state: {} });
     }
     }, []);
+    
+    
+    // === previous ====
+    const prevStep = () => {
+    if (step > 1) setStep(step - 1);
+    };
   
     // ====== Grade level Options ======
   const gradeOptions =
@@ -236,115 +283,216 @@ const Enrollment = () => {
         setPage("personal"); 
     };
 
-    const handleSubmitEnrollment = async () => {
-        if (!level || !childFirst || !childLast || !studentType) {
-            await sileo.promise(new Promise((resolve, reject) => setTimeout(() => reject(new Error("Please fill up required Student Info")), 1000)), {
-                error: { title: "Missing Info", 
-                description: "Please fill up required Student Info", 
-                fill: "black",
-                styles:{description:"text-white/75"}
-            }
-            });
-            return;
-        }
-        setIsSubmitting(true);
-        const submitEnrollment = async () => {
-            const studentID = editingStudent ? editingStudent.studentID : `${currentSY}-${childLast[0].toUpperCase()}${childFirst[0].toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
-            const [birthUrl, cardUrl, picUrl, gcashUrl] = await Promise.all([
-                uploadToCloudinary(files.birthCert), uploadToCloudinary(files.reportCard),
-                uploadToCloudinary(files.idPicture), uploadToCloudinary(paymentProof)
-            ]);
-            await setDoc(doc(db, "students", studentID), {
-                studentID, parentUID: auth.currentUser.uid, firstname: childFirst, middlename: childMiddle, lastname: childLast, suffix, level, grade, age: Number(age), sex, studentType, previousSchool: studentType === "Transferee" ? prevSchool : "", isEnrolled: false, status: "Pending", requirements: { birthCert: birthUrl, reportCard: cardUrl, idPicture: picUrl }, address: userData.address, father: userData.spouse, mother: userData.parent, schoolYear: currentSY, createdAt: serverTimestamp()
-            });
-            await setDoc(doc(db, "enrollments", `ENR-${currentSY}-${studentID}`), {
-                studentID, parentUID: auth.currentUser.uid, schoolYear: currentSY, fees: tuitionFees[level],
-                monthlyTracking: tuitionFees[level].months.reduce((acc, month) => { acc[month] = { status: "Unpaid", amount: tuitionFees[level].monthlyRate }; return acc; }, {}),
-                payment: { method: paymentMethod, proofImage: gcashUrl, status: "Pending", dateEnrolled: serverTimestamp() }
-            });
+const handleSubmitEnrollment = async () => {
+
+  // 🔴 FINAL VALIDATION BLOCK (DITO ILALAGAY)
+  const step1Valid = validateStep1();
+  const step2Valid = validateStep2();
+  const step3Valid = validateStep3();
+
+  if (!step1Valid || !step2Valid || !step3Valid) {
+    await sileo.error({
+      title: "Missing Requirements",
+      description: "Please complete all required fields before submitting",
+      fill: "black",
+      styles: { description: "text-white/75" }
+    });
+    return;
+  }
+
+  //  ONLY PROCEED IF VALID
+  setIsSubmitting(true);
+
+  const submitEnrollment = async () => {
+    const studentID = editingStudent
+      ? editingStudent.studentID
+      : `${currentSY}-${childLast[0].toUpperCase()}${childFirst[0].toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+
+    const [birthUrl, cardUrl, picUrl, gcashUrl] = await Promise.all([
+      uploadToCloudinary(files.birthCert),
+      uploadToCloudinary(files.reportCard),
+      uploadToCloudinary(files.idPicture),
+      uploadToCloudinary(paymentProof)
+    ]);
+
+    await setDoc(doc(db, "students", studentID), {
+      studentID,
+      parentUID: auth.currentUser.uid,
+      firstname: childFirst,
+      middlename: childMiddle,
+      lastname: childLast,
+      suffix,
+      level,
+      grade,
+      age: Number(age),
+      sex,
+      studentType,
+      previousSchool: studentType === "Transferee" ? prevSchool : "",
+      isEnrolled: false,
+      status: "Pending",
+      requirements: {
+        birthCert: birthUrl,
+        reportCard: cardUrl,
+        idPicture: picUrl
+      },
+      address: userData.address,
+      father: userData.spouse,
+      mother: userData.parent,
+      schoolYear: currentSY,
+      createdAt: serverTimestamp()
+    });
+
+    await setDoc(doc(db, "enrollments", `ENR-${currentSY}-${studentID}`), {
+      studentID,
+      parentUID: auth.currentUser.uid,
+      schoolYear: currentSY,
+      fees: tuitionFees[level],
+      monthlyTracking: tuitionFees[level].months.reduce((acc, month) => {
+        acc[month] = {
+          status: "Unpaid",
+          amount: tuitionFees[level].monthlyRate
         };
-        try {
-            await sileo.promise(submitEnrollment(), {
-                loading: { title: "Submitting Enrollment..." },
-                success: { title: "Enrollment Successful", description: `Pending Admin Approval for S.Y. ${currentSY}`, fill: "black" },
-                error: { title: "Enrollment Failed" }
-            });
-            fetchMyStudents(auth.currentUser.uid);
-            handleAddNewChild();
-            setPage("archive");
-        } finally { setIsSubmitting(false); }
-    };
+        return acc;
+      }, {}),
+      payment: {
+        method: paymentMethod,
+        proofImage: gcashUrl,
+        status: "Pending",
+        dateEnrolled: serverTimestamp()
+      }
+    });
+  };
+
+  try {
+    await sileo.promise(submitEnrollment(), {
+      loading: { title: "Submitting Enrollment..." },
+      success: {
+        title: "Enrollment Successful",
+        description: `Pending Admin Approval for S.Y. ${currentSY}`,
+        fill: "black"
+      },
+      error: { title: "Enrollment Failed" }
+    });
+
+    fetchMyStudents(auth.currentUser.uid);
+    handleAddNewChild();
+    setPage("archive");
+
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
     if (!userData) return <p className='text-center mt-20 font-bold animate-pulse text-gray-400'>Loading MCS Portal...</p>;
 
     const fullAddress = `${userData.address.purok}, ${userData.address.barangay}, ${userData.address.city}, ${userData.address.province}`;
 
     return (
-        <div className='min-h-screen font-sans text-[#2D3748]'>
+        <div className='h-screen font-sans text-[#2D3748]'>
             
             {/* Minimal Header */}
             <header className='bg-white z-20 px-8 py-4 flex items-center justify-between border-b border-gray-100 sticky top-0 shadow-sm'>
-                <div className='flex items-center gap-6'>
-                    <div className='flex items-center gap-3'>
-                        <img className='w-10' src={logo} alt="Logo" />
-                        <div>
-                            <h1 className='text-sm font-black tracking-tight text-gray-800 uppercase'>Myrtle Christian School</h1>
-                            <p className='text-[10px] text-green-950 font-bold tracking-widest uppercase'>Parent Portal</p>
-                        </div>
-                    </div>
-                </div>
+            <div className='flex items-center gap-6'>
+            <div className='flex items-center gap-3'>
+            {/* === menu mobile ==== */}
+            <button className=" z-50 tablet:hidden" onClick={() => setIsOpen(!isOpen)}>
+            <Menu className="w-6 h-6" />
+            </button> 
+            
+            <img className='w-10' src={logo} alt="Logo" />
+            
+            <div>
+            <h1 className='text-sm font-black tracking-tight text-gray-800 uppercase'>Myrtle Christian School</h1>
+            <p className='text-[10px] text-green-950 font-bold tracking-widest uppercase'>Parent Portal</p>
+            </div>
+            </div>
+            </div>
 
-                <div className='flex items-center gap-4'>
-                    <div className='text-right'>
-                        <p className='text-xs font-bold'>{userData.parent?.firstname} {userData.parent?.lastname}</p>
-                      
-                    </div>
-                    <img onClick={() => setOpen(!open)} className="w-10 h-10 rounded-full border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform"
-                     src={userData.profilePicture || deaf} alt="User Profile"
-                     referrerPolicy="no-referrer" 
-                     crossOrigin="anonymous"
-                      />
+
+            <div className='flex items-center gap-4'>
+            <div className='text-right'>
+            <p className='text-xs font-bold'>{userData.parent?.firstname} {userData.parent?.lastname}</p>         
+            </div>
+            <img onClick={() => setOpen(!open)} className="w-10 h-10 rounded-full border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform"
+            src={userData.profilePicture || deaf} alt="User Profile"
+            referrerPolicy="no-referrer" 
+            crossOrigin="anonymous"
+            />
                    
-                    {open && (
-                        <div className="absolute top-16 right-8 bg-white shadow-2xl border rounded-xl p-2 w-40 animate-in fade-in zoom-in-95">
-                            <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className="text-red-500 text-xs font-bold w-full text-left px-4 py-3 hover:bg-red-50 rounded-lg">Logout Account</button>
-                        </div>
-                    )}
-                </div>
-            </header>
+            {open && (
+            <div className="absolute top-16 right-8 bg-white shadow-2xl border rounded-xl p-2 w-40 animate-in fade-in zoom-in-95">
+            <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className="text-red-500 text-xs font-bold w-full text-left px-4 py-3 hover:bg-red-50 rounded-lg">Logout Account</button>
+            </div>
+            )}
+           </div>
+          </header>
             
 
             <div className="flex">
+      
+
+{/* SIDEBAR / TABS */}
+{/* MOBILE OVERLAY */}
+{isOpen && (
+  <div
+    className="fixed inset-0 bg-black/30 z-30 md:hidden"
+    onClick={() => setIsOpen(false)}
+  ></div>
+)}
+
+{/* SIDEBAR */}
+<div
+  className={`
+    fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-40
+    transform transition-transform duration-300
+    ${isOpen ? "translate-x-0" : "-translate-x-full"} 
+    md:translate-x-0 md:relative md:flex md:flex-col md:w-[13rem]
+  `}
+>
+
+  <button
+    className='hover:bg-gray-100 px-6 flex gap-2 w-full items-center py-1'
+    onClick={() => {
+    setPage("personal");
+    setIsOpen(false);
+    }}
+  >
+    <FileUser className='w-5 h-5'/> Enrollment
+  </button>
+
+  <button
+    className='hover:bg-gray-100 px-6 py-1 w-full flex items-center gap-2'
+    onClick={() =>{
+    setPage("archive");
+    setIsOpen(false);
+    }}
+  >
+    <Archive className='w-5 h-5'/> Records
+  </button>
+</div>
  
-                
                 {/* (TABS MENU) --- */}
-
-                <div className=' border w-[13rem] flex flex-col gap-2'>
-                {/* <div className='flex gap-2 backdrop-blur-sm mb-5 bg-gray-200/50 p-1.5 rounded-2xl w-fit'>
-                    <button 
-                        onClick={() => setPage("personal")} 
-                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${setpage === 'personal' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}
-                    >
-                        Enrollment Form
-                    </button>
-                    <button onClick={handleAddNewChild} className=' bg-black rounded-full w-10 h-10 flex items-center justify-center'>
-                    <img className=' w-5' src={plus} alt="" />
-                    </button>
-                    <button 
-                        onClick={() => setPage("archive")} 
-                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${setpage === 'archive' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'}`}
-                    >
-                        Records / Archive
-                    </button>
-                </div> */}
-                <button className=' hover:bg-gray-100 px-6 flex gap-2 w-full items-center py-1' 
-                onClick={() => setPage("persoanal")}><FileUser className='w-5 h-5'/>Enrollment</button>
-
-                <button className=' hover:bg-gray-100 px-6 py-1 w-full flex items-center gap-2'
+                <div className='p-5 hidden tablet:block tablet:sticky tablet:top-20 tablet:h-[calc(100vh-5rem)] relative'>
+                <div className='w-[10rem] gap-2'>
+                 <h1 className='font-semibold'>Child</h1>  
+                 <div className='flex flex-col mt-1 gap-1'>
+                <button className=' hover:bg-gray-100 hover:rounded-lg px-6 flex gap-2 w-full items-center py-1' 
+                onClick={() => setPage("persoanal")}><FileUser className=''/>Enrollment</button>
+                <button className=' hover:bg-gray-100 hover:rounded-lg w-full  px-6 py-1 flex items-center gap-2'
                 onClick={() => setPage("archive")}
-                ><Archive className='w-5 h-5'/>Records</button>
-                 </div> 
- 
+                ><Archive/>Records</button>
+                </div> 
+
+                <h1 className=' mt-2 font-semibold'>Account</h1>
+                 <div className='flex gap-1 flex-col'>
+                  <button className='px-6 hover:bg-gray-100 hover:rounded-lg flex items-center gap-2 py-2'><User/>Profile</button>
+                  <button className='px-6 hover:bg-gray-100 hover:rounded-lg py-2 flex items-center gap-2'><Settings/>Settings</button>
+                </div>
+                </div> 
+                <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className="absolute flex items-center gap-2 px-6 bottom-5 left-5 right-5 text-red-600 py-1">
+                 <LogOut/>Logout
+                 </button>
+                </div>
                 {setpage === "archive" ? (
                     <EnrollmentArchive {...{setpage, 
                         myStudents, 
@@ -419,7 +567,7 @@ const Enrollment = () => {
         <h3 className='font-bold uppercase tracking-widest text-sm'>Child Information</h3>
         </div>
                                 
-        <div className='flex gap-2'>
+        <div className='flex flex-col tablet:flex-row gap-2'>
          <div className='flex flex-col w-full gap-2'>
          <label className='flex gap-2'><span className='text-red-600'>*</span>First name</label>
          <FloatingInput
@@ -427,7 +575,10 @@ const Enrollment = () => {
          label="First name"
          id="childFirst"
          value={childFirst} 
-         onChange={(e)=>setChildFirst(e.target.value)} 
+         onChange={(e)=>{
+         setChildFirst(e.target.value);
+         setErrors(prev => ({ ...prev, childFirst: ""}));  
+         }} 
          />
          {errors.childFirst && (
          <p className="text-red-600 text-sm">{errors.childFirst}</p>
@@ -451,7 +602,10 @@ const Enrollment = () => {
           label="Last name" 
           id="childLast"
           value={childLast} 
-          onChange={(e)=>setChildLast(e.target.value)} 
+          onChange={(e)=>{
+          setChildLast(e.target.value);
+          setErrors(prev => ({ ...prev, childLast: ""}));
+          }} 
           />
           {errors.childLast && (
             <p className="text-red-600 text-sm">{errors.childLast}</p>
@@ -459,7 +613,7 @@ const Enrollment = () => {
           </div>
           </div>
 
-          <div className='grid grid-cols-2 md:grid-cols-4 gap-6 mt-6'>
+          <div className='grid grid-cols-1 tablet:grid-cols-2 md:grid-cols-4 gap-6 mt-6'>
           <div className='flex flex-col gap-2'>
           <label>Suffix</label>
           <FloatingSelect
@@ -478,7 +632,10 @@ const Enrollment = () => {
           id="age" 
           type="number" 
           value={age}
-          onChange={(e)=>setAge(e.target.value)} 
+          onChange={(e)=>{
+          setAge(e.target.value);
+          setErrors(prev => ({ ...prev, age : ""}));
+          }} 
           />
           {errors.age && (
           <p className="text-red-600 text-sm">{errors.age}</p>
@@ -491,7 +648,10 @@ const Enrollment = () => {
           label="Select"
           id="sex"
           value={sex} 
-          onChange={(e)=>setSex(e.target.value)}
+          onChange={(e)=>{
+          setSex(e.target.value);
+          setErrors(prev => ({ ...prev, sex : ""}));
+          }}
           options={["Male", "Female"]}
           />
           {errors.sex && (
@@ -504,7 +664,10 @@ const Enrollment = () => {
           <FloatingSelect 
           label="Select"
           value={studentType} 
-          onChange={(e) => setStudentType(e.target.value)}
+          onChange={(e) => {
+          setStudentType(e.target.value);
+          setErrors(prev => ({...prev, studentType: ""}))
+          }}
           options={["New Student", "Old", "Transferee"]}
           />
           {errors.studentType && (
@@ -512,7 +675,8 @@ const Enrollment = () => {
           )}
          </div>
          </div>
-
+          
+          {/* ==== previous school ===== */}
           {studentType === "Transferee" && (
           <div className='flex flex-col mt-5 gap-2'>
           <label className='flex gap-1'><span className='text-red-600'>*</span>Previous School Attended</label>
@@ -521,7 +685,10 @@ const Enrollment = () => {
           id="prevSchool"
           label="Previous School"
           value={prevSchool} 
-          onChange={(e) => setPrevSchool(e.target.value)} 
+          onChange={(e) => {
+          setPrevSchool(e.target.value);
+          setErrors(prev => ({...prev, prevSchool : ""}));
+          }} 
           />
           {errors.prevSchool && (
           <p className="text-red-600 text-sm">{errors.prevSchool}</p>  
@@ -536,7 +703,10 @@ const Enrollment = () => {
           label="Select"
           id="level"
           value={level} 
-          onChange={(e) => {setLevel(e.target.value); setGrade("");}}
+          onChange={(e) => {setLevel(e.target.value); 
+          setGrade("");
+          setErrors (prev =>({...prev, level: ""}));
+          }}
           options={["Preschool", "Elementary"]}
           />
           {errors.level && (
@@ -550,7 +720,11 @@ const Enrollment = () => {
          label="select"
          id="grade"
          value={grade} 
-         onChange={(e) => setGrade(e.target.value)} disabled={!level}
+         onChange={(e) => {
+         setGrade(e.target.value);
+         setErrors (prev => ({...prev, grade : ""}));   
+         }}
+         disabled={!level}
          options={gradeOptions}
          />
          {errors.grade && (
@@ -566,28 +740,42 @@ const Enrollment = () => {
          <section className="space-y-4">
          <h3 className="font-bold text-slate-700">Upload Requirements</h3>
         <div className='flex justify-center'>
-        <div className='flex w-96'>
+        <div className='flex flex-col w-full tablet:w-96'>
         <UploadBox
          label="ID Picture 2x2"
          file={files.idPicture}
-         setFile={(file) => setFiles(prev => ({ ...prev, idPicture: file }))}
+         setFile={(file) => {
+         setFiles(prev => ({ ...prev, idPicture: file }));
+         setErrors(prev => ({ ...prev, idPicture: "" }));
+          }}
          validateSize={true}
          />
+         {errors.idPicture && (
+         <p className='text-red-600 text-sm'>{errors.idPicture}</p>  
+         )}
         </div>
         </div>
-         <div className="flex gap-5">
+         <div className="flex flex-col tablet:flex-row gap-5">
+         <div className='flex flex-col w-full'>   
          <UploadBox
          label="Birth Certificate"
          file={files.birthCert}
          setFile={(file) => setFiles(prev => ({ ...prev, birthCert: file }))}
          />
-
+         {errors.birthCert && (
+         <p className='text-red-600 text-sm'>{errors.birthCert}</p>   
+         )}
+         </div>
+         <div className='flex flex-col w-full'>
          <UploadBox
          label="Report Card"
          file={files.reportCard}
          setFile={(file) => setFiles(prev => ({ ...prev, reportCard: file }))}
          />
-
+         {errors.reportCard && (
+         <p className='text-red-600 text-sm'>{errors.reportCard}</p>   
+         )}
+        </div>
 
          </div>
          </section>
@@ -654,7 +842,12 @@ const Enrollment = () => {
                         <div className='flex flex-col gap-4'>
                             <div className='flex flex-col gap-2'>
                                 <label className='text-[10px] font-black text-gray-400 uppercase'>Payment Method</label>
-                                <select className='w-full bg-white border border-gray-200 rounded-2xl px-5 py-3 text-sm font-bold focus:ring-2 ring-orange-100 outline-none cursor-pointer' value={paymentMethod} onChange={(e)=>setPaymentMethod(e.target.value)}>
+                                <select className='w-full bg-white border border-gray-200 rounded-2xl px-5 py-3 text-sm font-bold focus:ring-2 ring-orange-100 outline-none cursor-pointer'
+                                 value={paymentMethod} 
+                                 onChange={(e)=>{setPaymentMethod(e.target.value);
+                                    setErrors(prev => ({...prev,paymentMethod : ""}));
+                                 }}
+                                 >   
                                     <option value="">Choose Method</option>
                                     <option value="Cash">Cash Payment</option>
                                     <option value="GCash">GCash Transfer</option>
@@ -663,9 +856,13 @@ const Enrollment = () => {
                             {paymentMethod === "GCash" && (
                                 <div className='animate-in slide-in-from-top-2'>
                                     <label className='text-[10px] font-black text-gray-400 uppercase'>Proof of Transaction</label>
-                                    <input type="file" className='w-full mt-2 text-xs bg-white p-2 rounded-xl border border-dashed border-orange-300' onChange={(e)=>setPaymentProof(e.target.files[0])} />
+                                    <input type="file" className='w-full mt-2 text-xs bg-white p-2 rounded-xl border border-dashed border-orange-300'
+                                     onChange={(e)=>{setPaymentProof(e.target.files[0]);
+                                     setErrors (prev => ({...prev , paymentProof : ""}));   
+                                     }} />
                                 </div>
                             )}
+
                         </div>
                     </div>
                 </div>

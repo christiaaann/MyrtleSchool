@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react"; 
-import { doc, onSnapshot, updateDoc, deleteDoc } from "firebase/firestore"; 
+import { doc, onSnapshot, updateDoc, deleteDoc ,collection, query, where } from "firebase/firestore"; 
 import { db } from "../../services/firebase"; 
+import { auth } from "../../services/firebase";
 
 const EnrollmentArchive = ({
   setpage,
@@ -47,9 +48,25 @@ const EnrollmentArchive = ({
     return () => unsubSettings();
   }, []);
 
-  useEffect(() => {
-    setStudents(propsStudents);
-  }, [propsStudents]);
+    useEffect(() => {
+      if (!currentSY || !auth.currentUser) return;
+
+      const q = query(
+        collection(db, "students"),
+        where("parentUID", "==", auth.currentUser.uid)
+      );
+
+      const unsub = onSnapshot(q, (snap) => {
+        const data = snap.docs.map(doc => ({
+          ...doc.data(),
+          id: doc.id
+        }));
+
+        setStudents(data);
+      });
+
+      return () => unsub();
+    }, [currentSY, auth.currentUser?.uid]);
 
   useEffect(() => {
     if (!students?.length || !currentSY) return;
