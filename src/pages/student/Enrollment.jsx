@@ -406,14 +406,14 @@ const handleSubmitEnrollment = async () => {
             <img className='w-10' src={logo} alt="Logo" />
             
             <div>
-            <h1 className='text-sm font-black tracking-tight text-gray-800 uppercase'>Myrtle Christian School</h1>
+            <h1 className='text-sm text-nowrap font-black tracking-tight text-gray-800 uppercase'>Myrtle Christian School</h1>
             <p className='text-[10px] text-green-950 font-bold tracking-widest uppercase'>Parent Portal</p>
             </div>
             </div>
             </div>
 
 
-            <div className='flex items-center gap-4'>
+            {/* <div className='flex items-center gap-4'>
             <div className='text-right'>
             <p className='text-xs font-bold'>{userData.parent?.firstname} {userData.parent?.lastname}</p>         
             </div>
@@ -428,7 +428,7 @@ const handleSubmitEnrollment = async () => {
             <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className="text-red-500 text-xs font-bold w-full text-left px-4 py-3 hover:bg-red-50 rounded-lg">Logout Account</button>
             </div>
             )}
-           </div>
+           </div> */}
           </header>
             
 
@@ -439,7 +439,7 @@ const handleSubmitEnrollment = async () => {
           {/* MOBILE OVERLAY */}
                 {isOpen && (
                   <div
-                    className="fixed inset-0 bg-black/30 z-30 md:hidden"
+                    className="fixed inset-0 bg-black/30 z-30 tablet:hidden"
                     onClick={() => setIsOpen(false)}
                   ></div>
                 )}
@@ -447,10 +447,10 @@ const handleSubmitEnrollment = async () => {
                 {/* SIDEBAR */}
                 <div
                   className={`
-                    fixed top-0 left-0 h-full w-64 bg-white p-8 shadow-lg z-40
+                    fixed top-0 left-0 min-h-screen w-64 bg-white p-8 shadow-lg z-40
                     transform transition-transform duration-300
                     ${isOpen ? "translate-x-0" : "-translate-x-full"} 
-                    md:translate-x-0 md:relative md:flex md:flex-col md:w-[13rem]
+                    md:translate-x-0 md:relative md:flex md:flex-col md:w-[13rem] tablet:hidden
                   `}
                 >
                   <h1>Child</h1>
@@ -485,11 +485,16 @@ const handleSubmitEnrollment = async () => {
                   <button className=' px-6 py-2 flex gap-2 rounded-2xl hover:bg-gray-100'><User/>Profile</button>
                   <button className='flex gap-2 px-6 py-2 hover:bg-gray-200 rounded-2xl'><Settings/>Settings</button>
                   </div>
+                  <div className='flex absolute bg-gray-100 rounded-2xl gap-2 bottom-2  items-center px-6 py-2 w-ful'>
+                  <img className='w-10 h-10 rounded-full' src={userData.profilePicture} alt="" />
+                  <p className='text-xs text-nowrap font-bold'>{userData.parent?.firstname} {userData.parent?.lastname}</p>   
+                  <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className=" text-red-600"><LogOut/></button>
+               </div> 
                 </div>
  
                 {/* (TABS MENU) --- */}
                 <div className='p-5 hidden tablet:block tablet:sticky tablet:top-20 tablet:h-[calc(100vh-5rem)] relative'>
-                <div className='w-[10rem] gap-2'>
+                <div className='w-[15rem] gap-2'>
                  <h1 className='font-semibold'>Child</h1>  
                  <div className='flex flex-col mt-1 gap-1'>
 
@@ -514,10 +519,14 @@ const handleSubmitEnrollment = async () => {
                   <button className='px-6 hover:bg-gray-100 hover:rounded-lg flex items-center gap-2 py-2'><User/>Profile</button>
                   <button className='px-6 hover:bg-gray-100 hover:rounded-lg py-2 flex items-center gap-2'><Settings/>Settings</button>
                 </div>
-                </div> 
-                <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className="absolute flex items-center gap-2 px-6 bottom-5 left-5 right-5 text-red-600 py-1">
-                 <LogOut/>Logout
+                </div>
+                <div className='flex absolute bottom-3 w-[15rem] items-center justify-center px-6 py-1 rounded-2xl bg-gray-100 gap-2'> 
+                <img className='w-8 h-8 rounded-full' src={userData.profilePicture} alt="" />
+                  <h1 className='text-nowrap'>{userData.parent ?. firstname} {userData.parent ?. lastname}</h1> 
+                  <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className=" text-red-600">
+                 <LogOut/>
                  </button>
+                 </div>
                 </div>
                 {setpage === "archive" ? (
                     <EnrollmentArchive {...{setpage, 

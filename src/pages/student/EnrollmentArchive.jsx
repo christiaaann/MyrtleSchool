@@ -204,10 +204,12 @@ const EnrollmentArchive = ({
 
   return (
     <div className="min-h-screen p-5 w-full">  
-      <div className="flex items-center flex-co justify-between gap-2">
+      <div className="flex  items-center flex-co justify-between gap-2">
+      <div className="flex flex-col">
       <h2 className="text-2xl">Records</h2>
       <p className="text-[10px] font-bold text-gray-400">CURRENT SY: {currentSY || "Loading..."}</p>
-      <button onClick={handleAddNewChild} className=" bg-gray-200 text-black/50 px-5 py-2 rounded-xl text-[14px] font-bold hover:bg-green-100 transition-all">
+      </div>
+      <button onClick={handleAddNewChild} className=" bg-gray-200 text-black/50 px-5 py-2 rounded-xl text-[10px] text-nowrap font-bold hover:bg-green-100 transition-all">
       + Add New Child
       </button>
       </div>
