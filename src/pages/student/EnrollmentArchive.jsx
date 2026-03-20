@@ -203,7 +203,7 @@ const EnrollmentArchive = ({
   if (setpage !== "archive") return null;
 
   return (
-    <div className="h-screen p-5 w-full">  
+    <div className="min-h-screen p-5 w-full">  
       <div className="flex items-center flex-co justify-between gap-2">
       <h2 className="text-2xl">Records</h2>
       <p className="text-[10px] font-bold text-gray-400">CURRENT SY: {currentSY || "Loading..."}</p>

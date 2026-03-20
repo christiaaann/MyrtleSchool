@@ -198,7 +198,7 @@ const Auth = () => {
               {/* Google */}
               <button
                 onClick={handleGoogleLogin}
-                className="w-12 h-12 rounded-full mt-5 bg-gray-200 flex items-center justify-center"
+                className="w-12 h-12 rounded-full mt-5 bg-gray-100 flex items-center justify-center"
               >
                 <img className="w-8" src={google} alt="Google" />
               </button>

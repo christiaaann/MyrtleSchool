@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import logo from "../assets/logo.png";
 import { Menu, X } from "lucide-react";
 import { User } from "lucide-react";
+import { Link } from "react-router-dom";
 const Navbar = () => {
   const [open, setOpen] = useState(false);
 
@@ -41,10 +42,9 @@ const Navbar = () => {
           </ul>
 
           {/* Desktop Button */}
-          <button className="hidden laptop:flex gap-2 bg-[#2D5B60] hover:bg-[#24494d] transition text-white px-10 py-1 rounded-full shadow-md">
-            <User/>
-            Login
-          </button>
+          <Link to="/Auth" className="hidden laptop:flex gap-2 bg-[#2D5B60] hover:bg-[#24494d] transition text-white px-10 py-1 rounded-full shadow-md">
+            Enroll Now
+          </Link>
 
           {/* Mobile Menu Button */}
           <button

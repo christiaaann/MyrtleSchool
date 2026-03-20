@@ -280,6 +280,7 @@ const Enrollment = () => {
         setPaymentMethod(""); 
         setPaymentProof(null); 
         setEditingStudent(null);
+        setStep(1);
         setPage("personal"); 
     };
 
@@ -375,7 +376,10 @@ const handleSubmitEnrollment = async () => {
     });
 
     fetchMyStudents(auth.currentUser.uid);
+    
+    // reset form
     handleAddNewChild();
+    
     setPage("archive");
 
   } finally {
@@ -428,59 +432,81 @@ const handleSubmitEnrollment = async () => {
           </header>
             
 
-            <div className="flex">
+            <div className="flex ">
       
 
-{/* SIDEBAR / TABS */}
-{/* MOBILE OVERLAY */}
-{isOpen && (
-  <div
-    className="fixed inset-0 bg-black/30 z-30 md:hidden"
-    onClick={() => setIsOpen(false)}
-  ></div>
-)}
+          {/* SIDEBAR / TABS */}
+          {/* MOBILE OVERLAY */}
+                {isOpen && (
+                  <div
+                    className="fixed inset-0 bg-black/30 z-30 md:hidden"
+                    onClick={() => setIsOpen(false)}
+                  ></div>
+                )}
 
-{/* SIDEBAR */}
-<div
-  className={`
-    fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-40
-    transform transition-transform duration-300
-    ${isOpen ? "translate-x-0" : "-translate-x-full"} 
-    md:translate-x-0 md:relative md:flex md:flex-col md:w-[13rem]
-  `}
->
+                {/* SIDEBAR */}
+                <div
+                  className={`
+                    fixed top-0 left-0 h-full w-64 bg-white p-8 shadow-lg z-40
+                    transform transition-transform duration-300
+                    ${isOpen ? "translate-x-0" : "-translate-x-full"} 
+                    md:translate-x-0 md:relative md:flex md:flex-col md:w-[13rem]
+                  `}
+                >
+                  <h1>Child</h1>
+                  <div className='flex flex-col gap-2'>
+                  <button
+                     className={`px-6 flex gap-2 w-full items-center py-2 rounded-2xl transition-all
+                   ${setpage === "personal" ? "bg-gray-100" : "hover:bg-gray-100"}
+                    `}
+                    onClick={() => {
+                    setPage("personal");
+                    setIsOpen(false);
+                    }}
+                  >
+                    <FileUser className='w-5 h-5'/> Enrollment
+                  </button>
 
-  <button
-    className='hover:bg-gray-100 px-6 flex gap-2 w-full items-center py-1'
-    onClick={() => {
-    setPage("personal");
-    setIsOpen(false);
-    }}
-  >
-    <FileUser className='w-5 h-5'/> Enrollment
-  </button>
-
-  <button
-    className='hover:bg-gray-100 px-6 py-1 w-full flex items-center gap-2'
-    onClick={() =>{
-    setPage("archive");
-    setIsOpen(false);
-    }}
-  >
-    <Archive className='w-5 h-5'/> Records
-  </button>
-</div>
+                  <button
+                     className={`px-6 flex gap-2 w-full items-center py-2 rounded-2xl transition-all
+                    ${setpage === "archive" ? "bg-gray-100" : "hover:bg-gray-100"}
+                     `}
+                    onClick={() =>{
+                    setPage("archive");
+                    setIsOpen(false);
+                    }}
+                  >
+                    <Archive className='w-5 h-5'/> Records
+                  </button>
+                  </div>
+                  
+                  <h1>Account</h1>
+                  <div className=' flex flex-col'>
+                  <button className=' px-6 py-2 flex gap-2 rounded-2xl hover:bg-gray-100'><User/>Profile</button>
+                  <button className='flex gap-2 px-6 py-2 hover:bg-gray-200 rounded-2xl'><Settings/>Settings</button>
+                  </div>
+                </div>
  
                 {/* (TABS MENU) --- */}
                 <div className='p-5 hidden tablet:block tablet:sticky tablet:top-20 tablet:h-[calc(100vh-5rem)] relative'>
                 <div className='w-[10rem] gap-2'>
                  <h1 className='font-semibold'>Child</h1>  
                  <div className='flex flex-col mt-1 gap-1'>
-                <button className=' hover:bg-gray-100 hover:rounded-lg px-6 flex gap-2 w-full items-center py-1' 
-                onClick={() => setPage("persoanal")}><FileUser className=''/>Enrollment</button>
-                <button className=' hover:bg-gray-100 hover:rounded-lg w-full  px-6 py-1 flex items-center gap-2'
+
+                <button className={`px-6 flex gap-2 w-full items-center py-2 rounded-2xl transition-all duration-200 ease-out
+                 ${setpage === "personal" ? "bg-gray-100 scale-[0.98]" : "hover:bg-gray-100"}`}
+                 onClick={() => setPage("personal")}>
+                 <FileUser className=''/>
+                 Enrollment
+                 </button>
+
+                <button   className={`px-6 flex gap-2 w-full items-center py-2 rounded-2xl transition-all  duration-200 ease-out  
+                 ${setpage === "archive" ? "bg-gray-100 scale-[0.98]" : "hover:bg-gray-100"}
+                 `}
                 onClick={() => setPage("archive")}
-                ><Archive/>Records</button>
+                ><Archive/>
+                 Records
+                </button>
                 </div> 
 
                 <h1 className=' mt-2 font-semibold'>Account</h1>
@@ -512,7 +538,7 @@ const handleSubmitEnrollment = async () => {
                         setEditingStudent, 
                         setPage}} />
                 ) : (
-        <div className='space-y-2 animate-in border w-full fade-in slide-in-from-bottom-4 duration-700'>
+        <div className='space-y-2 animate-in border w-full fade-in slide-in-from-bottom-4 duration-700 overflow-hidden'>
         {/* stepper */}
         <ol className="flex justify-between items-center mt-1 relative">
         {[1, 2, 3].map((s, i) => (
@@ -541,7 +567,7 @@ const handleSubmitEnrollment = async () => {
 
         {/* Step Content */}
         <div className="text-center mt-6">
-        <h4 className={`text-base mb-1 ${step >= s ? "text-green-600" : "text-gray-900"}`}>
+        <h4 className={`tablet:text-base mb-1 text-sm text-nowrap ${step >= s ? "text-green-600" : "text-gray-900"}`}>
         {s === 1 && "Child Info"}
         {s === 2 && "Upload Requirements"}
         {s === 3 && "Payment"}
