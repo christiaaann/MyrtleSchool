@@ -30,7 +30,7 @@ import { Archive,
 import FloatingInput from '../../components/FloatingInput';
 import FloatingSelect from '../../components/FloatingSelect';
 import UploadBox from '../../components/UploadBox';
-
+import { useTheme } from '../../components/ThemeContext';
 const Enrollment = () => {
     // --- ALL ORIGINAL STATES PRESERVED ---
     const [isOpen, setIsOpen] = useState(false);
@@ -42,6 +42,7 @@ const Enrollment = () => {
     const [studentType, setStudentType] = useState("");
     const [userData, setUserData] = useState(null);
     const navigate = useNavigate();
+     const { darkMode, toggleTheme } = useTheme();
 
     const [childFirst, setChildFirst] = useState("");
     const [childMiddle, setChildMiddle] = useState("");
@@ -392,22 +393,22 @@ const handleSubmitEnrollment = async () => {
     const fullAddress = `${userData.address.purok}, ${userData.address.barangay}, ${userData.address.city}, ${userData.address.province}`;
 
     return (
-        <div className='h-screen font-sans text-[#2D3748]'>
+        <div className=' dark:bg-black font-sans text-[#2D3748]'>
             
             {/* Minimal Header */}
-            <header className='bg-white z-20 px-8 py-4 flex items-center justify-between border-b border-gray-100 sticky top-0 shadow-sm'>
+            <header className='bg-white dark:bg-black  z-20 px-8 py-4 flex items-center justify-between border-b dark:border-b-neutral-800 border-gray-100 sticky top-0 shadow-sm'>
             <div className='flex items-center gap-6'>
             <div className='flex items-center gap-3'>
             {/* === menu mobile ==== */}
             <button className=" z-50 tablet:hidden" onClick={() => setIsOpen(!isOpen)}>
-            <Menu className="w-6 h-6" />
+            <Menu className="w-6 h-6 dark:text-neutral-400" />
             </button> 
             
             <img className='w-10' src={logo} alt="Logo" />
             
-            <div>
-            <h1 className='text-sm text-nowrap font-black tracking-tight text-gray-800 uppercase'>Myrtle Christian School</h1>
-            <p className='text-[10px] text-green-950 font-bold tracking-widest uppercase'>Parent Portal</p>
+            <div className=''>
+            <h1 className='text-sm text-nowrap dark:text-gray-500 font-black tracking-tight text-gray-800 uppercase'>Myrtle Christian School</h1>
+            <p className='text-[10px] text-green-950 dark:text-white font-bold tracking-widest uppercase'>Parent Portal</p>
             </div>
             </div>
             </div>
@@ -429,9 +430,26 @@ const handleSubmitEnrollment = async () => {
             </div>
             )}
            </div> */}
-          </header>
-            
-
+          
+          {/* darkmode toggle */}
+        <label className="switch">
+          <input
+            type="checkbox"
+            checked={darkMode}
+            onChange={toggleTheme}
+          />
+          <span className="slider">
+            <svg
+              className="slider-icon"
+              viewBox="0 0 32 32"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path fill="none" d="m4 16.5 8 8 16-16"></path>
+            </svg>
+          </span>
+        </label>
+          </header> 
             <div className="flex ">
       
 
@@ -485,7 +503,7 @@ const handleSubmitEnrollment = async () => {
                   <button className=' px-6 py-2 flex gap-2 rounded-2xl hover:bg-gray-100'><User/>Profile</button>
                   <button className='flex gap-2 px-6 py-2 hover:bg-gray-200 rounded-2xl'><Settings/>Settings</button>
                   </div>
-                  <div className='flex absolute bg-gray-100 rounded-2xl gap-2 bottom-2  items-center px-6 py-2 w-ful'>
+                  <div className='flex  absolute bg-gray-100 rounded-2xl gap-2 bottom-2  items-center px-6 py-2 w-ful'>
                   <img className='w-10 h-10 rounded-full' src={userData.profilePicture} alt="" />
                   <p className='text-xs text-nowrap font-bold'>{userData.parent?.firstname} {userData.parent?.lastname}</p>   
                   <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className=" text-red-600"><LogOut/></button>
@@ -493,20 +511,20 @@ const handleSubmitEnrollment = async () => {
                 </div>
  
                 {/* (TABS MENU) --- */}
-                <div className='p-5 hidden tablet:block tablet:sticky tablet:top-20 tablet:h-[calc(100vh-5rem)] relative'>
+                <div className='p-5 hidden dark:text-neutral-700 tablet:block tablet:sticky tablet:top-20 tablet:h-[calc(100vh-5rem)] relative '>
                 <div className='w-[15rem] gap-2'>
                  <h1 className='font-semibold'>Child</h1>  
                  <div className='flex flex-col mt-1 gap-1'>
 
                 <button className={`px-6 flex gap-2 w-full items-center py-2 rounded-2xl transition-all duration-200 ease-out
-                 ${setpage === "personal" ? "bg-gray-100 scale-[0.98]" : "hover:bg-gray-100"}`}
+                 ${setpage === "personal" ? "bg-gray-100 dark:bg-neutral-900 scale-[0.98]" : "hover:bg-gray-100 hover:dark:bg-neutral-900"}`}
                  onClick={() => setPage("personal")}>
                  <FileUser className=''/>
                  Enrollment
                  </button>
 
                 <button   className={`px-6 flex gap-2 w-full items-center py-2 rounded-2xl transition-all  duration-200 ease-out  
-                 ${setpage === "archive" ? "bg-gray-100 scale-[0.98]" : "hover:bg-gray-100"}
+                 ${setpage === "archive" ? "bg-gray-100 dark:bg-neutral-900 scale-[0.98]" : "hover:bg-gray-100 hover:dark:bg-neutral-900"}
                  `}
                 onClick={() => setPage("archive")}
                 ><Archive/>
@@ -547,7 +565,7 @@ const handleSubmitEnrollment = async () => {
                         setEditingStudent, 
                         setPage}} />
                 ) : (
-        <div className='space-y-2 animate-in border w-full fade-in slide-in-from-bottom-4 duration-700 overflow-hidden'>
+        <div className='space-y-2 animate-in  w-full fade-in slide-in-from-bottom-4 duration-700 overflow-hidden'>
         {/* stepper */}
         <ol className="flex justify-between items-center mt-1 relative">
         {[1, 2, 3].map((s, i) => (
@@ -571,12 +589,12 @@ const handleSubmitEnrollment = async () => {
 
         {/* Connecting line */}
         {i < 2 && (
-        <div className="absolute top-4 left-1/2  border w-full bg-gray-300 z-0"></div>
+        <div className="absolute top-4 left-1/2  border dark:border-neutral-900 w-full bg-gray-300 z-0"></div>
         )}
 
         {/* Step Content */}
         <div className="text-center mt-6">
-        <h4 className={`tablet:text-base mb-1 text-sm text-nowrap ${step >= s ? "text-green-600" : "text-gray-900"}`}>
+        <h4 className={`tablet:text-base mb-1 text-sm text-nowrap ${step >= s ? "text-green-600" : "text-gray-900 dark:text-neutral-600"}`}>
         {s === 1 && "Child Info"}
         {s === 2 && "Upload Requirements"}
         {s === 3 && "Payment"}
@@ -593,18 +611,18 @@ const handleSubmitEnrollment = async () => {
         </ol>
 
         {/* FORM CONTENT */}
-        <div className=' borde p-5'>
+        <div className=' p-5'>
         {/* SECTION: CHILD */}
         { step === 1 && (
         <section>
         <div className='flex gap-2 items-center'>
         <div className='w-1 h-6 bg-green-950 rounded-full'></div>
-        <h3 className='font-bold uppercase tracking-widest text-sm'>Child Information</h3>
+        <h3 className='font-semibold uppercase tracking-widest text-sm dark:text-neutral-600'>Child Information</h3>
         </div>
                                 
         <div className='flex flex-col tablet:flex-row gap-2'>
          <div className='flex flex-col w-full gap-2'>
-         <label className='flex gap-2'><span className='text-red-600'>*</span>First name</label>
+         <label className='flex gap-2 dark:text-neutral-600'><span className='text-red-600'>*</span>First name</label>
          <FloatingInput
          type="text"
          label="First name"
@@ -621,7 +639,7 @@ const handleSubmitEnrollment = async () => {
          </div>
             
          <div className='flex flex-col w-full gap-2'>
-         <label className='flex gap-1'>Middle Name</label>
+         <label className='flex gap-1 dark:text-neutral-600'>Middle Name</label>
          <FloatingInput
          type="text"
          label="Middle name"
@@ -631,7 +649,7 @@ const handleSubmitEnrollment = async () => {
          </div>
             
          <div className='flex flex-col w-full gap-2'>
-         <label className='flex gap-1'><span className='text-red-500'>*</span>Last Name</label>
+         <label className='flex gap-1 dark:text-neutral-600'><span className='text-red-500'>*</span>Last Name</label>
          <FloatingInput
           type="text"
           label="Last name" 
@@ -661,7 +679,7 @@ const handleSubmitEnrollment = async () => {
           </div>
             
           <div className='flex flex-col gap-2'>
-          <label className="flex gap-1"><span className='text-red-600'>*</span>Age</label>
+          <label className="flex gap-1 dark:text-neutral-600"><span className='text-red-600'>*</span>Age</label>
           <FloatingInput
           label="Age"
           id="age" 
@@ -678,7 +696,7 @@ const handleSubmitEnrollment = async () => {
           </div>
             
           <div className='flex flex-col gap-2'>
-          <label className="flex gap-1"><span className='text-red-600'>*</span>Sex</label>
+          <label className="flex gap-1 dark:text-neutral-600"><span className='text-red-600'>*</span>Sex</label>
           <FloatingSelect
           label="Select"
           id="sex"
@@ -695,7 +713,7 @@ const handleSubmitEnrollment = async () => {
           </div>
           
           <div className='flex flex-col gap-2'>
-          <label className="flex gap-1"><span className='text-red-600'>*</span>Student Type</label>
+          <label className="flex gap-1 dark:text-neutral-600"><span className='text-red-600'>*</span>Student Type</label>
           <FloatingSelect 
           label="Select"
           value={studentType} 
@@ -714,7 +732,7 @@ const handleSubmitEnrollment = async () => {
           {/* ==== previous school ===== */}
           {studentType === "Transferee" && (
           <div className='flex flex-col mt-5 gap-2'>
-          <label className='flex gap-1'><span className='text-red-600'>*</span>Previous School Attended</label>
+          <label className='flex gap-1 dark:text-neutral-600'><span className='text-red-600'>*</span>Previous School Attended</label>
           <FloatingInput 
           type="text" 
           id="prevSchool"
@@ -733,7 +751,7 @@ const handleSubmitEnrollment = async () => {
 
           <div className='flex gap-5 mt-5'>
           <div className='flex flex-col w-full gap-2'>
-          <label className='flex gap-1'><span className='text-red-600'>*</span>Level</label>
+          <label className='flex gap-1 dark:text-neutral-600'><span className='text-red-600'>*</span>Level</label>
           <FloatingSelect 
           label="Select"
           id="level"
@@ -750,7 +768,7 @@ const handleSubmitEnrollment = async () => {
          </div>
 
          <div className='flex flex-col w-full gap-2'>
-         <label className='flex gap-1'><span className='text-red-600'>*</span>Grade</label>
+         <label className='flex gap-1 dark:text-neutral-600'><span className='text-red-600'>*</span>Grade</label>
          <FloatingSelect 
          label="select"
          id="grade"
@@ -773,7 +791,7 @@ const handleSubmitEnrollment = async () => {
          {/* Upload Requirments */}
          { step === 2 && (
          <section className="space-y-4">
-         <h3 className="font-bold text-slate-700">Upload Requirements</h3>
+         <h3 className="font-bold text-slate-700 dark:text-neutral-400">Upload Requirements</h3>
         <div className='flex justify-center'>
         <div className='flex flex-col w-full tablet:w-96'>
         <UploadBox
@@ -819,14 +837,14 @@ const handleSubmitEnrollment = async () => {
                     {/* LEDGER VIEW */}
                     { step == 3 && (
                     <section>
-                    <div className='bg-gray-50 rounded-3xl p-6'>
-                    <div className='flex justify-between items-center mb-6'>
+                    <div className='bg-gray-50 dark:bg-neutral-900 rounded-3xl p-6'>
+                    <div className='flex justify-between items-center mb-6 text-neutral-400'>
                     <h4 className='text-[10px] font-black uppercase text-gray-400 tracking-widest'>Financial Summary</h4>
                     <span className='text-[10px] font-bold text-green-950'>S.Y. {currentSY}</span>
                     </div>
                 
                 {/* Breakdown of Fees */}
-                <div className='grid grid-cols-2 gap-y-3 mb-6 border-b border-gray-200 pb-6'>
+                <div className='grid grid-cols-2 gap-y-3 mb-6 border-b border-gray-200  pb-6'>
                     {[
                         { label: 'Registration', key: 'registration' },
                         { label: 'Miscellaneous', key: 'misc' },
@@ -905,8 +923,8 @@ const handleSubmitEnrollment = async () => {
                         </section>   
 )}
                             {/* SECTION: Final Review */}
-                            <section className='pt-10 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center gap-8'>
-                                <div className='bg-gray-50 p-6 rounded-3xl flex-1 w-full'>
+                            <section className='pt-10 border-gray-50 flex flex-col md:flex-row justify-between items-center gap-8'>
+                                <div className='bg-gray-50 dark:bg-neutral-900 p-6 rounded-3xl flex-1 w-full'>
                                     <h4 className='text-[10px] font-black text-gray-400 uppercase mb-4'>Linked Guardian Info</h4>
                                     <div className='grid grid-cols-2 gap-4'>
                                         <div>

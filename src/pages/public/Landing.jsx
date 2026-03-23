@@ -120,8 +120,8 @@ const Landing = () => {
      </div> */}
 
     <div id='home' className="h-[50rem] bg-gradient-to-tr relative from-white via-green-100 to-white flex items-center"> 
-      <div className='flex  h-full w-[80rem] p-5 mx-auto tablet:justify-between justify-center items-end'>
-      <div className="flex flex-col h-full justify-center items-center gap-5 tablet:items-start">
+      <div className='flex  h-full w-[80rem] p-5 mx-auto tablet:justify-between justify-center'>
+      <div className="flex flex-col justify-center items-center gap-5 tablet:items-start">
         <h1 className="tablet:text-6xl font-bold text-4xl tablet:text-nowrap"> Start Your Child’s </h1>
         <h1 className="tablet:text-7xl text-[#2D5B60] font-bold text-5xl"> Future Today!</h1>
         <div className="flex">
@@ -232,7 +232,6 @@ const Landing = () => {
 </div>
 
 <div id='contact' className =" min-h-screen relative">
-    <img className=' absolute -left-2 w-[10rem] tablet:w-[15rem] laptop:w-[24rem] laptop:top-2 z-0 ' src={gif} alt="" />
     <div className='max-w-4xl relative mx-auto z-10 p-6'>
         <div className='flex flex-col gap-2 w-full items-center'>
           <h1 className='border-2 border-black px-6 rounded-full'>FAQ</h1>
@@ -288,22 +287,25 @@ const Landing = () => {
 </div>
 
 
-<div className=" tablet:h-[20rem] h-[10rem] w-full relative">
-  <div className=" w-full">
-    {/* Sun */}
-    <img
-      src={sun}
-      alt="sun"
-      className="w-[8rem] phone:w-[12rem] tablet:w-[24rem] absolute duration-300 left-1/3 -bottom-0 transform -translate-x-1/2 animate-smoothBounce"
-    />
-    {/* Mountain */}
-    <img
-      src={mountain}
-      alt="mountain"
-      className="absolute bottom-0 left-0 w-full z-10"
-    />
-  </div>
-</div>
+        <footer className=" p-5 border-t-2">
+        <div className="flex flex-col gap-1 tablet:gap-10 tablet:flex-row justify-around">
+          <div className="text-neutral-500 w-full leading-6 text-sm">
+            <h1 className="text-xl font-bold text-neutral-500">
+              Myrtle Christian School
+            </h1>
+            <p>
+              Purok 1, Hacienda de Ortube, Irosin, Sorsogon, San Juan
+              Poblacion, Philippines 4707
+            </p>
+          </div>
+
+          <div className="text-neutral-500 w-full text-sm">
+            <p>School Telephone: +639919107871</p>
+            <p>Email:</p>
+            <p>Contact Admin:</p>
+          </div>
+        </div>
+      </footer>
 
 </div>
 </div>

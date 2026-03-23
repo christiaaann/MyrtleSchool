@@ -48,7 +48,7 @@ const UploadBox = ({ label, file, setFile, validateSize }) => {
     <div className="flex w-full flex-col gap-2">
       <p className="text-xs font-bold text-gray-600 uppercase">{label}</p>
 
-      <div className="relative w-full h-40 md:h-48 rounded-xl border border-dashed overflow-hidden">
+      <div className="relative w-full h-40 md:h-48 rounded-xl border border-dashed dark:border-neutral-900 overflow-hidden">
         {/* Drop area */}
         <div
           className={`absolute inset-0 flex flex-col items-center justify-center cursor-pointer transition
@@ -68,7 +68,7 @@ const UploadBox = ({ label, file, setFile, validateSize }) => {
           />
 
           {!preview && (
-            <div className="text-center px-4">
+            <div className="text-center dark:text-neutral-400 px-4">
               <div className="flex justify-center mb-2">
                 <ImageUp className="w-5 h-5 opacity-60" />
               </div>

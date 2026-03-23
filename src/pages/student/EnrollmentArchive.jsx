@@ -206,8 +206,8 @@ const EnrollmentArchive = ({
     <div className="min-h-screen p-5 w-full">  
       <div className="flex  items-center flex-co justify-between gap-2">
       <div className="flex flex-col">
-      <h2 className="text-2xl">Records</h2>
-      <p className="text-[10px] font-bold text-gray-400">CURRENT SY: {currentSY || "Loading..."}</p>
+      <h2 className="text-2xl dark:text-neutral-500">Records</h2>
+      <p className="text-[10px] font-bold text-gray-400 dark:text-neutral-500">CURRENT SY: {currentSY || "Loading..."}</p>
       </div>
       <button onClick={handleAddNewChild} className=" bg-gray-200 text-black/50 px-5 py-2 rounded-xl text-[10px] text-nowrap font-bold hover:bg-green-100 transition-all">
       + Add New Child
@@ -238,18 +238,18 @@ const EnrollmentArchive = ({
             const remainingBalance = (monthlyRate * 10) - totalPaid;
 
             return (
-              <div key={stud.studentID} className="border rounded-xl bg-white shadow-sm overflow-hidden border-gray-200">
-                <div className="p-5 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50">
+              <div key={stud.studentID} className="border rounded-xl bg-white dark:bg-neutral-900 shadow-sm overflow-hidden border-gray-200 dark:border-neutral-700">
+                <div className="p-5 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50 dark:bg-neutral-900">
                   <div className="flex gap-4 items-center w-full">
-                    <img className="w-16 h-16 object-cover rounded-full border-2 border-white shadow-md" src={stud.requirements?.idPicture || "/default-avatar.png"} alt="Student" />
+                    <img className="w-16 h-16 object-cover rounded-full border-2 border-whit shadow-md" src={stud.requirements?.idPicture || "/default-avatar.png"} alt="Student" />
                     <div>
-                      <h3 className="font-black text-lg uppercase text-gray-800 leading-tight">{stud.firstname} {stud.middlename} {stud.lastname}</h3>  
-                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-tighter"> ID: {formatSchoolID(stud)} • {stud.level} - Grade {stud.grade}</p>
+                      <h3 className="font-semibold   text-lg dark:text-neutral-400  leading-tight">{stud.firstname} {stud.middlename} {stud.lastname}</h3>  
+                      <p className="text-[11px] font-bold text-gray-400 uppercase dark:text-neutral-400 tracking-tighter"> ID: {formatSchoolID(stud)} • {stud.level} - Grade {stud.grade}</p>
                       
                       <div className="flex gap-3 mt-1">
                         <button 
                             onClick={() => setShowHistory(prev => ({...prev, [stud.studentID]: !prev[stud.studentID]}))} 
-                            className="text-[#2D5B60] text-[10px] font-bold underline uppercase"
+                            className="text-[#2D5B60] text-[10px] font-bold underline dark:text-neutral-400 uppercase"
                         >
                           {showHistory[stud.studentID] ? "Hide History" : "View Academic History"}
                         </button>
@@ -292,13 +292,13 @@ const EnrollmentArchive = ({
 
                 {/* Academic History Dropdown */}
                 {showHistory[stud.studentID] && (
-                    <div className="p-4 bg-white border-t space-y-2 animate-in slide-in-from-top-2 duration-200">
+                    <div className="p-4 bg-white dark:bg-neutral-800 border-t dark:border-t-neutral-700 space-y-2 animate-in slide-in-from-top-2 duration-200">
                         <p className="text-[9px] font-bold text-gray-400 uppercase">School Year Records:</p>
                         {history.map(record => (
-                            <div key={record.studentID} className="flex justify-between items-center p-2 bg-gray-50 rounded border border-gray-100">
+                            <div key={record.studentID} className="flex justify-between items-center p-2 bg-gray-50 dark:bg-neutral-950 rounded borde border-gray-100">
                                 <div className="flex flex-col">
-                                    <span className="text-[11px] font-black text-gray-700 uppercase">SY {record.schoolYear}</span>
-                                    <span className="text-[9px] text-gray-500">{record.level} - Grade {record.grade}</span>
+                                    <span className="text-[11px] font-black text-gray-700 uppercase dark:text-neutral-400">SY {record.schoolYear}</span>
+                                    <span className="text-[9px] text-gray-500 dark:text-neutral-400">{record.level} - Grade {record.grade}</span>
                                 </div>
                                 <div className="flex gap-2 items-center">
                                     <span className={`text-[9px] font-black px-2 py-1 rounded ${record.isEnrolled ? "bg-green-200 text-green-700" : "bg-orange-200 text-orange-700"}`}>
@@ -321,7 +321,7 @@ const EnrollmentArchive = ({
 
                 {/* Monthly Tracker */}
                 {stud.isEnrolled && isAppliedThisYear && (
-                  <div className="p-5 border-t">
+                  <div className="p-5 border-t dark:border-t-neutral-700">
                     <div className="grid grid-cols-5 md:grid-cols-10 gap-1">
                       {schoolMonths.map((month) => {
                         const dbMonthKey = month.substring(0, 3).toUpperCase();
@@ -335,11 +335,11 @@ const EnrollmentArchive = ({
                           <div 
                             key={month} 
                             onClick={() => isOpen && handlePaymentClick(stud, month, data.amount)}
-                            className={`text-center py-2 rounded border transition-all ${
+                            className={`text-center py-2 rounded transition-all ${
                               isPaid ? "bg-green-500 border-green-600 text-white" : 
                               isPending ? "bg-yellow-400 border-yellow-500 text-white" :
                               isOpen ? "bg-orange-50 border-orange-400 text-orange-600 cursor-pointer animate-pulse" : 
-                              "bg-gray-50 border-gray-100 text-gray-300"
+                              "bg-gray-50 dark:bg-neutral-800 border-gray-100 dark:border-gray-900 text-gray-300"
                             }`}
                           >
                             <p className="text-[8px] font-bold uppercase">{month.substring(0, 3)}</p>

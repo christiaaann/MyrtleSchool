@@ -18,15 +18,20 @@ const FloatingInput = ({
         value={value}
         onChange={onChange}
         disabled={disabled}
-        className="peer block px-3 py-3 pr-11 w-full text-lg bg-transparent rounded-xl border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#2D5B60]"
+        className="peer block px-3 py-3
+                   pr-11 w-full text-lg dark:text-neutral-400 
+                   bg-transparent rounded-xl
+                   border border-gray-300 dark:border-neutral-800 
+                   appearance-none focus:outline-none 
+                   focus:ring-0 focus:border-[#2D5B60]"
         {...props}
       />
 
       <label
         htmlFor={id}
-        className="absolute text-lg text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2
+        className="absolute text-lg text-gray-500 dark:text-neutral-600 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-black px-2
         peer-focus:px-2
-        peer-focus:text-[#2D5B60]
+        peer-focus:text-neutral-700
         peer-placeholder-shown:scale-100
         peer-placeholder-shown:-translate-y-1/2
         peer-placeholder-shown:top-1/2
