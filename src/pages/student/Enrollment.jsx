@@ -20,6 +20,7 @@ import logo from '../../assets/logo.png'
 import { Archive,
       BookOpenCheck, 
       Check, 
+      ChevronDown, 
       CreditCard, 
       FileUser,
       LogOut,
@@ -48,6 +49,7 @@ const Enrollment = () => {
     const [childMiddle, setChildMiddle] = useState("");
     const [childLast, setChildLast] = useState("");
     const [suffix, setSuffix] = useState("none");
+    const [birthDate, setBirthDate] = useState("");
     const [age, setAge] = useState("");
     const [sex, setSex] = useState("");
     const [prevSchool, setPrevSchool] = useState("");
@@ -140,6 +142,29 @@ const Enrollment = () => {
         navigate(location.pathname, { replace: true, state: {} });
     }
     }, []);
+
+    // birthday automatic
+useEffect(() => {
+  if (!birthDate) return;
+
+  const today = new Date();
+  const birth = new Date(birthDate);
+
+  let ageCalc = today.getFullYear() - birth.getFullYear();
+
+  const monthDiff = today.getMonth() - birth.getMonth();
+
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birth.getDate())
+  ) {
+    ageCalc--;
+  }
+
+  if (ageCalc < 0) ageCalc = 0;
+
+  setAge(ageCalc);
+}, [birthDate]);
     
     
     // === previous ====
@@ -205,7 +230,9 @@ const Enrollment = () => {
                     return () => unsub();
                 }, []);
 
-    useEffect(() => {
+    
+    
+                useEffect(() => {
         let interval;
         const startOnlineTracking = async (user) => {
             const userRef = doc(db, "users", user.uid);
@@ -271,7 +298,8 @@ const Enrollment = () => {
         setChildMiddle(""); 
         setChildLast(""); 
         setSuffix("none");
-        setAge(""); 
+        setAge("");
+        setBirthDate(""); 
         setSex(""); 
         setPrevSchool(""); 
         setLevel(""); 
@@ -326,6 +354,7 @@ const handleSubmitEnrollment = async () => {
       suffix,
       level,
       grade,
+      birthDate,
       age: Number(age),
       sex,
       studentType,
@@ -393,7 +422,7 @@ const handleSubmitEnrollment = async () => {
     const fullAddress = `${userData.address.purok}, ${userData.address.barangay}, ${userData.address.city}, ${userData.address.province}`;
 
     return (
-        <div className=' dark:bg-black font-sans text-[#2D3748]'>
+        <div className=' dark:bg-black bg-white font-sans text-[#2D3748]'>
             
             {/* Minimal Header */}
             <header className='bg-white dark:bg-black  z-20 px-8 py-4 flex items-center justify-between border-b dark:border-b-neutral-800 border-gray-100 sticky top-0 shadow-sm'>
@@ -465,7 +494,7 @@ const handleSubmitEnrollment = async () => {
                 {/* SIDEBAR */}
                 <div
                   className={`
-                    fixed top-0 left-0 min-h-screen w-64 bg-white p-8 shadow-lg z-40
+                    fixed top-0 left-0 min-h-screen w-64 bg-white dark:bg-black dark:text-white p-8 shadow-lg z-40
                     transform transition-transform duration-300
                     ${isOpen ? "translate-x-0" : "-translate-x-full"} 
                     md:translate-x-0 md:relative md:flex md:flex-col md:w-[13rem] tablet:hidden
@@ -475,7 +504,7 @@ const handleSubmitEnrollment = async () => {
                   <div className='flex flex-col gap-2'>
                   <button
                      className={`px-6 flex gap-2 w-full items-center py-2 rounded-2xl transition-all
-                   ${setpage === "personal" ? "bg-gray-100" : "hover:bg-gray-100"}
+                   ${setpage === "personal" ? "bg-gray-100 dark:bg-neutral-900" : "hover:bg-gray-100 hover:dark:bg-neutral-900"}
                     `}
                     onClick={() => {
                     setPage("personal");
@@ -487,7 +516,7 @@ const handleSubmitEnrollment = async () => {
 
                   <button
                      className={`px-6 flex gap-2 w-full items-center py-2 rounded-2xl transition-all
-                    ${setpage === "archive" ? "bg-gray-100" : "hover:bg-gray-100"}
+                    ${setpage === "archive" ? "bg-gray-100 dark:bg-neutral-900" : "hover:bg-gray-100 hover:dark:bg-neutral-900"}
                      `}
                     onClick={() =>{
                     setPage("archive");
@@ -500,11 +529,11 @@ const handleSubmitEnrollment = async () => {
                   
                   <h1>Account</h1>
                   <div className=' flex flex-col'>
-                  <button className=' px-6 py-2 flex gap-2 rounded-2xl hover:bg-gray-100'><User/>Profile</button>
-                  <button className='flex gap-2 px-6 py-2 hover:bg-gray-200 rounded-2xl'><Settings/>Settings</button>
+                  <button className=' px-6 py-2 flex gap-2 rounded-2xl hover:bg-gray-100 hover:dark:bg-neutral-900'><User/>Profile</button>
+                  <button className='flex gap-2 px-6 py-2  rounded-2xl'><Settings/>Settings</button>
                   </div>
-                  <div className='flex  absolute bg-gray-100 rounded-2xl gap-2 bottom-2  items-center px-6 py-2 w-ful'>
-                  <img className='w-10 h-10 rounded-full' src={userData.profilePicture} alt="" />
+                  <div className='flex  absolute bg-gray-100 dark:bg-neutral-900 rounded-2xl gap-2 bottom-2  items-center px-6 py-1 w-ful'>
+                  <img className='w-8 h-8 rounded-full' src={userData.profilePicture} alt="" />
                   <p className='text-xs text-nowrap font-bold'>{userData.parent?.firstname} {userData.parent?.lastname}</p>   
                   <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className=" text-red-600"><LogOut/></button>
                </div> 
@@ -516,14 +545,14 @@ const handleSubmitEnrollment = async () => {
                  <h1 className='font-semibold'>Child</h1>  
                  <div className='flex flex-col mt-1 gap-1'>
 
-                <button className={`px-6 flex gap-2 w-full items-center py-2 rounded-2xl transition-all duration-200 ease-out
+                <button className={`px-6 flex gap-2 w-full dark:text-white  items-center py-2 rounded-2xl transition-all duration-200 ease-out
                  ${setpage === "personal" ? "bg-gray-100 dark:bg-neutral-900 scale-[0.98]" : "hover:bg-gray-100 hover:dark:bg-neutral-900"}`}
                  onClick={() => setPage("personal")}>
-                 <FileUser className=''/>
+                 <FileUser/>
                  Enrollment
                  </button>
 
-                <button   className={`px-6 flex gap-2 w-full items-center py-2 rounded-2xl transition-all  duration-200 ease-out  
+                <button   className={`px-6 flex gap-2 w-full dark:text-white items-center py-2 rounded-2xl transition-all  duration-200 ease-out  
                  ${setpage === "archive" ? "bg-gray-100 dark:bg-neutral-900 scale-[0.98]" : "hover:bg-gray-100 hover:dark:bg-neutral-900"}
                  `}
                 onClick={() => setPage("archive")}
@@ -532,13 +561,38 @@ const handleSubmitEnrollment = async () => {
                 </button>
                 </div> 
 
-                <h1 className=' mt-2 font-semibold'>Account</h1>
-                 <div className='flex gap-1 flex-col'>
-                  <button className='px-6 hover:bg-gray-100 hover:rounded-lg flex items-center gap-2 py-2'><User/>Profile</button>
-                  <button className='px-6 hover:bg-gray-100 hover:rounded-lg py-2 flex items-center gap-2'><Settings/>Settings</button>
+              <h1 className=' mt-2 font-semibold'>Account</h1>
+              <div className='flex gap-1 flex-col'>
+                  <button className='px-6 hover:bg-gray-100 hover:rounded-2xl hover:dark:bg-neutral-900 flex items-center gap-2 py-2 dark:text-white'><User/>Profile</button>
+               
+              <button className='px-6 dark:text-white py-2 flex items-center gap-2'
+               onClick={() => setOpen(!open)}
+               >
+              <Settings/>Settings
+              <ChevronDown className='text-white'/>
+              </button>
+
+              {open && (
+                <div className='flex ml-8 flex-col justify-end '>
+                <NavLink
+                to=""
+                className="px-6 hover:bg-gray-100 py-2 rounded-2xl"
+                >
+                Personal Details  
+                </NavLink>
+                
+                <NavLink
+                to=""
+                className="px-6 hover:bg-gray-100 py-2 rounded-2xl"
+                >
+                Change Password
+                </NavLink>
+                </div>
+              )}
+               
                 </div>
                 </div>
-                <div className='flex absolute bottom-3 w-[15rem] items-center justify-center px-6 py-1 rounded-2xl bg-gray-100 gap-2'> 
+                <div className='flex absolute bottom-3 w-[15rem] items-center justify-center px-6 py-1 rounded-2xl bg-gray-100 dark:text-white dark:bg-neutral-900 gap-2'> 
                 <img className='w-8 h-8 rounded-full' src={userData.profilePicture} alt="" />
                   <h1 className='text-nowrap'>{userData.parent ?. firstname} {userData.parent ?. lastname}</h1> 
                   <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className=" text-red-600">
@@ -668,7 +722,7 @@ const handleSubmitEnrollment = async () => {
 
           <div className='grid grid-cols-1 tablet:grid-cols-2 md:grid-cols-4 gap-6 mt-6'>
           <div className='flex flex-col gap-2'>
-          <label>Suffix</label>
+          <label className='text-neutral-600'>Suffix</label>
           <FloatingSelect
           id="suffix"
           label="Suffix"
@@ -678,23 +732,47 @@ const handleSubmitEnrollment = async () => {
           />
           </div>
             
-          <div className='flex flex-col gap-2'>
-          <label className="flex gap-1 dark:text-neutral-600"><span className='text-red-600'>*</span>Age</label>
+ <div className='flex flex-col gap-2'>
+  <label className="flex gap-1 dark:text-neutral-600">
+    <span className='text-red-600'>*</span>Birthday
+  </label>
+
+  <div
+    className="relative w-full cursor-pointer"
+    onClick={() => document.getElementById("birthdayInput").showPicker?.()}
+  >
+      
+    <div className="w-full px-6 py-3 border border-neutral-300 dark:border-none rounded-xl bg-white dark:bg-neutral-900 dark:text-white">
+      {birthDate ? birthDate : "Select birthday"}
+    </div>
+
+    {/* hidden input */}
+    <input
+      id="birthdayInput"
+      type="date"
+      value={birthDate}
+      max={new Date().toISOString().split("T")[0]}
+      onChange={(e) => {
+        setBirthDate(e.target.value);
+        setErrors(prev => ({ ...prev, age: "" }));
+      }}
+      className="absolute opacity-0 w-full h-full top-0 left-0 cursor-pointer"
+    />
+     </div>
+    </div>
+
+        <div className='flex flex-col gap-2'>
+          <label className="dark:text-neutral-600 flex gap-1"><span className='text-red-600'>*</span>Age</label>
+
           <FloatingInput
-          label="Age"
-          id="age" 
-          type="number" 
-          value={age}
-          onChange={(e)=>{
-          setAge(e.target.value);
-          setErrors(prev => ({ ...prev, age : ""}));
-          }} 
+            type="text"
+            value={age}
+            readOnly
+            label="Age"
+            disabled
           />
-          {errors.age && (
-          <p className="text-red-600 text-sm">{errors.age}</p>
-          )}
-          </div>
-            
+        </div>
+                    
           <div className='flex flex-col gap-2'>
           <label className="flex gap-1 dark:text-neutral-600"><span className='text-red-600'>*</span>Sex</label>
           <FloatingSelect
@@ -712,7 +790,8 @@ const handleSubmitEnrollment = async () => {
           )}
           </div>
           
-          <div className='flex flex-col gap-2'>
+          <div className='flex items-center'>
+          <div className='flex w-full flex-col gap-2'>
           <label className="flex gap-1 dark:text-neutral-600"><span className='text-red-600'>*</span>Student Type</label>
           <FloatingSelect 
           label="Select"
@@ -731,7 +810,7 @@ const handleSubmitEnrollment = async () => {
           
           {/* ==== previous school ===== */}
           {studentType === "Transferee" && (
-          <div className='flex flex-col mt-5 gap-2'>
+          <div className='flex flex-col gap-2'>
           <label className='flex gap-1 dark:text-neutral-600'><span className='text-red-600'>*</span>Previous School Attended</label>
           <FloatingInput 
           type="text" 
@@ -748,7 +827,7 @@ const handleSubmitEnrollment = async () => {
           )}
           </div>
           )}
-
+</div>
           <div className='flex gap-5 mt-5'>
           <div className='flex flex-col w-full gap-2'>
           <label className='flex gap-1 dark:text-neutral-600'><span className='text-red-600'>*</span>Level</label>

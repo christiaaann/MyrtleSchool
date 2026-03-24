@@ -17,6 +17,7 @@ import gif from '../../assets/gif.png'
 import DepedLogo from "../../assets/DepEDLogo.png"
 import logo from "../../assets/logo.png"
 import { useState, useEffect } from 'react'
+import boy from "../../assets/boy.png"
 const Landing = () => {
   const navigate = useNavigate("");
   const faqData = [
@@ -127,12 +128,12 @@ const Landing = () => {
         <div className="flex">
       <button onClick={handleEnrollNow} className="bg-[#2D5B60] mt-2 text-white px-20 py-2 rounded-2xl">Enroll Now</button> 
         </div>
-          <div className="flex gap-2 absolute bottom-0 left-5 duration-300 tablet:left-20">
-        <img className=" tablet:w-48 w-28 object-contain bottom-0" src={DepedLogo} alt="" />
-          <img className="tablet:w-28 w-20 object-contain bottom-0" src={logo} alt="" />    
-        </div>  
+ 
       </div>
-        <img className='w-96 hidden tablet:block object-contain' src={model1} alt="" />
+      <div className='tablet:flex hidden w-full'>
+        <img className='w-60 laptop:w-96 object-contain tablet:block hidden relative left-20 laptop:left-32 duration-300' src={boy} alt="" />
+        <img className='w-60 laptop:w-96 hidden tablet:block object-contain' src={model1} alt="" />
+        </div>
       </div>
     </div>
               
