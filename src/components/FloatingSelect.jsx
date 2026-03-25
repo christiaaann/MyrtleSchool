@@ -11,13 +11,17 @@ const FloatingSelect = ({
 }) => {
   return (
     <div className="relative w-full">
-      <select
-        id={id}
-        value={value}
-        onChange={onChange}
-        disabled={disabled}
-        className="peer block dark:text-neutral-400 px-3 py-3 w-full text-lg bg-transparent rounded-xl border dark:border-neutral-800 dark:bg-neutral-900 border-gray-300 focus:outline-none focus:border-[#2D5B60]"
-      >
+    <select
+      id={id}
+      value={value}
+      onChange={onChange}
+      disabled={disabled}
+      className="peer block w-full h-[52px] px-3 py-3 text-lg rounded-xl 
+      bg-white dark:bg-neutral-900
+      border border-gray-300 dark:border-neutral-700
+      text-gray-900 dark:text-white
+      focus:outline-none focus:border-[#2D5B60]"
+    >
         <option value="" disabled hidden></option>
         {options.map((opt, i) => (
           <option key={i} value={opt}>

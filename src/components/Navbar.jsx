@@ -68,7 +68,7 @@ useEffect(() => {
           <div className="flex items-center gap-3">
             <img className="w-12 object-contain" src={logo} alt="logo" />
             <h1 className="hidden phone:block text-neutral-700 font-baloo font-bold text-lg">
-              MYRTLE CHRISTIAN SCHOOL
+              MYRTLE CHRISTIAN SCHOOL INC.
             </h1>
           </div>
 

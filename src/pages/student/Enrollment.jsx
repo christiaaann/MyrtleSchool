@@ -25,9 +25,11 @@ import { Archive,
       FileUser,
       LogOut,
       Menu,
+      Phone,
       Settings,
       User,
-      UserPen } from 'lucide-react';
+      UserPen, 
+      Users} from 'lucide-react';
 import FloatingInput from '../../components/FloatingInput';
 import FloatingSelect from '../../components/FloatingSelect';
 import UploadBox from '../../components/UploadBox';
@@ -436,7 +438,7 @@ const handleSubmitEnrollment = async () => {
             <img className='w-10' src={logo} alt="Logo" />
             
             <div className=''>
-            <h1 className='text-sm text-nowrap dark:text-gray-500 font-black tracking-tight text-gray-800 uppercase'>Myrtle Christian School</h1>
+            <h1 className='text-sm text-nowrap dark:text-gray-500 font-black tracking-tight text-gray-800 uppercase'>Myrtle Christian School Inc.</h1>
             <p className='text-[10px] text-green-950 dark:text-white font-bold tracking-widest uppercase'>Parent Portal</p>
             </div>
             </div>
@@ -461,7 +463,7 @@ const handleSubmitEnrollment = async () => {
            </div> */}
           
           {/* darkmode toggle */}
-        <label className="switch">
+        {/* <label className="switch">
           <input
             type="checkbox"
             checked={darkMode}
@@ -477,7 +479,7 @@ const handleSubmitEnrollment = async () => {
               <path fill="none" d="m4 16.5 8 8 16-16"></path>
             </svg>
           </span>
-        </label>
+        </label> */}
           </header> 
             <div className="flex ">
       
@@ -569,7 +571,7 @@ const handleSubmitEnrollment = async () => {
                onClick={() => setOpen(!open)}
                >
               <Settings/>Settings
-              <ChevronDown className='text-white'/>
+              <ChevronDown className=' dark:text-white'/>
               </button>
 
               {open && (
@@ -1003,24 +1005,91 @@ const handleSubmitEnrollment = async () => {
 )}
                             {/* SECTION: Final Review */}
                             <section className='pt-10 border-gray-50 flex flex-col md:flex-row justify-between items-center gap-8'>
-                                <div className='bg-gray-50 dark:bg-neutral-900 p-6 rounded-3xl flex-1 w-full'>
-                                    <h4 className='text-[10px] font-black text-gray-400 uppercase mb-4'>Linked Guardian Info</h4>
-                                    <div className='grid grid-cols-2 gap-4'>
-                                        <div>
-                                            <p className='text-[9px] font-bold text-gray-400'>Father</p>
-                                            <p className='text-xs font-bold text-gray-700'>{userData.spouse?.firstname} {userData.spouse?.lastname}</p>
-                                        </div>
-                                        <div>
-                                            <p className='text-[9px] font-bold text-gray-400'>Mother</p>
-                                            <p className='text-xs font-bold text-gray-700'>{userData.parent?.firstname} {userData.parent?.lastname}</p>
-                                        </div>
-                                    </div>
-                                    <div className='mt-4 pt-4 border-t border-gray-100'>
-                                        <p className='text-[9px] font-bold text-gray-400'>Registered Address</p>
-                                        <p className='text-xs font-medium text-gray-500 italic'>{fullAddress}</p>
-                                    </div>
-                                </div>
+<div className='bg-gray-50 dark:bg-neutral-900 p-6 rounded flex-1 w-full'>
 
+  <h4 className='text-lg mb-4 flex gap-2 items-center'>
+    <Users/>
+    Family Background
+  </h4>
+
+  {/* MAIN PERSON (parent) */}
+ <div className="grid tablet:grid-cols-2 grid-cols-1 gap-4">
+
+  {/* PARENT (Mother or primary parent) */}
+  <div>
+    <p className="font-semibold text-gray-600">
+      {userData.parent?.firstname && userData.spouse
+        ? "Mother"
+        : "Parent"}
+    </p>
+
+    <p className="border px-2 uppercase text-gray-700">
+      {userData.parent?.firstname} {userData.parent?.lastname}
+    </p>
+
+    {/* SPOUSE / FATHER (optional) */}
+    {userData.spouse ? (
+      <>
+        <p className="mt-2 font-semibold text-gray-600">Father</p>
+        <p className="border px-2 uppercase text-gray-700">
+          {userData.spouse?.firstname} {userData.spouse?.lastname}
+        </p>
+      </>
+    ) : (
+      <p className="text-sm text-gray-400 mt-2">
+        No spouse recorded
+      </p>
+    )}
+  </div>
+
+  {/* CONTACT */}
+  <div>
+    <p className="font-bold flex gap-1">
+      <span className="text-red-600">*</span>Contact
+    </p>
+
+    <p className="border flex items-center gap-2 px-2">
+      <Phone size={18} />
+      {userData.parent?.contact}
+    </p>
+  </div>
+
+</div>
+
+  {/* SPOUSE (optional lang) */}
+  <hr className="border-t border-gray-300 my-8" />
+  <div className='flex flex-col tablet:flex-row items-center gap-5 mt-5'>
+  {/* {userData.spouse && (
+    <div className='flex flex-col w-full'>
+      <p className='font-bold flex gap-1'><span className=' text-red-600'>*</span>Spouse</p>
+      <p className='border px-2 uppercase'>
+        {userData.spouse.firstname} {userData.spouse.lastname}
+      </p>
+    </div>
+  )} */}
+
+  <div className='flex flex-col w-full'>
+    <p className='font-bold flex gap-1'><span className='text-red-600'>*</span>Full Address</p>
+    <p className=' px-2 border'>
+      {fullAddress}
+    </p>
+  </div>
+
+</div>
+   
+     <hr className="border-t border-gray-300 mt-8" />
+   <div className='flex flex-col tablet:flex-row gap-5 mt-5 items-center'>
+   <div className='w-full'>
+    <p className='font-bold'>Guardian's Name</p>
+    <p className='border px-2 uppercase'>{userData.emergency.name}</p>
+   </div>
+
+   <div className='w-full'>
+    <p className='font-bold'>Relationship</p>
+    <p className='border px-2 uppercase'>{userData.emergency.relation}</p>
+   </div>
+   </div>
+</div>
                                 <div className='flex flex-col items-center md:items-end gap-4 w-full md:w-auto'>
                                     <p className='text-[10px] text-gray-400 italic text-center md:text-right max-w-[250px]'>By clicking submit, you agree to MCS terms for S.Y. {currentSY}.</p>
 

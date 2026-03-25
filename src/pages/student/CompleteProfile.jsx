@@ -10,7 +10,11 @@ import CompleteSkeleton from "../../components/Skeleton/CompleteSkeleton";
 
 const CompleteProfile = () => {
   const navigate = useNavigate();
-
+  
+    const [role, setRole] = useState("mother");
+    const [emergencyName, setEmergencyName] = useState("");
+    const [emergencyRelation, setEmergencyRelation] = useState("");
+    const [emergencyContact, setEmergencyContact] = useState("");
   // --- STATES (Lahat ng original fields mo) ---
   const [parentFirst, setParentFirst] = useState("");
   const [parentMiddle, setParentMiddle] = useState("");
@@ -68,11 +72,14 @@ const CompleteProfile = () => {
   // --- PROGRESS CALCULATION ---
   const calculateProgress = () => {
     let completedFields = 0;
-    const totalFields = 7; 
+    const totalFields = 8; 
 
     if (parentFirst && parentLast) completedFields++;
     if (contact) completedFields++;
     if (occupation) completedFields++;
+
+    if (emergencyName && emergencyContact) completedFields++;
+    
     
     if (noSpouse || (spouseFirst && spouseLast)) completedFields++;
     if (noSpouse || spouseOccupation) completedFields++;
@@ -134,6 +141,12 @@ const CompleteProfile = () => {
 const [loading, setLoading] = useState(true); // <-- bago fetching
 
 useEffect(() => {
+  if (role === "mother") setEmergencyRelation("Mother");
+  else if (role === "father") setEmergencyRelation("Father");
+  else if (role === "guardian") setEmergencyRelation("");
+}, [role]);
+
+useEffect(() => {
   const unsubscribe = auth.onAuthStateChanged(async (user) => {
     if (user) {
       setUid(user.uid);
@@ -170,6 +183,12 @@ useEffect(() => {
           setBarangay(data.address?.barangay || "");
           setCity(data.address?.city || "");
           setProvince(data.address?.province || "");
+
+
+          setRole(data.role || "mother");
+          setEmergencyName(data.emergency?.name || "");
+          setEmergencyRelation(data.emergency?.relation || "");
+          setEmergencyContact(data.emergency?.contact || "");
         }
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -192,6 +211,7 @@ useEffect(() => {
     }
     try {
    await updateDoc(doc(db, "users", uid), {
+      role:"parent",
    parent: { 
     firstname: parentFirst, 
     middlename: parentMiddle, 
@@ -206,6 +226,12 @@ useEffect(() => {
     lastname: spouseLast,
     contact: spouseContact,
     occupation: spouseOccupation
+  },
+
+    emergency: {
+    name: emergencyName,
+    relation: emergencyRelation,
+    contact: emergencyContact
   },
 
   noSpouse: noSpouse,
@@ -228,6 +254,7 @@ useEffect(() => {
         <div className=" w-full">
         <div className="lg:col-span-8  w-full p-8">
           <h2 className="text-2xl font-bold mb-8">Complete Profile</h2>
+
 
           {/* Profile Picture Section with Google Fix */}
           <div className="flex flex-col mb-10">
@@ -284,7 +311,23 @@ useEffect(() => {
 
           <div className="space-y-8">
             {/* Parent Info */}
-            <section className="space-y-4">
+          <section className="space-y-4">
+                        <div className="flex items-center gap-2 mb-4">
+  <span className="text-sm font-medium">Who is filling up this form?</span>
+
+  <div className="flex">
+    {["mother", "father", "guardian"].map((item) => (
+      <button
+        key={item}
+        onClick={() => setRole(item)}
+        className={`px-3 py-1 border text-xs font-bold capitalize transition
+        ${role === item ? "bg-blue-500 text-white" : "bg-white text-gray-600"}`}
+      >
+        {item}
+      </button>
+    ))}
+  </div>
+</div>
               <h3 className="font-bold text-slate-700">Personal Info (Parent)</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex flex-col tablet:flex-row gap-4">
@@ -409,6 +452,36 @@ useEffect(() => {
               </div>
             </section>
 )}
+
+<section className="space-y-4">
+  <h3 className="font-bold text-slate-700">Emergency Contact</h3>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="flex flex-col">
+      <FloatingInput
+        label="Full Name"
+        value={emergencyName}
+        onChange={(e) => setEmergencyName(e.target.value)}
+      />
+      {errors.emergencyName && <p className="text-red-500 text-sm">{errors.emergencyName}</p>}
+    </div>
+
+    <FloatingInput
+      label="Relation (e.g. Sister, Uncle)"
+      value={emergencyRelation}
+      onChange={(e) => setEmergencyRelation(e.target.value)}
+    />
+  </div>
+
+  <div className="flex flex-col">
+    <FloatingInput
+      label="Contact Number"
+      value={emergencyContact}
+      onChange={(e) => setEmergencyContact(e.target.value)}
+    />
+    {errors.emergencyContact && <p className="text-red-500 text-sm">{errors.emergencyContact}</p>}
+  </div>
+</section>
             {/* Address */}
             <div className="flex flex-col gap-2">
             <h3 className="font-bold text-slate-700">Full address</h3>

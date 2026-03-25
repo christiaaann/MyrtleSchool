@@ -94,7 +94,7 @@ const SignInForm = () => {
 
       const role = docSnap.data().role?.toLowerCase();
       if (role === "admin") navigate("/admin", { replace: true });
-      else if (role === "user" || role === "parent")
+      else if (role === "user" || role === "parent" || role === "mother" || role === "father" || role === "guardian")
         navigate("/Enrollment", { replace: true, state: { loginSuccess: true } });
       else sileo.error({ title: "Login Error", description: "User role undefined" });
 
