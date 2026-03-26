@@ -211,7 +211,7 @@ useEffect(() => {
     }
     try {
    await updateDoc(doc(db, "users", uid), {
-      role:"parent",
+      role: role,
    parent: { 
     firstname: parentFirst, 
     middlename: parentMiddle, 

@@ -29,6 +29,8 @@ import { Archive,
       Settings,
       User,
       UserPen, 
+      Banknote,
+      Trash2,
       Users} from 'lucide-react';
 import FloatingInput from '../../components/FloatingInput';
 import FloatingSelect from '../../components/FloatingSelect';
@@ -67,6 +69,19 @@ const Enrollment = () => {
    
     const location = useLocation();
     const [errors, setErrors] = useState({});
+
+
+    // payment
+    const [selectedFee, setSelectedFee] = useState("registration");
+    const [payments, setPayments] = useState({});
+    const [fees, setFees] = useState({
+    registration: 500, // fixed
+    misc: 1000,
+    books: 2500,
+    instructional: 500,
+    uniform: 1500,
+    pta: 200
+    });
     
     //  === Validations For Stepper 1 ====
     const validateStep1 = () => {
@@ -335,67 +350,81 @@ const handleSubmitEnrollment = async () => {
   //  ONLY PROCEED IF VALID
   setIsSubmitting(true);
 
-  const submitEnrollment = async () => {
-    const studentID = editingStudent
-      ? editingStudent.studentID
-      : `${currentSY}-${childLast[0].toUpperCase()}${childFirst[0].toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+const submitEnrollment = async () => {
+  const studentID = editingStudent
+    ? editingStudent.studentID
+    : `${currentSY}-${childLast[0].toUpperCase()}${childFirst[0].toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
 
-    const [birthUrl, cardUrl, picUrl, gcashUrl] = await Promise.all([
-      uploadToCloudinary(files.birthCert),
-      uploadToCloudinary(files.reportCard),
-      uploadToCloudinary(files.idPicture),
-      uploadToCloudinary(paymentProof)
-    ]);
+  // 🔹 Compute payment breakdown
+  const paymentBreakdown = Object.keys(fees).reduce((acc, key) => {
+    const total = fees[key];
+    const paid = key === "registration" ? total : (payments[key] || 0);
 
-    await setDoc(doc(db, "students", studentID), {
-      studentID,
-      parentUID: auth.currentUser.uid,
-      firstname: childFirst,
-      middlename: childMiddle,
-      lastname: childLast,
-      suffix,
-      level,
-      grade,
-      birthDate,
-      age: Number(age),
-      sex,
-      studentType,
-      previousSchool: studentType === "Transferee" ? prevSchool : "",
-      isEnrolled: false,
+    acc[key] = {
+      total,
+      paid,
+      balance: total - paid,
+      status: paid >= total ? "Fully Paid" : paid > 0 ? "Partial" : "Unpaid"
+    };
+
+    return acc;
+  }, {});
+
+  const [birthUrl, cardUrl, picUrl, gcashUrl] = await Promise.all([
+    uploadToCloudinary(files.birthCert),
+    uploadToCloudinary(files.reportCard),
+    uploadToCloudinary(files.idPicture),
+    uploadToCloudinary(paymentProof)
+  ]);
+
+  await setDoc(doc(db, "students", studentID), {
+    studentID,
+    parentUID: auth.currentUser.uid,
+    firstname: childFirst,
+    middlename: childMiddle,
+    lastname: childLast,
+    suffix,
+    level,
+    grade,
+    birthDate,
+    age: Number(age),
+    sex,
+    studentType,
+    previousSchool: studentType === "Transferee" ? prevSchool : "",
+    isEnrolled: false,
+    status: "Pending",
+    requirements: {
+      birthCert: birthUrl,
+      reportCard: cardUrl,
+      idPicture: picUrl
+    },
+    address: userData.address,
+    father: userData.spouse,
+    mother: userData.parent,
+    schoolYear: currentSY,
+    createdAt: serverTimestamp()
+  });
+
+  await setDoc(doc(db, "enrollments", `ENR-${currentSY}-${studentID}`), {
+    studentID,
+    parentUID: auth.currentUser.uid,
+    schoolYear: currentSY,
+    fees: paymentBreakdown,  // ✅ dito na gamit yung bagong breakdown
+    monthlyTracking: tuitionFees[level].months.reduce((acc, month) => {
+      acc[month] = {
+        status: "Unpaid",
+        amount: tuitionFees[level].monthlyRate
+      };
+      return acc;
+    }, {}),
+    payment: {
+      method: paymentMethod,
+      proofImage: gcashUrl,
       status: "Pending",
-      requirements: {
-        birthCert: birthUrl,
-        reportCard: cardUrl,
-        idPicture: picUrl
-      },
-      address: userData.address,
-      father: userData.spouse,
-      mother: userData.parent,
-      schoolYear: currentSY,
-      createdAt: serverTimestamp()
-    });
-
-    await setDoc(doc(db, "enrollments", `ENR-${currentSY}-${studentID}`), {
-      studentID,
-      parentUID: auth.currentUser.uid,
-      schoolYear: currentSY,
-      fees: tuitionFees[level],
-      monthlyTracking: tuitionFees[level].months.reduce((acc, month) => {
-        acc[month] = {
-          status: "Unpaid",
-          amount: tuitionFees[level].monthlyRate
-        };
-        return acc;
-      }, {}),
-      payment: {
-        method: paymentMethod,
-        proofImage: gcashUrl,
-        status: "Pending",
-        dateEnrolled: serverTimestamp()
-      }
-    });
-  };
-
+      dateEnrolled: serverTimestamp()
+    }
+  });
+};
   try {
     await sileo.promise(submitEnrollment(), {
       loading: { title: "Submitting Enrollment..." },
@@ -915,94 +944,166 @@ const handleSubmitEnrollment = async () => {
          </section>
          )}
 
-                    {/* LEDGER VIEW */}
-                    { step == 3 && (
-                    <section>
-                    <div className='bg-gray-50 dark:bg-neutral-900 rounded-3xl p-6'>
-                    <div className='flex justify-between items-center mb-6 text-neutral-400'>
-                    <h4 className='text-[10px] font-black uppercase text-gray-400 tracking-widest'>Financial Summary</h4>
-                    <span className='text-[10px] font-bold text-green-950'>S.Y. {currentSY}</span>
-                    </div>
-                
-                {/* Breakdown of Fees */}
-                <div className='grid grid-cols-2 gap-y-3 mb-6 border-b border-gray-200  pb-6'>
-                    {[
-                        { label: 'Registration', key: 'registration' },
-                        { label: 'Miscellaneous', key: 'misc' },
-                        { label: 'Books', key: 'books' },
-                        { label: 'Instructional', key: 'instructional' },
-                        { label: 'Uniform', key: 'uniform' },
-                        { label: 'PTA Fee', key: 'pta' }
-                    ].map((item) => (
-                        <React.Fragment key={item.key}>
-                            <span className='text-[11px] font-bold text-gray-500 uppercase'>{item.label}</span>
-                            <span className='text-[11px] font-black text-gray-800 text-right'>
-                                ₱{level ? tuitionFees[level][item.key].toLocaleString() : '0'}
-                            </span>
-                        </React.Fragment>
+{step === 3 && (
+  <section className="space-y-6 animate-in fade-in duration-500">
+    {/* Header */}
+    <div className='flex gap-2 items-center mb-4'>
+      <div className='w-1.5 h-6 bg-green-950 rounded-full'></div>
+      <h3 className='font-bold uppercase tracking-widest text-sm text-neutral-700 dark:text-neutral-400'>
+        Payment Details
+      </h3>
+    </div>
+
+    {/* Summary Cards - Dito agad makikita ang totals */}
+    <div className="grid grid-cols-2 gap-4">
+      <div className="p-4 bg-white border rounded-xl shadow-sm border-l-4 border-l-red-500">
+        <p className="text-[10px] text-gray-500 uppercase font-black tracking-wider">Remaining Balance</p>
+        <p className="text-xl font-black text-neutral-800">
+          ₱ {Object.entries(fees).reduce((acc, [key, value]) => acc + (key === "registration" ? 0 : (value - (payments[key] || 0))), 0)}
+        </p>
+      </div>
+      <div className="p-4 bg-green-50 border border-green-100 rounded-xl shadow-sm border-l-4 border-l-green-600">
+        <p className="text-[10px] text-green-700 uppercase font-black tracking-wider">Total to Pay Now</p>
+        <p className="text-xl font-black text-green-900">
+          ₱ {Object.entries(fees).reduce((acc, [key, value]) => acc + (key === "registration" ? value : (payments[key] || 0)), 0)}
+        </p>
+      </div>
+    </div>
+
+    {/* Fees Management Area */}
+    <div className="bg-gray-50 dark:bg-neutral-900/50 rounded-2xl p-5 border border-gray-200">
+      <div className="flex justify-between items-center mb-6">
+        <h4 className="font-bold text-sm text-neutral-600 flex items-center gap-2">
+          <Banknote size={18} /> Selected Fees
+        </h4>
+        
+        {/* Dropdown para magdagdag ng ibang babayaran */}
+        <select 
+          className="bg-white border-2 border-green-800 px-3 py-2 rounded-lg text-xs font-bold shadow-sm outline-none focus:ring-2 focus:ring-green-500 cursor-pointer"
+          onChange={(e) => {
+            const key = e.target.value;
+            if (key) setPayments(prev => ({ ...prev, [key]: 100 })); // Default initial payment 100
+            e.target.value = ""; 
+          }}
+        >
+          <option value="">+ ADD OTHER FEE</option>
+          {Object.entries(fees).map(([key, value]) => (
+            key !== "registration" && payments[key] === undefined && (
+              <option key={key} value={key} className="capitalize">{key}</option>
+            )
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-4">
+        {Object.entries(fees).map(([key, value]) => {
+          // Ipakita lang ang Registration OR yung mga pinili sa dropdown
+          if (key !== "registration" && payments[key] === undefined) return null;
+
+          const isReg = key === "registration";
+          const paid = isReg ? value : (payments[key] || 0);
+          const balance = isReg ? 0 : value - paid;
+
+          // FIXED AMOUNTS ONLY (100, 200, 500, etc.)
+          const increments = [100, 200, 300, 400, 500, 1000, 1500, 2000, 3000, 5000];
+          const validOptions = increments.filter(opt => opt < value);
+
+          return (
+            <div key={key} className="flex flex-col md:flex-row md:items-center gap-4 bg-white dark:bg-neutral-900 p-4 rounded-xl border border-gray-200 shadow-sm relative group">
+              <div className="flex-1">
+                <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase ${isReg ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
+                  {isReg ? 'Mandatory' : 'Installment Available'}
+                </span>
+                <p className="font-black capitalize text-lg text-neutral-800 mt-1">{key}</p>
+                <p className="text-xs text-gray-400 font-medium tracking-tight">Total Fee: ₱{value}</p>
+              </div>
+
+              {/* FIXED SELECT DROPDOWN */}
+              <div className="flex flex-col gap-1 w-full md:w-52">
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Payment Amount</label>
+                {isReg ? (
+                   <div className="px-4 py-2 bg-gray-100 border rounded-lg font-black text-gray-600">₱ {value}</div>
+                ) : (
+                  <select
+                    value={payments[key]}
+                    onChange={(e) => setPayments(prev => ({ ...prev, [key]: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 rounded-lg border-2 border-green-700 text-sm font-black focus:ring-0 outline-none cursor-pointer hover:bg-green-50"
+                  >
+                    {validOptions.map(opt => (
+                      <option key={opt} value={opt}>₱ {opt.toLocaleString()}</option>
                     ))}
-                </div>
+                    <option value={value}>FULL PAYMENT (₱ {value.toLocaleString()})</option>
+                  </select>
+                )}
+              </div>
 
-                <div className='space-y-3'>
-                    <div className='flex justify-between items-center'>
-                        <span className='text-xs font-bold text-gray-500'>Total Initial Fees</span>
-                        <span className='text-xl font-black text-green-950 italic'>
-                            ₱{level ? (
-                                tuitionFees[level].registration + 
-                                tuitionFees[level].misc + 
-                                tuitionFees[level].books + 
-                                tuitionFees[level].instructional + 
-                                tuitionFees[level].uniform + 
-                                tuitionFees[level].pta
-                            ).toLocaleString() : '0'}
-                        </span>
-                    </div>
+              {/* Status/Balance Display */}
+              <div className="text-right border-l pl-4 hidden md:block min-w-[120px]">
+                <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Balance</p>
+                <p className={`text-lg font-black ${balance > 0 ? 'text-red-500' : 'text-green-600'}`}>
+                  ₱{balance.toLocaleString()}
+                </p>
+              </div>
 
-                    {/* Monthly Breakdown */}
-                    <div className='grid grid-cols-5 gap-2 mt-4'>
-                        {(level ? tuitionFees[level].months : ["JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC", "JAN", "FEB", "MAR"]).map(m => (
-                            <div key={m} className='bg-white rounded-xl p-2 border border-gray-100 text-center flex flex-col shadow-sm'>
-                                <span className='text-[8px] font-bold text-gray-300'>{m}</span>
-                                <span className='text-[9px] font-black text-gray-700'>
-                                    ₱{level ? tuitionFees[level].monthlyRate.toLocaleString() : '---'}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-    
-                    {/* Payment Method Section (Original) */}
-                    <div className='mt-8 pt-6 border-t border-gray-200'>
-                        <div className='flex flex-col gap-4'>
-                            <div className='flex flex-col gap-2'>
-                                <label className='text-[10px] font-black text-gray-400 uppercase'>Payment Method</label>
-                                <select className='w-full bg-white border border-gray-200 rounded-2xl px-5 py-3 text-sm font-bold focus:ring-2 ring-orange-100 outline-none cursor-pointer'
-                                 value={paymentMethod} 
-                                 onChange={(e)=>{setPaymentMethod(e.target.value);
-                                    setErrors(prev => ({...prev,paymentMethod : ""}));
-                                 }}
-                                 >   
-                                    <option value="">Choose Method</option>
-                                    <option value="Cash">Cash Payment</option>
-                                    <option value="GCash">GCash Transfer</option>
-                                </select>
-                            </div>
-                            {paymentMethod === "GCash" && (
-                                <div className='animate-in slide-in-from-top-2'>
-                                    <label className='text-[10px] font-black text-gray-400 uppercase'>Proof of Transaction</label>
-                                    <input type="file" className='w-full mt-2 text-xs bg-white p-2 rounded-xl border border-dashed border-orange-300'
-                                     onChange={(e)=>{setPaymentProof(e.target.files[0]);
-                                     setErrors (prev => ({...prev , paymentProof : ""}));   
-                                     }} />
-                                </div>
-                            )}
+              {/* Delete Button for Optional Fees */}
+              {!isReg && (
+                <button 
+                  onClick={() => {
+                    const next = { ...payments };
+                    delete next[key];
+                    setPayments(next);
+                  }}
+                  className="absolute -top-2 -right-2 bg-red-50 text-red-400 hover:text-red-600 p-1.5 rounded-full border border-red-100 shadow-sm transition-all"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
 
-                        </div>
-                    </div>
-                </div>
+    {/* Payment Method & GCash Upload */}
+    <div className='grid md:grid-cols-2 gap-6 pt-6 border-t border-gray-100'>
+      <div className='flex flex-col gap-3'>
+        <label className='text-sm font-black flex items-center gap-2 text-neutral-700 uppercase tracking-tighter'>
+          <CreditCard size={18} className="text-green-800" /> Payment Method <span className='text-red-600'>*</span>
+        </label>
+        <FloatingSelect
+          label="Select Mode"
+          value={paymentMethod}
+          onChange={(e) => setPaymentMethod(e.target.value)}
+          options={["Cash", "GCash"]}
+        />
+        {errors.paymentMethod && <p className="text-red-600 text-[10px] font-bold uppercase">{errors.paymentMethod}</p>}
+      </div>
 
-                        </section>   
+ {paymentMethod === "GCash" && (
+  <div className='flex flex-col gap-3 animate-in zoom-in-95 duration-300'>
+    <label className='text-sm font-black text-neutral-700 uppercase tracking-tighter'>
+      Upload Payment Receipt <span className='text-red-600'>*</span>
+    </label>
+
+    <input
+      type="file"
+      accept="image/*"
+      onChange={(e) => setPaymentProof(e.target.files[0])}
+      className="border border-gray-300 dark:border-neutral-700 rounded-md p-2 cursor-pointer bg-white dark:bg-neutral-900"
+    />
+
+    {errors.paymentProof && (
+      <p className="text-red-600 text-[10px] font-bold uppercase">
+        {errors.paymentProof}
+      </p>
+    )}
+  </div>
 )}
+    </div>
+  </section>
+)}
+
+          
                             {/* SECTION: Final Review */}
                             <section className='pt-10 border-gray-50 flex flex-col md:flex-row justify-between items-center gap-8'>
 <div className='bg-gray-50 dark:bg-neutral-900 p-6 rounded flex-1 w-full'>
@@ -1016,31 +1117,37 @@ const handleSubmitEnrollment = async () => {
  <div className="grid tablet:grid-cols-2 grid-cols-1 gap-4">
 
   {/* PARENT (Mother or primary parent) */}
-  <div>
-    <p className="font-semibold text-gray-600">
-      {userData.parent?.firstname && userData.spouse
-        ? "Mother"
-        : "Parent"}
-    </p>
+ <div>
+  {/* PARENT */}
+  <p className="font-semibold text-gray-600">
+    {userData.role === "father"
+      ? "Father"
+      : userData.role === "mother"
+      ? "Mother"
+      : "Parent"}
+  </p>
 
-    <p className="border px-2 uppercase text-gray-700">
-      {userData.parent?.firstname} {userData.parent?.lastname}
-    </p>
+  <p className="border px-2 uppercase text-gray-700">
+    {userData.parent?.firstname} {userData.parent?.lastname}
+  </p>
 
-    {/* SPOUSE / FATHER (optional) */}
-    {userData.spouse ? (
-      <>
-        <p className="mt-2 font-semibold text-gray-600">Father</p>
-        <p className="border px-2 uppercase text-gray-700">
-          {userData.spouse?.firstname} {userData.spouse?.lastname}
-        </p>
-      </>
-    ) : (
-      <p className="text-sm text-gray-400 mt-2">
-        No spouse recorded
+  {/* SPOUSE */}
+  {userData.spouse && (
+    <>
+      <p className="mt-2 font-semibold text-gray-600">
+        {userData.role === "father"
+          ? "Mother"
+          : userData.role === "mother"
+          ? "Father"
+          : "Parent"}
       </p>
-    )}
-  </div>
+
+      <p className="border px-2 uppercase text-gray-700">
+        {userData.spouse?.firstname} {userData.spouse?.lastname}
+      </p>
+    </>
+  )}
+</div>
 
   {/* CONTACT */}
   <div>
