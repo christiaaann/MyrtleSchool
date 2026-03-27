@@ -276,7 +276,7 @@ useEffect(() => {
                 </td>
                 <td className='px-4 py-4'>
                   <div className='font-semibold text-gray-700'>{st.level}</div>
-                  <div className='text-xs text-gray-500'>Grade {st.grade}</div>
+                  <div className='text-xs text-gray-500'>{st.grade}</div>
                 </td>
                 <td className='px-4 py-4'>
                   <div className='flex flex-col gap-1'>

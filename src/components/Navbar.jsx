@@ -6,7 +6,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../services/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../services/firebase";
-
+import DepEdLogo from "../assets/DepEDLogo.png"
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -67,7 +67,8 @@ useEffect(() => {
           {/* Logo */}
           <div className="flex items-center gap-3">
             <img className="w-12 object-contain" src={logo} alt="logo" />
-            <h1 className="hidden phone:block text-neutral-700 font-baloo font-bold text-lg">
+            <img className="w-12 object-contain" src={DepEdLogo} alt="" />
+            <h1 className="hidden phone:block duration-300 text-nowrap text-sm text-neutral-700 font-baloo font-bold tablet:text-lg">
               MYRTLE CHRISTIAN SCHOOL INC.
             </h1>
           </div>
