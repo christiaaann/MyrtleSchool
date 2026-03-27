@@ -136,7 +136,7 @@ const Enrollment = () => {
 };
 
     // ==== stepper ====
-    const [step, setStep] = useState(2);
+    const [step, setStep] = useState(1);
     const totalSteps = 3;
     const nextStep = () => {
     if (step === 1) {
