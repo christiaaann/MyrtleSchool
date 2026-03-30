@@ -1004,7 +1004,7 @@ const handleSubmitEnrollment = async () => {
                         </section>   
 )}
                             {/* SECTION: Final Review */}
-                            <section className='pt-10 border-gray-50 flex flex-col md:flex-row justify-between items-center gap-8'>
+<section className='pt-10 border-gray-50 flex flex-col md:flex-row justify-between items-center gap-8'>
 <div className='bg-gray-50 dark:bg-neutral-900 p-6 rounded flex-1 w-full'>
 
   <h4 className='text-lg mb-4 flex gap-2 items-center'>
@@ -1016,31 +1016,37 @@ const handleSubmitEnrollment = async () => {
  <div className="grid tablet:grid-cols-2 grid-cols-1 gap-4">
 
   {/* PARENT (Mother or primary parent) */}
-  <div>
-    <p className="font-semibold text-gray-600">
-      {userData.parent?.firstname && userData.spouse
-        ? "Mother"
-        : "Parent"}
-    </p>
+ <div>
+  {/* PARENT */}
+  <p className="font-semibold text-gray-600">
+    {userData.role === "father"
+      ? "Father"
+      : userData.role === "mother"
+      ? "Mother"
+      : "Parent"}
+  </p>
 
-    <p className="border px-2 uppercase text-gray-700">
-      {userData.parent?.firstname} {userData.parent?.lastname}
-    </p>
+  <p className="border px-2 uppercase text-gray-700">
+    {userData.parent?.firstname} {userData.parent?.lastname}
+  </p>
 
-    {/* SPOUSE / FATHER (optional) */}
-    {userData.spouse ? (
-      <>
-        <p className="mt-2 font-semibold text-gray-600">Father</p>
-        <p className="border px-2 uppercase text-gray-700">
-          {userData.spouse?.firstname} {userData.spouse?.lastname}
-        </p>
-      </>
-    ) : (
-      <p className="text-sm text-gray-400 mt-2">
-        No spouse recorded
+  {/* SPOUSE */}
+  {userData.spouse && (
+    <>
+      <p className="mt-2 font-semibold text-gray-600">
+        {userData.role === "father"
+          ? "Mother"
+          : userData.role === "mother"
+          ? "Father"
+          : "Parent"}
       </p>
-    )}
-  </div>
+
+      <p className="border px-2 uppercase text-gray-700">
+        {userData.spouse?.firstname} {userData.spouse?.lastname}
+      </p>
+    </>
+  )}
+</div>
 
   {/* CONTACT */}
   <div>
