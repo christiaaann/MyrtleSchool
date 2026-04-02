@@ -154,6 +154,27 @@ const EnrollmentArchive = ({
     setPage("personal"); 
   };
 
+  const handleResume = (stud) => {
+    setChildFirst(stud.firstname); 
+    setChildMiddle(stud.middlename || ""); 
+    setChildLast(stud.lastname);
+    setSuffix(stud.suffix || "none"); 
+    setAge(stud.age); 
+    setSex(stud.sex);
+    setStudentType(stud.studentType); 
+    setPrevSchool(stud.previousSchool || "");
+    setLevel(stud.level); 
+    setGrade(stud.grade);
+    setFiles({
+      birthCert: stud.requirements?.birthCert ? { url: stud.requirements.birthCert } : null,
+      reportCard: stud.requirements?.reportCard ? { url: stud.requirements.reportCard } : null,
+      idPicture: stud.requirements?.idPicture ? { url: stud.requirements.idPicture } : null
+    });
+    setPaymentMethod(stud.paymentMethod || ""); 
+    setEditingStudent(stud); 
+    setPage("personal"); 
+  };
+
   const handlePaymentClick = (student, month, amount) => {
     setSelectedPay({ student, month, amount });
     setPayMethod("");
@@ -237,6 +258,16 @@ const EnrollmentArchive = ({
             // Computation for 10 months. Kung zero ang rate, zero talaga ang balance.
             const remainingBalance = (monthlyRate * 10) - totalPaid;
 
+            // Determine current step
+            let currentStep = 1;
+            if (stud.status === "Submitted for Verification" || stud.verificationStatus === "Pending") {
+                currentStep = 3;
+            } else if (stud.verificationStatus === "Approved" || stud.status === "Payment Submitted") {
+                currentStep = 4;
+            } else if (stud.isEnrolled) {
+                currentStep = 4; // completed
+            }
+
             return (
               <div key={stud.studentID} className="border rounded-xl bg-white dark:bg-neutral-900 shadow-sm overflow-hidden border-gray-200 dark:border-neutral-700">
                 <div className="p-5 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50 dark:bg-neutral-900">
@@ -288,6 +319,44 @@ const EnrollmentArchive = ({
                       </p>
                     </div>
                   </div>
+
+                  {/* Stepper Status */}
+                  <div className="mt-4 p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors" onClick={() => !stud.isEnrolled && handleResume(stud)}>
+                    <p className="text-[8px] font-bold text-gray-500 uppercase mb-2">Enrollment Progress</p>
+                    <div className="flex items-center justify-center gap-2">
+                      {[1,2,3,4].map(s => {
+                        const stepNames = ["Child Info", "Requirements", "Verification", "Payment"];
+                        const isCompleted = currentStep > s;
+                        const isCurrent = currentStep === s && !stud.isEnrolled;
+                        const isEnrolledStep = stud.isEnrolled && s === 4;
+                        return (
+                          <div key={s} className="flex flex-col items-center">
+                            <span className={`w-5 h-5 rounded-full flex justify-center items-center text-[7px] font-bold ${
+                              isEnrolledStep ? 'bg-green-600 text-white' : 
+                              isCompleted ? 'bg-green-500 text-white' : 
+                              isCurrent ? 'bg-blue-500 text-white' : 
+                              'bg-gray-300 text-gray-600'
+                            }`}>
+                              {isEnrolledStep ? '✓' : isCompleted ? '✓' : s}
+                            </span>
+                            <span className="text-[6px] text-center mt-1 leading-tight">{stepNames[s-1]}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[7px] text-gray-600 text-center mt-2">
+                      {stud.isEnrolled ? "Completed" : `Click to resume at Step ${currentStep}`}
+                    </p>
+                  </div>
+
+                  {currentStep === 4 && !stud.isEnrolled && (
+                    <button 
+                      onClick={() => handleResume(stud)}
+                      className="mt-2 px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      Complete Payment
+                    </button>
+                  )}
                 </div>
 
                 {/* Academic History Dropdown */}
@@ -328,7 +397,7 @@ const EnrollmentArchive = ({
                         // Dito ginagamit ang monthlyRate para sa bawat month card
                         const data = paymentRecord[dbMonthKey] || { status: "Unpaid", amount: monthlyRate };
                         const isPaid = data.status === "Paid";
-                        const isOpen = data.status === "Open";
+                        const isOpen = data.status === "Unpaid" || data.status === "Open";
                         const isPending = data.status === "Pending Approval";
 
                         return (

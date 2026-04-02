@@ -217,10 +217,10 @@ const Users = () => {
               {/* Footer Actions */}
               <div className="mt-12 pt-8 border-t flex justify-between items-center">
                  <div className="flex gap-4">
-                    <button className="bg-black text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase shadow-lg shadow-black/20 hover:scale-105 transition-all">Open Chat</button>
-                    <button className="border border-gray-200 px-6 py-2.5 rounded-xl text-xs font-black uppercase hover:bg-gray-50 transition-all">Enrollment Files</button>
+                    {/* <button className="bg-black text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase shadow-lg shadow-black/20 hover:scale-105 transition-all">Open Chat</button>
+                    <button className="border border-gray-200 px-6 py-2.5 rounded-xl text-xs font-black uppercase hover:bg-gray-50 transition-all">Enrollment Files</button> */}
                  </div>
-                 <button onClick={() => handleDelete(selectedUser.id)} className="text-red-500 font-black text-[10px] uppercase tracking-widest hover:underline">Delete Member</button>
+                 <button onClick={() => handleDelete(selectedUser.id)} className="text-red-500 font-black text-[10px] uppercase tracking-widest hover:underline">Delete</button>
               </div>
 
             </div>

@@ -129,64 +129,100 @@ useEffect(() => {
     }
   };
  if (loading) return <StudentsSkeleton/>;
-  const handleApprove = async (id, studentID) => {
-    if(window.confirm(`Approve enrollment for SY ${currentSY}?`)) {
+  const handleApproveVerification = async (id, studentID) => {
+    if(window.confirm(`Approve verification for SY ${currentSY}?`)) {
         try {
-            await updateDoc(doc(db, "students", id), { isEnrolled: true, status: "Enrolled" });
             const enrRef = doc(db, "enrollments", `ENR-${currentSY}-${studentID}`);
             const enrSnap = await getDoc(enrRef);
             
             if(enrSnap.exists()) {
-                await updateDoc(enrRef, { "payment.status": "Approved" });
-            } else {
-                await setDoc(enrRef, {
-                  studentID: studentID,
-                  schoolYear: currentSY,
-                  payment: { status: "Approved", method: "Admin-Set" },
-                  monthlyTracking: {
-                    "JUN": { status: "Open", amount: 1100 },
-                    "JUL": { status: "Locked", amount: 1100 },
-                    "AUG": { status: "Locked", amount: 1100 },
-                    "SEP": { status: "Locked", amount: 1100 },
-                    "OCT": { status: "Locked", amount: 1100 },
-                    "NOV": { status: "Locked", amount: 1100 },
-                    "DEC": { status: "Locked", amount: 1100 },
-                    "JAN": { status: "Locked", amount: 1100 },
-                    "FEB": { status: "Locked", amount: 1100 },
-                    "MAR": { status: "Locked", amount: 1100 }
-                  }
+                await updateDoc(enrRef, { 
+                    "verificationStatus": "Approved"
                 });
+                await updateDoc(doc(db, "students", id), { status: "Verification Approved" });
             }
-            alert("Student Enrolled Successfully!");
-            
-            //  === SEND EMAIL NOTIFICATION via backend ===
-            try {
-              await axios.post("https://myrtlebackend.vercel.app/send-enrollment", { studentID });
-              alert("Email notification sent to parent!");
-            } catch(emailError) {
-              console.error("Email sending failed:", emailError);
-              alert("Student enrolled, but email failed to send.");
-            }
+            alert("Verification Approved!");
+        } catch (error) { 
+            console.error("Approval Error:", error); 
+            alert("Error: " + error.message);
+        }
+    }
+  };
+        
+        // === if students rejected ===
+        const handleRejectVerification = async (id, studentID) => {
+          const rejectionNote = window.prompt("Please provide a reason for rejection:");
+          if (rejectionNote === null) return; // Cancelled
+          if (!rejectionNote.trim()) {
+            alert("Rejection reason is required.");
+            return;
+          }
+          if(window.confirm("Reject this verification?")) {
+              try {
+                  await updateDoc(doc(db, "students", id), { status: "Verification Rejected" });
+                  const enrRef = doc(db, "enrollments", `ENR-${currentSY}-${studentID}`);
+                  const enrSnap = await getDoc(enrRef);
+                  if(enrSnap.exists()) {
+                      await updateDoc(enrRef, { 
+                        "verificationStatus": "Rejected",
+                        "rejectionNote": rejectionNote
+                      });
+                  }
+                  alert("Verification Rejected!");
+              } catch (error) { 
+                  console.error("Rejection Error:", error); 
+                  alert("Error: " + error.message);
+              }
+          }
+        };
+         
+        // === approve payment ===
+        const handleApprovePayment = async (studentID) => {
+          if(window.confirm(`Approve payment for SY ${currentSY}?`)) {
+              try {
+                  const enrRef = doc(db, "enrollments", `ENR-${currentSY}-${studentID}`);
+                  await updateDoc(enrRef, { 
+                      "payment.status": "Approved"
+                  });
+                  // Now enroll the student
+                  const studRef = doc(db, "students", selectedStudent.id);
+                  await updateDoc(studRef, { isEnrolled: true, status: "Enrolled" });
+                  alert("Payment Approved and Student Enrolled!");
+                  
+                  // Send email
+                  try {
+                    await axios.post("https://myrtlebackend.vercel.app/send-enrollment", { studentID });
+                    alert("Email notification sent to parent!");
+                  } catch(emailError) {
+                    console.error("Email sending failed:", emailError);
+                    alert("Student enrolled, but email failed to send.");
+                  }
               } catch (error) { 
                   console.error("Approval Error:", error); 
                   alert("Error: " + error.message);
               }
           }
         };
-        
-        // === if students rejected ===
-        const handleReject = async (id, studentID) => {
-          if(window.confirm("Reject this enrollment?")) {
+
+        // === reject payment ===
+        const handleRejectPayment = async (studentID) => {
+          const rejectionNote = window.prompt("Please provide a reason for payment rejection:");
+          if (rejectionNote === null) return;
+          if (!rejectionNote.trim()) {
+            alert("Rejection reason is required.");
+            return;
+          }
+          if(window.confirm("Reject this payment?")) {
               try {
-                  await updateDoc(doc(db, "students", id), { isEnrolled: false, status: "Rejected" });
                   const enrRef = doc(db, "enrollments", `ENR-${currentSY}-${studentID}`);
-                  const enrSnap = await getDoc(enrRef);
-                  if(enrSnap.exists()) {
-                      await updateDoc(enrRef, { "payment.status": "Rejected" });
-                  }
-                  alert("Student Enrollment Rejected!");
-              } catch (error) {
-                  console.error("Reject Error:", error);
+                  await updateDoc(enrRef, { 
+                      "payment.status": "Rejected",
+                      "paymentRejectionNote": rejectionNote
+                  });
+                  await updateDoc(doc(db, "students", selectedStudent.id), { status: "Payment Rejected" });
+                  alert("Payment Rejected!");
+              } catch (error) { 
+                  console.error("Rejection Error:", error); 
                   alert("Error: " + error.message);
               }
           }
@@ -290,24 +326,33 @@ useEffect(() => {
                 </td>
                 <td className='px-4 py-4 text-center'>
                   <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${
-                    st.status === "Enrolled" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
+                    st.status === "Enrolled" ? "bg-green-100 text-green-700" : 
+                    st.status === "Payment Submitted" ? "bg-yellow-100 text-yellow-700" :
+                    st.status === "Verification Approved" ? "bg-orange-100 text-orange-700" :
+                    "bg-gray-100 text-gray-700"
                   }`}>
-                    {st.status === "Enrolled" ? "PAID" : "PENDING"}
+                    {st.status === "Enrolled" ? "PAID" : 
+                     st.status === "Payment Submitted" ? "PENDING APPROVAL" :
+                     st.status === "Verification Approved" ? "NOT SUBMITTED" :
+                     "PENDING"}
                   </span>
                 </td>
                 <td className='px-4 py-4 text-center'>
                   <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${
-                    st.status === "Enrolled" ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                    st.status === "Enrolled" ? 'bg-green-100 text-green-700' : 
+                    st.status === "Verification Rejected" ? 'bg-red-100 text-red-700' :
+                    st.status === "Payment Rejected" ? 'bg-red-100 text-red-700' :
+                    'bg-orange-100 text-orange-700'
                   }`}>
                     {st.status || 'Pending'}
                   </span>
                 </td>
                 <td className='px-4 py-4 text-center'>
                   <div className='flex justify-center gap-2'>
-                    {st.status !== "Enrolled" && st.status !== "Rejected" && (
+                    {st.status === "Submitted for Verification" && (
                       <>
-                        <button onClick={() => handleApprove(st.id, st.studentID)} className='bg-[#2D5B60] text-white px-3 py-1 rounded text-[11px] font-bold hover:bg-black'>Approve</button>
-                        <button onClick={() => handleReject(st.id, st.studentID)} className='bg-red-50 text-red-600 px-3 py-1 rounded text-[11px] font-bold border border-red-200'>Reject</button>
+                        <button onClick={() => handleApproveVerification(st.id, st.studentID)} className='bg-[#2D5B60] text-white px-3 py-1 rounded text-[11px] font-bold hover:bg-black'>Approve Verif</button>
+                        <button onClick={() => handleRejectVerification(st.id, st.studentID)} className='bg-red-50 text-red-600 px-3 py-1 rounded text-[11px] font-bold border border-red-200'>Reject Verif</button>
                       </>
                     )}
                     <button onClick={() => handleViewDetails(st)} className='bg-blue-50 text-blue-700 px-3 py-1 rounded text-[11px] font-bold border border-blue-200'>Details</button>
@@ -351,6 +396,32 @@ useEffect(() => {
                           <a href={selectedStudent.paymentInfo.payment.proofImage} target="_blank" rel="noreferrer">
                             <img src={selectedStudent.paymentInfo.payment.proofImage} className='w-full h-32 object-contain border bg-white rounded mt-1 shadow-sm' alt="Receipt" />
                           </a>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+
+                  <section className='bg-green-50 p-4 rounded-lg border border-green-200'>
+                    <h3 className="text-green-700 font-black uppercase text-xs mb-3 border-b border-green-200 pb-2">2.5. Verification Status</h3>
+                    <div className='space-y-2'>
+                      <p><span className='text-gray-500'>Status:</span> <span className={`font-bold uppercase ${selectedStudent.paymentInfo?.verificationStatus === "Approved" ? "text-green-700" : selectedStudent.paymentInfo?.verificationStatus === "Rejected" ? "text-red-700" : "text-orange-700"}`}>{selectedStudent.paymentInfo?.verificationStatus || "Pending"}</span></p>
+                      {selectedStudent.paymentInfo?.rejectionNote && (
+                        <p><span className='text-gray-500'>Rejection Reason:</span> <span className='font-bold text-red-700'>{selectedStudent.paymentInfo.rejectionNote}</span></p>
+                      )}
+                    </div>
+                  </section>
+
+                  <section className='bg-purple-50 p-4 rounded-lg border border-purple-200'>
+                    <h3 className="text-purple-700 font-black uppercase text-xs mb-3 border-b border-purple-200 pb-2">2.6. Payment Status</h3>
+                    <div className='space-y-2'>
+                      <p><span className='text-gray-500'>Status:</span> <span className={`font-bold uppercase ${selectedStudent.paymentInfo?.payment?.status === "Approved" ? "text-green-700" : selectedStudent.paymentInfo?.payment?.status === "Rejected" ? "text-red-700" : "text-orange-700"}`}>{selectedStudent.paymentInfo?.payment?.status || "Not Submitted"}</span></p>
+                      {selectedStudent.paymentInfo?.paymentRejectionNote && (
+                        <p><span className='text-gray-500'>Rejection Reason:</span> <span className='font-bold text-red-700'>{selectedStudent.paymentInfo.paymentRejectionNote}</span></p>
+                      )}
+                      {selectedStudent.paymentInfo?.payment?.status === "Pending Approval" && (
+                        <div className='flex gap-2 mt-3'>
+                          <button onClick={() => handleApprovePayment(selectedStudent.studentID)} className='bg-green-600 text-white px-4 py-2 rounded text-xs font-bold hover:bg-green-700'>Approve Payment</button>
+                          <button onClick={() => handleRejectPayment(selectedStudent.studentID)} className='bg-red-600 text-white px-4 py-2 rounded text-xs font-bold hover:bg-red-700'>Reject Payment</button>
                         </div>
                       )}
                     </div>

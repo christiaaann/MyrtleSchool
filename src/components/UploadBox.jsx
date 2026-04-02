@@ -1,21 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ImageUp, X } from "lucide-react";
 import { sileo } from "sileo";
+
 const UploadBox = ({ label, file, setFile, validateSize }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [preview, setPreview] = useState(null);
 
-  // function to handle file with optional validation
-  const handleFile = (file) => {
-    if (!file) return;
+  useEffect(() => {
+    if (!file) {
+      setPreview(null);
+      return;
+    }
+
+    if (file instanceof File) {
+      const url = URL.createObjectURL(file);
+      setPreview(url);
+
+      return () => URL.revokeObjectURL(url); // cleanup
+    }
+  }, [file]);
+
+  const handleFile = (f) => {
+    if (!f) return;
 
     if (validateSize) {
       const img = new Image();
-      img.src = URL.createObjectURL(file);
+      img.src = URL.createObjectURL(f);
       img.onload = () => {
         const width = img.width;
         const height = img.height;
 
-        // 2x2 inches at 300dpi ~ 600x600px
         const expectedPx = 600;
         if (Math.abs(width - expectedPx) > 10 || Math.abs(height - expectedPx) > 10) {
           sileo.error({
@@ -26,14 +40,12 @@ const UploadBox = ({ label, file, setFile, validateSize }) => {
           return;
         }
 
-        // valid file
-        setFile(file);
+        setFile(f); // only set valid file
       };
       return;
     }
 
-    // normal file without validation
-    setFile(file);
+    setFile(f); // normal case
   };
 
   const handleDrop = (e) => {
@@ -42,14 +54,11 @@ const UploadBox = ({ label, file, setFile, validateSize }) => {
     handleFile(e.dataTransfer.files[0]);
   };
 
-  const preview = file ? URL.createObjectURL(file) : null;
-
   return (
     <div className="flex w-full flex-col gap-2">
       <p className="text-xs font-bold text-gray-600 uppercase">{label}</p>
 
       <div className="relative w-full h-40 md:h-48 rounded-xl border border-dashed dark:border-neutral-900 overflow-hidden">
-        {/* Drop area */}
         <div
           className={`absolute inset-0 flex flex-col items-center justify-center cursor-pointer transition
           ${isDragging ? "bg-green-50 border-green-400" : ""}`}
@@ -78,7 +87,6 @@ const UploadBox = ({ label, file, setFile, validateSize }) => {
           )}
         </div>
 
-        {/* Preview */}
         {preview && (
           <img
             src={preview}
@@ -87,7 +95,6 @@ const UploadBox = ({ label, file, setFile, validateSize }) => {
           />
         )}
 
-        {/* Remove button */}
         {file && (
           <button
             onClick={() => setFile(null)}
