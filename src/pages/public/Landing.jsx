@@ -266,7 +266,7 @@ const Landing = () => {
         <p className='text-neutral-500 mt-2 text-center flex flex-col'>If you cannot find answer to your question in our FAQ 
         <span>you can always contact us.We will answer to you shortly!</span>
         </p>  
-         <div className='flex flex-col tablet:flex-row gap-5 items-center mt-8'>
+         {/* <div className='flex flex-col tablet:flex-row gap-5 items-center mt-8'>
           <div className='flex justify-center w-full'>
            <div className='bg-gray-100 rounded-lg flex gap-2 flex-col items-center p-2 w-[28rem] tablet:w-full'>
             <img className='w-8' src={iconcall} alt="" />
@@ -281,32 +281,77 @@ const Landing = () => {
             <p className='text-neutral-500'>The best way to get answer faster</p>
            </div>
          </div>
-         </div>
+         </div> */}
          
         </div>
       </div>
 </div>
 
 
-        <footer className=" p-5 border-t-2">
-        <div className="flex flex-col gap-1 tablet:gap-10 tablet:flex-row justify-around">
-          <div className="text-neutral-500 w-full leading-6 text-sm">
-            <h1 className="text-xl font-bold text-neutral-500">
-              Myrtle Christian School
-            </h1>
-            <p>
-              Purok 1, Hacienda de Ortube, Irosin, Sorsogon, San Juan
-              Poblacion, Philippines 4707
-            </p>
-          </div>
+<footer className="bg-[#2D5B60] text-white pt-16 pb-6">
+  <div className="max-w-7xl mx-auto px-6 lg:px-8">
+    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-12 pb-12 border-b border-white/10">
+      
+      {/* 1. School Identity */}
+      <div className="col-span-1 lg:col-span-1">
+        <h2 className="text-xl font-bold tracking-tight mb-4 border-l-4 border-blue-600 pl-3">
+          MYRTLE CHRISTIAN<br/>SCHOOL
+        </h2>
+        <p className="text-gray-400 text-sm leading-relaxed mb-6">
+          Established to provide holistic Christian education, empowering students to lead with faith and excellence.
+        </p>
+      </div>
 
-          <div className="text-neutral-500 w-full text-sm">
-            <p>School Telephone: +639919107871</p>
-            <p>Email:</p>
-            <p>Contact Admin:</p>
+      {/* 2. Contact Information */}
+      <div>
+        <h3 className="text-sm font-semibold uppercase tracking-wider mb-5 text-blue-500">Contact Us</h3>
+        <div className="space-y-4 text-sm text-gray-300">
+          <div className="flex flex-col gap-1">
+            <span className="text-gray-400 text-xs font-medium uppercase">Address</span>
+            <p>Purok 1, Hacienda de Ortube, Irosin, Sorsogon, 4707</p>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-gray-400 text-xs font-medium uppercase">Phone</span>
+            <p className="hover:text-white transition-colors">+63 991 910 7871</p>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-gray-400 text-xs font-medium uppercase">Email</span>
+            <p className="hover:text-white transition-colors font-medium">admin@myrtlechristian.edu.ph</p>
           </div>
         </div>
-      </footer>
+      </div>
+
+      {/* 3. Quick Links (Standard sa School Sites) */}
+      <div>
+        <h3 className="text-sm font-semibold uppercase tracking-wider mb-5 text-blue-500">Academic Portal</h3>
+        <ul className="space-y-3 text-sm text-gray-300">
+          <li><a href="#" className="hover:text-white transition-colors">Admissions</a></li>
+          <li><a href="#" className="hover:text-white transition-colors">School Calendar</a></li>
+          <li><a href="#" className="hover:text-white transition-colors">Student Portal</a></li>
+          <li><a href="#" className="hover:text-white transition-colors">Faculty Directory</a></li>
+        </ul>
+      </div>
+
+      {/* 4. Support & Transparency */}
+      <div>
+        <h3 className="text-sm font-semibold uppercase tracking-wider mb-5 text-blue-500">Information</h3>
+        <ul className="space-y-3 text-sm text-gray-300">
+          <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
+          <li><a href="#" className="hover:text-white transition-colors">Terms of Use</a></li>
+        </ul>
+      </div>
+
+    </div>
+
+    {/* Bottom Bar */}
+    <div className="mt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] text-gray-300 font-medium uppercase tracking-[2px]">
+      <p>© {new Date().getFullYear()} Myrtle Christian School. All Rights Reserved.</p>
+      <div className="flex gap-6 italic">
+        "Nurturing Faith, Building Future"
+      </div>
+    </div>
+  </div>
+</footer>
 
 </div>
 </div>
