@@ -18,8 +18,37 @@ import DepedLogo from "../../assets/DepEDLogo.png"
 import logo from "../../assets/logo.png"
 import { useState, useEffect } from 'react'
 import boy from "../../assets/boy.png"
+import { collection, getDocs, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 const Landing = () => {
   const navigate = useNavigate("");
+  
+  const [announcements, setAnnouncements] = useState([]);
+const [current, setCurrent] = useState(0);
+
+useEffect(() => {
+  const q = query(
+    collection(db, "announcements"),
+    orderBy("createdAt", "desc"),
+    limit(3)
+  );
+
+  // Real-time listener
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    setAnnouncements(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  });
+
+  // Cleanup kapag component 
+  return () => unsubscribe();
+}, []);
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    setCurrent(prev => announcements.length ? (prev + 1) % announcements.length : 0);
+  }, 3000); // change slide every 3s
+  return () => clearInterval(interval);
+}, [announcements]);
+ 
+
   const faqData = [
       {
         question: "What age is accepted for Preschool?",
@@ -120,14 +149,25 @@ const Landing = () => {
       </div>
      </div> */}
 
-    <div id='home' className="h-[50rem] bg-gradient-to-tr relative from-white via-green-100 to-white flex items-center"> 
+    <div id='home' className="h-screen bg-gradient-to-tr relative from-white via-green-100 to-white flex items-center"> 
       <div className='flex  h-full w-[80rem] p-5 mx-auto tablet:justify-between justify-center'>
-      <div className="flex flex-col justify-center items-center gap-5 tablet:items-start">
-        <h1 className="tablet:text-6xl font-bold text-4xl tablet:text-nowrap"> Start Your Child’s </h1>
-        <h1 className="tablet:text-7xl text-[#2D5B60] font-bold text-5xl"> Future Today!</h1>
+      <div className="flex w-full flex-col justify-center items-center gap-5 tablet:items-start">
+        <h1 className="tablet:text-5xl font-bold text-4xl tablet:text-nowrap"> Start Your Child’s </h1>
+        <h1 className="tablet:text-5xl text-[#2D5B60] font-bold text-5xl"> Future Today!</h1>
         <div className="flex">
       <button onClick={handleEnrollNow} className="bg-[#2D5B60] mt-2 text-white px-20 py-2 rounded-2xl">Enroll Now</button> 
         </div>
+      {announcements.length > 0 ? (
+        <div className=" w-[30rem] max-w-7xl rounded overflow-hidden">
+          <img
+            src={announcements[current].imageUrl}
+            alt="announcement"
+            className=" w-full h-64 border-4 border-green-900 transition-all duration-500"
+          />
+        </div>
+      ) : (
+        <div className="text-center py-10 text-gray-400">No announcements yet.</div>
+      )}
  
       </div>
       <div className='tablet:flex hidden w-full'>

@@ -194,10 +194,10 @@ const AdminLayout = () => {
           </NavLink>
 
           <NavLink
-            to="/admin/sdsd"
+            to="/admin/announcements"
             className="p-2 rounded-xl hover:bg-gray-200"
           >
-            Role Management
+           Announcements
           </NavLink>
         </div>
       )}

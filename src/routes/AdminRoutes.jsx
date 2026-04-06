@@ -9,6 +9,7 @@ const Students = lazy(() => import("../pages/admin/Students"));
 const Profile = lazy(() => import("../pages/admin/Profile"));
 const Settings = lazy(() => import("../pages/admin/Settings"));
 const SchoolYear = lazy(() => import("../pages/admin/SchoolYear"));
+const Announcements = lazy(() => import("../pages/admin/Announcements"));
 
 const AdminRoutes = () => {
   return (
@@ -22,6 +23,7 @@ const AdminRoutes = () => {
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
           <Route path="schoolyear" element={<SchoolYear />} />
+          <Route path="announcements" element={<Announcements/>} />
           <Route path="*" element={<Navigate to="/admin" />} />
         </Route>
       </Routes>
