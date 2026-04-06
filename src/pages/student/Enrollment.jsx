@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, Link } from 'react-router-dom';
 import { doc, getDoc,
          updateDoc, 
          serverTimestamp, 
@@ -566,60 +566,36 @@ const handleSubmitEnrollment = async () => {
         <div className=' dark:bg-black bg-white font-sans text-[#2D3748]'>
             
             {/* Minimal Header */}
-            <header className='bg-white dark:bg-black  z-20 px-8 py-4 flex items-center justify-between border-b dark:border-b-neutral-800 border-gray-100 sticky top-0 shadow-sm'>
-            <div className='flex items-center gap-6'>
-            <div className='flex items-center gap-3'>
-            {/* === menu mobile ==== */}
-            <button className=" z-50 tablet:hidden" onClick={() => setIsOpen(!isOpen)}>
-            <Menu className="w-6 h-6 dark:text-neutral-400" />
-            </button> 
-            
-            <img className='w-10' src={logo} alt="Logo" />
-            
-            <div className=''>
-            <h1 className='text-sm text-nowrap dark:text-gray-500 font-black tracking-tight text-gray-800 uppercase'>Myrtle Christian School Inc.</h1>
-            <p className='text-[10px] text-green-950 dark:text-white font-bold tracking-widest uppercase'>Parent Portal</p>
-            </div>
-            </div>
-            </div>
+ <header className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 px-6 py-3 flex items-center justify-between shadow-sm">
+  <div className="flex items-center gap-4">
+    {/* Mobile Menu Button */}
+    <button 
+      className="p-2 hover:bg-gray-100 rounded-lg tablet:hidden transition-colors" 
+      onClick={() => setIsOpen(!isOpen)}
+    >
+      <Menu className="w-5 h-5 text-gray-600" />
+    </button>
+    
+    {/* Logo & Branding - Clickable to Home */}
+    <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+      <img className="w-10 h-10 object-contain" src={logo} alt="Logo" />
+      
+      {/* Vertical Divider & Text */}
+      <div className="hidden phone:block border-l border-gray-200 pl-4 py-1">
+        <h1 className="text-[14px] font-black tracking-tight text-gray-800 uppercase leading-none">
+          Myrtle Christian School Inc.
+        </h1>
+        <p className="text-[10px] text-green-800 font-bold tracking-[0.15em] uppercase mt-1">
+          Parent Portal
+        </p>
+      </div>
+    </Link>
+  </div>
 
-
-            {/* <div className='flex items-center gap-4'>
-            <div className='text-right'>
-            <p className='text-xs font-bold'>{userData.parent?.firstname} {userData.parent?.lastname}</p>         
-            </div>
-            <img onClick={() => setOpen(!open)} className="w-10 h-10 rounded-full border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform"
-            src={userData.profilePicture || deaf} alt="User Profile"
-            referrerPolicy="no-referrer" 
-            crossOrigin="anonymous"
-            />
-                   
-            {open && (
-            <div className="absolute top-16 right-8 bg-white shadow-2xl border rounded-xl p-2 w-40 animate-in fade-in zoom-in-95">
-            <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className="text-red-500 text-xs font-bold w-full text-left px-4 py-3 hover:bg-red-50 rounded-lg">Logout Account</button>
-            </div>
-            )}
-           </div> */}
-          
-          {/* darkmode toggle */}
-        {/* <label className="switch">
-          <input
-            type="checkbox"
-            checked={darkMode}
-            onChange={toggleTheme}
-          />
-          <span className="slider">
-            <svg
-              className="slider-icon"
-              viewBox="0 0 32 32"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path fill="none" d="m4 16.5 8 8 16-16"></path>
-            </svg>
-          </span>
-        </label> */}
-          </header> 
+  {/* Pwedeng magdagdag ng User Profile dito sa kanan kung kailangan */}
+</header>
+      
+      
             <div className="flex ">
       
 
