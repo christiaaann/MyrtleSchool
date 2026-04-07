@@ -566,95 +566,87 @@ const handleSubmitEnrollment = async () => {
         <div className=' dark:bg-black bg-white font-sans text-[#2D3748]'>
             
             {/* Minimal Header */}
- <header className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 px-6 py-3 flex items-center justify-between shadow-sm">
-  <div className="flex items-center gap-4">
-    {/* Mobile Menu Button */}
-    <button 
-      className="p-2 hover:bg-gray-100 rounded-lg tablet:hidden transition-colors" 
-      onClick={() => setIsOpen(!isOpen)}
-    >
-      <Menu className="w-5 h-5 text-gray-600" />
-    </button>
-    
-    {/* Logo & Branding - Clickable to Home */}
-    <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-      <img className="w-10 h-10 object-contain" src={logo} alt="Logo" />
-      
-      {/* Vertical Divider & Text */}
-      <div className="hidden phone:block border-l border-gray-200 pl-4 py-1">
-        <h1 className="text-[14px] font-black tracking-tight text-gray-800 uppercase leading-none">
-          Myrtle Christian School Inc.
-        </h1>
-        <p className="text-[10px] text-green-800 font-bold tracking-[0.15em] uppercase mt-1">
-          Parent Portal
-        </p>
-      </div>
-    </Link>
-  </div>
+          <header className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 px-6 py-3 flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-4">
+              {/* Mobile Menu Button */}
+              <button 
+                className="p-2 hover:bg-gray-100 rounded-lg tablet:hidden transition-colors" 
+                onClick={() => setIsOpen(!isOpen)}
+              >
+                {/* <Menu className="w-5 h-5 text-gray-600 hidden" /> */}
+              </button>
+              
+              {/* Logo & Branding - Clickable to Home */}
+              <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+                <img className="w-10 h-10 object-contain" src={logo} alt="Logo" />
+                
+                {/* Vertical Divider & Text */}
+                <div className="hidden phone:block border-l border-gray-200 pl-4 py-1">
+                  <h1 className="text-[14px] font-black tracking-tight text-gray-800 uppercase leading-none">
+                    Myrtle Christian School Inc.
+                  </h1>
+                  <p className="text-[10px] text-green-800 font-bold tracking-[0.15em] uppercase mt-1">
+                    Parent Portal
+                  </p>
+                </div>
+              </Link>
+            </div>
 
-  {/* Pwedeng magdagdag ng User Profile dito sa kanan kung kailangan */}
-</header>
-      
+
+          </header>
+                
       
             <div className="flex ">
       
 
           {/* SIDEBAR / TABS */}
           {/* MOBILE OVERLAY */}
-                {isOpen && (
-                  <div
-                    className="fixed inset-0 bg-black/30 z-30 tablet:hidden"
-                    onClick={() => setIsOpen(false)}
-                  ></div>
-                )}
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-auto min-w-[280px] z-50 tablet:hidden">
+          <div className="bg-white/80 dark:bg-neutral-950/90 backdrop-blur-md border border-gray-200/50 dark:border-neutral-800 shadow-xl rounded-full px-4 py-2 flex justify-between items-center gap-6">
+            
+            {/* Enrollment */}
+            <button 
+              onClick={() => setPage("personal")}
+              className={`flex flex-col items-center transition-all duration-300 ${setpage === "personal" ? "text-blue-600" : "text-gray-400"}`}
+            >
+              <div className={`p-1.5 rounded-xl transition-colors ${setpage === "personal" ? "bg-blue-50 dark:bg-blue-600/10" : ""}`}>
+                <FileUser size={18} strokeWidth={2} />
+              </div>
+              <span className="text-[9px] font-bold tracking-tight">Enroll</span>
+            </button>
 
-                {/* SIDEBAR */}
-                <div
-                  className={`
-                    fixed top-0 left-0 min-h-screen w-64 bg-white dark:bg-black dark:text-white p-8 shadow-lg z-40
-                    transform transition-transform duration-300
-                    ${isOpen ? "translate-x-0" : "-translate-x-full"} 
-                    md:translate-x-0 md:relative md:flex md:flex-col md:w-[13rem] tablet:hidden
-                  `}
-                >
-                  <h1>Child</h1>
-                  <div className='flex flex-col gap-2'>
-                  <button
-                     className={`px-6 flex gap-2 w-full items-center py-2 rounded-2xl transition-all
-                   ${setpage === "personal" ? "bg-gray-100 dark:bg-neutral-900" : "hover:bg-gray-100 hover:dark:bg-neutral-900"}
-                    `}
-                    onClick={() => {
-                    setPage("personal");
-                    setIsOpen(false);
-                    }}
-                  >
-                    <FileUser className='w-5 h-5'/> Enrollment
-                  </button>
+            {/* Records */}
+            <button 
+              onClick={() => setPage("archive")}
+              className={`flex flex-col items-center transition-all duration-300 ${setpage === "archive" ? "text-blue-600" : "text-gray-400"}`}
+            >
+              <div className={`p-1.5 rounded-xl transition-colors ${setpage === "archive" ? "bg-blue-50 dark:bg-blue-600/10" : ""}`}>
+                <Archive size={18} strokeWidth={2} />
+              </div>
+              <span className="text-[9px] font-bold tracking-tight">Records</span>
+            </button>
 
-                  <button
-                     className={`px-6 flex gap-2 w-full items-center py-2 rounded-2xl transition-all
-                    ${setpage === "archive" ? "bg-gray-100 dark:bg-neutral-900" : "hover:bg-gray-100 hover:dark:bg-neutral-900"}
-                     `}
-                    onClick={() =>{
-                    setPage("archive");
-                    setIsOpen(false);
-                    }}
-                  >
-                    <Archive className='w-5 h-5'/> Records
-                  </button>
-                  </div>
-                  
-                  <h1>Account</h1>
-                  <div className=' flex flex-col'>
-                  <button className=' px-6 py-2 flex gap-2 rounded-2xl hover:bg-gray-100 hover:dark:bg-neutral-900'><User/>Profile</button>
-                  <button className='flex gap-2 px-6 py-2  rounded-2xl'><Settings/>Settings</button>
-                  </div>
-                  <div className='flex  absolute bg-gray-100 dark:bg-neutral-900 rounded-2xl gap-2 bottom-2  items-center px-6 py-1 w-ful'>
-                  <img className='w-8 h-8 rounded-full' src={userData.profilePicture} alt="" />
-                  <p className='text-xs text-nowrap font-bold'>{userData.parent?.firstname} {userData.parent?.lastname}</p>   
-                  <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className=" text-red-600"><LogOut/></button>
-               </div> 
-                </div>
+            {/* Account - Small Profile Circle */}
+            <button className="flex flex-col items-center transition-all duration-300 text-gray-400">
+              <div className="p-0.5 rounded-full border border-gray-200 dark:border-neutral-800">
+                <img className="w-6 h-6 rounded-full object-cover grayscale-[0.5]" src={userData.profilePicture} alt="" />
+              </div>
+              <span className="text-[9px] font-bold tracking-tight">Account</span>
+            </button>
+
+            {/* Logout - Red Accent */}
+            <button 
+              onClick={async () => { await auth.signOut(); navigate("/auth"); }}
+              className="flex flex-col items-center text-red-500/70"
+            >
+              <div className="p-1.5">
+                <LogOut size={18} strokeWidth={2} />
+              </div>
+              <span className="text-[9px] font-bold tracking-tight">Exit</span>
+            </button>
+
+          </div>
+        </div>
  
                 {/* (TABS MENU) --- */}
                 <div className='p-5 hidden dark:text-neutral-700 tablet:block tablet:sticky tablet:top-20 tablet:h-[calc(100vh-5rem)] relative '>
@@ -767,7 +759,7 @@ const handleSubmitEnrollment = async () => {
 
         {/* Step Content */}
         <div className="text-center mt-6">
-        <h4 className={`tablet:text-base mb-1 text-sm text-nowrap ${step >= s ? "text-green-600" : "text-gray-900 dark:text-neutral-600"}`}>
+        <h4 className={`tablet:text-base mb-1 text-[10px] text-nowrap ${step >= s ? "text-green-600" : "text-gray-900 dark:text-neutral-600"}`}>
         {s === 1 && "Child Info"}
         {s === 2 && "Upload Requirements"}
         {s === 3 && "Admin Verification"}
@@ -1309,10 +1301,10 @@ const handleSubmitEnrollment = async () => {
           </div>
         </div>
           
-          <div className='flex flex-col items-center md:items-end gap-4 w-full md:w-auto'>
+          <div className='flex flex-col items-center md:items-end h-[15rem] tablet:h-[10rem]  w-full md:w-auto'>
           <p className='text-[10px] text-gray-400 italic text-center md:text-right max-w-[250px]'>By clicking submit, you agree to MCS terms for S.Y. {currentSY}.</p>
 
-          <section className='pt-10 border-t border-gray-50 flex justify-between items-center gap-4'>
+          <section className='pt-10 border-t border-gray-50 flex justify-center items-center gap-4'>
             {step > 1 && step !== 4 && (
               <button
                 onClick={prevStep}
@@ -1325,7 +1317,7 @@ const handleSubmitEnrollment = async () => {
             {step < 2 && (
               <button
                 onClick={nextStep}
-                className="px-6 py-2 rounded-xl bg-green-900 text-white"
+                className="px-10 py-2 rounded-xl bg-green-900 text-white"
               >
                 Next
               </button>

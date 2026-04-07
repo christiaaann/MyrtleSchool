@@ -150,13 +150,14 @@ useEffect(() => {
      </div> */}
 
     <div id='home' className="h-screen bg-gradient-to-tr relative from-white via-green-100 to-white flex items-center"> 
-      <div className='flex  h-full w-[80rem] p-5 mx-auto tablet:justify-between justify-center'>
+      <div className='flex  h-full w-full p-5 mx-auto tablet:justify-between justify-center'>
       <div className="flex w-full flex-col justify-center items-center gap-5 tablet:items-start">
+        <div className='flex flex-col justify-center items-center w-full'>
         <h1 className="tablet:text-5xl font-bold text-4xl tablet:text-nowrap"> Start Your Child’s </h1>
         <h1 className="tablet:text-5xl text-[#2D5B60] font-bold text-5xl"> Future Today!</h1>
-        <div className="flex">
       <button onClick={handleEnrollNow} className="bg-[#2D5B60] mt-2 text-white px-20 py-2 rounded-2xl">Enroll Now</button> 
-        </div>
+       </div>
+       <div className='flex justify-center w-full'>
       {announcements.length > 0 ? (
         <div className=" w-[30rem] max-w-7xl rounded overflow-hidden">
           <img
@@ -168,11 +169,12 @@ useEffect(() => {
       ) : (
         <div className="text-center py-10 text-gray-400">No announcements yet.</div>
       )}
- 
+     </div>
+
       </div>
-      <div className='tablet:flex hidden w-full'>
-        <img className='w-60 laptop:w-96 object-contain tablet:block hidden relative left-20 laptop:left-32 duration-300' src={boy} alt="" />
-        <img className='w-60 laptop:w-96 hidden tablet:block object-contain' src={model1} alt="" />
+      <div className='tablet:flex hidden absolute bottom-0 justify-end w-full'>
+        <img className=' laptop:w-72 object-contain tablet:block hidden bottom-0 left-32 laptop:right-[13rem] absolute duration-300' src={boy} alt="" />
+        <img className=' w-64 laptop:w-80 hidden tablet:block object-contain absolute bottom-0 right-28' src={model1} alt="" />
         </div>
       </div>
     </div>
@@ -378,6 +380,10 @@ useEffect(() => {
         <ul className="space-y-3 text-sm text-gray-300">
           <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
           <li><a href="#" className="hover:text-white transition-colors">Terms of Use</a></li>
+          <div className='flex gap-2 items-center'>
+          <img className='w-20' src={logo} alt="" />
+          <img className='w-20 bg-white p-2' src={DepedLogo} alt="" />
+          </div>
         </ul>
       </div>
 
