@@ -146,9 +146,9 @@ useEffect(() => {
       <div className='flex z-10  h-full w-full p-5 mx-auto tablet:justify-between justify-center'>
       <div className="flex w-full  flex-col justify-center items-center gap-5 tablet:items-start">
         <div className='flex flex-col gap-1 justify-center items-center w-full'>
-        <h1 className="tablet:text-7xl font-bold text-4xl tablet:text-nowrap"> Start Your Child’s </h1>
-        <h1 className="tablet:text-6xl text-[#2D5B60] font-bold text-5xl"> Future Today!</h1>
-      <button onClick={handleEnrollNow} className="bg-[#2D5B60] mt-2 text-white px-20 py-4 text-xl rounded-2xl">Enroll Now</button> 
+        <h1 className="tablet:text-7xl font-bold text-4xl text-nowrap"> Start Your Child’s </h1>
+        <h1 className="tablet:text-6xl text-[#2D5B60] font-bold text-4xl"> Future Today!</h1>
+      <button onClick={handleEnrollNow} className="bg-[#2D5B60] mt-2 text-white px-10 py-3 tablet:py-4 tablet:text-lg text-sm rounded-2xl">Enroll Now</button> 
        </div>
         <div className='flex justify-center w-full'>
         {announcements.length > 0 ? (
@@ -156,7 +156,7 @@ useEffect(() => {
             <img
               src={announcements[current].imageUrl}
               alt="announcement"
-              className=" border-[1rem] w-[50rem] h-[30rem] object-fill border-white transition-all duration-500"
+              className=" border-[1rem] w-[48rem] h-[23rem] tablet:h-[28rem] border-white transition-all duration-500"
             />
           </div>
         ) : (

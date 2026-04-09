@@ -104,7 +104,7 @@ const Navbar = () => {
               src={logo}
               alt="logo"
             />
-            <h1 className="hidden phone:block text-neutral-700 font-baloo font-bold text-lg uppercase tracking-tighter">
+            <h1 className="hidden phone:block text-neutral-700 font-baloo font-bold tablet:text-lg text-nowrap text-sm uppercase tracking-tighter">
               Myrtle Christian School INC.
             </h1>
           </Link>
