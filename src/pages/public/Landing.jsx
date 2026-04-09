@@ -1,24 +1,17 @@
 import React from 'react'
 import Navbar from '../../components/Navbar'
-import bg from '../../assets/myrtlebg.png'
 import { useNavigate } from 'react-router-dom'
 import model1 from '../../assets/model1.png'
 import { auth, db } from "../../services/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import facebook from "../../assets/icons/facebook.png"
-import iconcall from '../../assets/icons/call.png'
-import icongmail from '../../assets/icons/gmail.png'
-import sun from "../../assets/sun.png"
-import mountain from "../../assets/mountain.png"
 import image1 from "../../assets/image1.png"
 import image2 from "../../assets/image2.png"
 import image3 from "../../assets/image3.png"
-import gif from '../../assets/gif.png'
 import DepedLogo from "../../assets/DepEDLogo.png"
 import logo from "../../assets/logo.png"
 import { useState, useEffect } from 'react'
 import boy from "../../assets/boy.png"
-import { collection, getDocs, query, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 const Landing = () => {
   const navigate = useNavigate("");
   
@@ -133,8 +126,7 @@ useEffect(() => {
 
   return (
     <>
-    <Navbar />
-    <div className='bg-yellow-100/10'>
+        <Navbar />
     <div className=' overflow-hidden'>
      {/* <div id='home' className=' min-h-screen flex items-center justify-center phone:justify-start bg-cover bg-no-repeat bg-center'>
       <div className='px-10'>
@@ -149,32 +141,33 @@ useEffect(() => {
       </div>
      </div> */}
 
-    <div id='home' className="h-screen bg-gradient-to-tr relative from-white via-green-100 to-white flex items-center"> 
-      <div className='flex  h-full w-full p-5 mx-auto tablet:justify-between justify-center'>
-      <div className="flex w-full flex-col justify-center items-center gap-5 tablet:items-start">
-        <div className='flex flex-col justify-center items-center w-full'>
-        <h1 className="tablet:text-5xl font-bold text-4xl tablet:text-nowrap"> Start Your Child’s </h1>
-        <h1 className="tablet:text-5xl text-[#2D5B60] font-bold text-5xl"> Future Today!</h1>
-      <button onClick={handleEnrollNow} className="bg-[#2D5B60] mt-2 text-white px-20 py-2 rounded-2xl">Enroll Now</button> 
+    <div id='home' className="min-h-screen bg-gradient-to-tr relative from-white via-green-100 to-white flex items-center"> 
+       <div className="absolute inset-0 z-0 bg-[radial-gradient(circle,_#cbd5e1_1px,_transparent_1px)] bg-[length:10px_10px] pointer-events-none" />
+      <div className='flex z-10  h-full w-full p-5 mx-auto tablet:justify-between justify-center'>
+      <div className="flex w-full  flex-col justify-center items-center gap-5 tablet:items-start">
+        <div className='flex flex-col gap-1 justify-center items-center w-full'>
+        <h1 className="tablet:text-7xl font-bold text-4xl tablet:text-nowrap"> Start Your Child’s </h1>
+        <h1 className="tablet:text-6xl text-[#2D5B60] font-bold text-5xl"> Future Today!</h1>
+      <button onClick={handleEnrollNow} className="bg-[#2D5B60] mt-2 text-white px-20 py-4 text-xl rounded-2xl">Enroll Now</button> 
        </div>
-       <div className='flex justify-center w-full'>
-      {announcements.length > 0 ? (
-        <div className=" w-[30rem] max-w-7xl rounded overflow-hidden">
-          <img
-            src={announcements[current].imageUrl}
-            alt="announcement"
-            className=" w-full h-64 border-4 border-green-900 transition-all duration-500"
-          />
-        </div>
-      ) : (
-        <div className="text-center py-10 text-gray-400">No announcements yet.</div>
-      )}
-     </div>
+        <div className='flex justify-center w-full'>
+        {announcements.length > 0 ? (
+          <div className=" max-w-7xl rounded-xl shadow-lg flex justify-center overflow-hidden">
+            <img
+              src={announcements[current].imageUrl}
+              alt="announcement"
+              className=" border-[1rem] w-[50rem] h-[30rem] object-fill border-white transition-all duration-500"
+            />
+          </div>
+        ) : (
+          <div className="text-center py-10 text-gray-400">No announcements yet.</div>
+        )}
+      </div>
 
       </div>
       <div className='tablet:flex hidden absolute bottom-0 justify-end w-full'>
-        <img className=' laptop:w-72 object-contain tablet:block hidden bottom-0 left-32 laptop:right-[13rem] absolute duration-300' src={boy} alt="" />
-        <img className=' w-64 laptop:w-80 hidden tablet:block object-contain absolute bottom-0 right-28' src={model1} alt="" />
+        <img className=' laptop:w-72 object-contain tablet:block hidden bottom-0 absolute duration-300' src={boy} alt="" />
+        <img className=' w-64 laptop:w-80 hidden tablet:block object-contain absolute bottom-0 right-32 ' src={model1} alt="" />
         </div>
       </div>
     </div>
@@ -274,7 +267,7 @@ useEffect(() => {
    
 </div>
 
-<div id='contact' className =" min-h-screen relative">
+<div id='contact' className ="relative">
     <div className='max-w-4xl relative mx-auto z-10 p-6'>
         <div className='flex flex-col gap-2 w-full items-center'>
           <h1 className='border-2 border-black px-6 rounded-full'>FAQ</h1>
@@ -399,7 +392,6 @@ useEffect(() => {
   </div>
 </footer>
 
-</div>
 </div>
     </>
   )
