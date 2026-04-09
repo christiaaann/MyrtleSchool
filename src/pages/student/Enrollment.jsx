@@ -13,8 +13,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import { sileo } from 'sileo';
 import EnrollmentArchive from './EnrollmentArchive';
 import { useLocation } from 'react-router-dom';
-import plus from '../../assets/icons/plus.png'
-import deaf from '../../assets/default.png'
 import logo from '../../assets/logo.png'
 
 import { Archive,
@@ -24,7 +22,6 @@ import { Archive,
       CreditCard, 
       FileUser,
       LogOut,
-      Menu,
       Phone,
       Settings,
       User,
@@ -34,10 +31,9 @@ import FloatingInput from '../../components/FloatingInput';
 import FloatingSelect from '../../components/FloatingSelect';
 import UploadBox from '../../components/UploadBox';
 import { useTheme } from '../../components/ThemeContext';
+
 const Enrollment = () => {
-    // --- ALL ORIGINAL STATES PRESERVED ---
     const [isOpen, setIsOpen] = useState(false);
-    const toggleDropdown = () => setIsOpen(!isOpen);
     const [open, setOpen] = useState(false);
     const [setpage, setPage] = useState("personal");
     const [level, setLevel] = useState("");
@@ -45,7 +41,7 @@ const Enrollment = () => {
     const [studentType, setStudentType] = useState("");
     const [userData, setUserData] = useState(null);
     const navigate = useNavigate();
-     const { darkMode, toggleTheme } = useTheme();
+    const { darkMode, toggleTheme } = useTheme();
 
     const [childFirst, setChildFirst] = useState("");
     const [childMiddle, setChildMiddle] = useState("");
@@ -65,7 +61,6 @@ const Enrollment = () => {
     const [selectedMonths, setSelectedMonths] = useState([]);
     const [selectedInitialFees, setSelectedInitialFees] = useState(['registration']);
 
-   
     const location = useLocation();
     const [errors, setErrors] = useState({});
     const [verificationStatus, setVerificationStatus] = useState("Not Submitted");
@@ -74,119 +69,85 @@ const Enrollment = () => {
     const [myStudents, setMyStudents] = useState([]);
     const [editingStudent, setEditingStudent] = useState(null);
     
-    //  === Validations For Stepper 1 ====
     const validateStep1 = () => {
-    const newErrors = {};
-    if (!childFirst.trim()) newErrors.childFirst = "First name is required";
-    if (!childLast.trim()) newErrors.childLast = "Last name is required";
-    if (!age) newErrors.age = "Age is required";
-    if (!sex) newErrors.sex = "Sex is required";
-    if (!studentType) newErrors.studentType = "Student type is required";
-    if (!level) newErrors.level = "Level is required";
-    if (!grade) newErrors.grade = "Grade is required";
+      const newErrors = {};
+      if (!childFirst.trim()) newErrors.childFirst = "First name is required";
+      if (!childLast.trim()) newErrors.childLast = "Last name is required";
+      if (!age) newErrors.age = "Age is required";
+      if (!sex) newErrors.sex = "Sex is required";
+      if (!studentType) newErrors.studentType = "Student type is required";
+      if (!level) newErrors.level = "Level is required";
+      if (!grade) newErrors.grade = "Grade is required";
 
-    if (studentType === "Transferee" && !prevSchool.trim()) {
-        newErrors.prevSchool = "Previous school is required";
-    }
+      if (studentType === "Transferee" && !prevSchool.trim()) {
+          newErrors.prevSchool = "Previous school is required";
+      }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
     };
 
-    // === Validations For Stepper 2 ===
     const validateStep2 = () => {
-    const newErrors = {};
-    if (!files.idPicture) newErrors.idPicture = "Upload 2x2 Picture";
-    if (!files.birthCert) newErrors.birthCert = "Upload Birth Certificate";
+      const newErrors = {};
+      if (!files.idPicture) newErrors.idPicture = "Upload 2x2 Picture";
+      if (!files.birthCert) newErrors.birthCert = "Upload Birth Certificate";
 
-    // optional: Report Card required lang if studentType != New
-    if ((studentType === "Old" || studentType === "Transferee") && !files.reportCard) {
-        newErrors.reportCard = "Upload Report Card";
-    }
+      if ((studentType === "Old" || studentType === "Transferee") && !files.reportCard) {
+          newErrors.reportCard = "Upload Report Card";
+      }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
     };
 
-    const validateStep3 = () => {
-    // Admin verification step - no validation needed
-    return true;
-};
+    const validateStep3 = () => true;
 
-    // === Validations For Stepper 4 (Payment) ===
     const validateStep4 = () => {
-    const newErrors = {};
-    if (!paymentMethod) {
-    newErrors.paymentMethod = "Please select payment method";
-    }
-    if (paymentMethod === "GCash" && !paymentProof) {
-    newErrors.paymentProof = "Please upload proof of payment";
-    }
-    if (paymentType === "Partial" && selectedMonths.length === 0) {
-    newErrors.selectedMonths = "Please select at least one tuition month for partial payment";
-    }
+      const newErrors = {};
+      if (!paymentMethod) {
+        newErrors.paymentMethod = "Please select payment method";
+      }
+      if (paymentMethod === "GCash" && !paymentProof) {
+        newErrors.paymentProof = "Please upload proof of payment";
+      }
 
-  setErrors(newErrors);
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    };
 
-  return Object.keys(newErrors).length === 0;
-};
-
-    // ==== stepper ====
     const [step, setStep] = useState(1);
     const totalSteps = 4;
     const nextStep = () => {
-    if (step === 1) {
-    if (!validateStep1()) return; // STOP kung may error
-    }
-    
-    if (step === 2) {
-    if (!validateStep2()) return; // check lahat ng files
-    }
-    if (step === 3) {
-    if (!validateStep3()) return; // admin verification
-    }
-    if (step === 4) {
-    if (!validateStep4()) return; // check payment
-    }
-   if (step < totalSteps) setStep(step + 1);
-   };
+      if (step === 1 && !validateStep1()) return;
+      if (step === 2 && !validateStep2()) return;
+      if (step === 3 && !validateStep3()) return;
+      if (step === 4 && !validateStep4()) return;
+      if (step < totalSteps) setStep(step + 1);
+    };
 
     useEffect(() => {
-    if (location.state?.loginSuccess) {
-        sileo.success({
-        title: "Login Successful",
-        fill: "black",
-        styles: { description: "text-white" }
-        });
+      if (location.state?.loginSuccess) {
+          sileo.success({
+            title: "Login Successful",
+            fill: "black",
+            styles: { description: "text-white" }
+          });
+          navigate(location.pathname, { replace: true, state: {} });
+      }
+    }, [location, navigate]);
 
-        navigate(location.pathname, { replace: true, state: {} });
-    }
-    }, []);
-
-    // birthday automatic
     useEffect(() => {
       if (!birthDate) return;
-
       const today = new Date();
       const birth = new Date(birthDate);
-
       let ageCalc = today.getFullYear() - birth.getFullYear();
-
       const monthDiff = today.getMonth() - birth.getMonth();
-
-      if (
-        monthDiff < 0 ||
-        (monthDiff === 0 && today.getDate() < birth.getDate())
-      ) {
-        ageCalc--;
-      }
-
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) ageCalc--;
       if (ageCalc < 0) ageCalc = 0;
-
       setAge(ageCalc);
     }, [birthDate]);
     
-    // Handle editing student
+    // THIS EFFECT HANDLES THE JUMP TO STEP 4
     useEffect(() => {
       if (editingStudent) {
         setChildFirst(editingStudent.firstname || "");
@@ -207,8 +168,12 @@ const Enrollment = () => {
         });
         setPaymentMethod(editingStudent.paymentMethod || "");
         setSubmittedStudentID(editingStudent.studentID);
-        // Set step based on status
-        if (editingStudent.verificationStatus === "Approved" || editingStudent.status === "Payment Submitted") {
+        
+        const isReadyForPayment = editingStudent.verificationStatus === "Approved" || 
+                                  editingStudent.status === "Waiting for Payment" || 
+                                  editingStudent.status === "Payment Submitted";
+
+        if (isReadyForPayment) {
           setStep(4);
         } else if (editingStudent.status === "Submitted for Verification" || editingStudent.verificationStatus === "Pending") {
           setStep(3);
@@ -218,86 +183,85 @@ const Enrollment = () => {
       }
     }, [editingStudent]);
     
-    // === previous ====
     const prevStep = () => {
-    if (step > 1) setStep(step - 1);
+      if (step > 1) setStep(step - 1);
     };
   
-    // ====== Grade level Options ======
-  const gradeOptions =
-    level === "Preschool"
-      ? ["Nursery", "Kinder"]
-      : level === "Elementary"
-      ? ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"]
-      : [];
+    const gradeOptions =
+      level === "Preschool"
+        ? ["Nursery", "Kinder"]
+        : level === "Elementary"
+        ? ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"]
+        : [];
 
-        // ==== if user not complete back to complete profile ====
-        useEffect(() => {
-        const checkProfile = async () => {
-            if (!auth.currentUser) return;
-
-            const docSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
-            if (docSnap.exists()) {
-            const data = docSnap.data();
-
-            const isProfileComplete =
-                data.parent?.firstname &&
-                data.parent?.lastname &&
-                data.address?.barangay &&
-                data.address?.city &&
-                data.address?.province &&
-                // === spouse is optional: check only if it exists ===
-                (!data.spouse || (data.spouse.firstname && data.spouse.lastname));
-
-                if (!isProfileComplete) {
-                navigate("/completeprofile", { replace: true });
-                }
-                } else {
-                navigate("/completeprofile", { replace: true });
-                }
-                };checkProfile();
-                }, [navigate]);
+    useEffect(() => {
+      const checkProfile = async () => {
+        if (!auth.currentUser) return;
+        const docSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const isProfileComplete =
+              data.parent?.firstname && data.parent?.lastname &&
+              data.address?.barangay && data.address?.city && data.address?.province &&
+              (!data.spouse || (data.spouse.firstname && data.spouse.lastname));
+          if (!isProfileComplete) navigate("/completeprofile", { replace: true });
+        } else {
+          navigate("/completeprofile", { replace: true });
+        }
+      };
+      checkProfile();
+    }, [navigate]);
                 
-                // For Calculations ===
-                const tuitionFees = {
-                    "Preschool": { 
-                        registration: 500, misc: 3500, books: 2500, instructional: 500, uniform: 700, pta: 200,
-                        monthlyRate: 900,
-                        months: ["JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC", "JAN", "FEB", "MAR"]
-                    },
-                    "Elementary": { 
-                        registration: 500, misc: 3500, books: 2500, instructional: 700, uniform: 700, pta: 200,
-                        monthlyRate: 1500,
-                        months: ["JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC", "JAN", "FEB", "MAR"]
-                    }
-                };
+    // --- NEW: Fetch dynamic fees from database ---
+    const [tuitionFees, setTuitionFees] = useState(null);
 
-                // --- ALL ORIGINAL LOGIC PRESERVED ---
-                useEffect(() => {
-                    const settingsRef = doc(db, "settings", "schoolYear");
-                    const unsub = onSnapshot(settingsRef, (snap) => {
-                        if (snap.exists()) setCurrentSY(snap.data().active);
-                    });
-                    return () => unsub();
-                }, []);
+    useEffect(() => {
+        const unsubFees = onSnapshot(doc(db, "settings", "fees"), (snap) => {
+            const monthsArray = ["JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC", "JAN", "FEB", "MAR"];
+            
+            if (snap.exists()) {
+                const data = snap.data();
+                // Inject the months array into the fetched data so the rest of the app doesn't break
+                if (data.Preschool) data.Preschool.months = monthsArray;
+                if (data.Elementary) data.Elementary.months = monthsArray;
+                setTuitionFees(data);
+            } else {
+                // Fallback to defaults if admin hasn't set up the database document yet
+                setTuitionFees({
+                    "Preschool": { registration: 500, misc: 3500, books: 2500, instructional: 500, uniform: 700, pta: 200, monthlyRate: 900, months: monthsArray },
+                    "Elementary": { registration: 500, misc: 3500, books: 2500, instructional: 700, uniform: 700, pta: 200, monthlyRate: 1500, months: monthsArray }
+                });
+            }
+        });
+        return () => unsubFees();
+    }, []);
 
-                // Listen for verification status changes
-                useEffect(() => {
-                    if (!submittedStudentID || !currentSY) return;
+    // (Make sure to wrap Step 4 in a null check for tuitionFees so it doesn't crash while loading)
+    if (!tuitionFees && step === 4) {
+        return <p className="text-center animate-pulse p-10 font-bold text-gray-500">Loading Assessment...</p>;
+    }
 
-                    const enrRef = doc(db, "enrollments", `ENR-${currentSY}-${submittedStudentID}`);
-                    const unsub = onSnapshot(enrRef, (snap) => {
-                        if (snap.exists()) {
-                            const data = snap.data();
-                            setVerificationStatus(data.verificationStatus || "Pending");
-                        }
-                    });
-                    return () => unsub();
-                }, [submittedStudentID, currentSY]);
+    useEffect(() => {
+        const settingsRef = doc(db, "settings", "schoolYear");
+        const unsub = onSnapshot(settingsRef, (snap) => {
+            if (snap.exists()) setCurrentSY(snap.data().active);
+        });
+        return () => unsub();
+    }, []);
 
-    
-    
-                useEffect(() => {
+    useEffect(() => {
+        if (!submittedStudentID || !currentSY) return;
+        const enrRef = doc(db, "enrollments", `ENR-${currentSY}-${submittedStudentID}`);
+        const unsub = onSnapshot(enrRef, (snap) => {
+            if (snap.exists()) {
+                const data = snap.data();
+                setVerificationStatus(data.verificationStatus || "Pending");
+            }
+        });
+        return () => unsub();
+    }, [submittedStudentID, currentSY]);
+
+    useEffect(() => {
         let interval;
         const startOnlineTracking = async (user) => {
             const userRef = doc(db, "users", user.uid);
@@ -346,7 +310,7 @@ const Enrollment = () => {
     }, [navigate, currentSY]);
 
     const uploadToCloudinary = async (file) => {
-        if (!file) return "";
+        if (!file || !file.name) return ""; 
         const formData = new FormData();
         formData.append("file", file);
         formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
@@ -360,434 +324,236 @@ const Enrollment = () => {
     };
 
     const handleAddNewChild = () => {
-        // I-reset ang lahat ng inputs
-        setChildFirst(""); 
-        setChildMiddle(""); 
-        setChildLast(""); 
-        setSuffix("none");
-        setAge("");
-        setBirthDate(""); 
-        setSex(""); 
-        setPrevSchool(""); 
-        setLevel(""); 
-        setGrade("");
-        setStudentType(""); 
+        setChildFirst(""); setChildMiddle(""); setChildLast(""); setSuffix("none");
+        setAge(""); setBirthDate(""); setSex(""); setPrevSchool(""); 
+        setLevel(""); setGrade(""); setStudentType(""); 
         setFiles({ birthCert: null, reportCard: null, idPicture: null });
-        setPaymentMethod(""); 
-        setPaymentProof(null); 
-        setEditingStudent(null);
-        setSubmittedStudentID(null);
-        setVerificationStatus("Not Submitted");
-        setSelectedMonths([]);
-        setPaymentType("Partial");
-        setSelectedInitialFees(['registration']);
-        setStep(1);
-        setPage("personal"); 
+        setPaymentMethod(""); setPaymentProof(null); 
+        setEditingStudent(null); setSubmittedStudentID(null);
+        setVerificationStatus("Not Submitted"); setSelectedMonths([]);
+        setPaymentType("Partial"); setSelectedInitialFees(['registration']);
+        setStep(1); setPage("personal"); 
     };
 
-const handleSubmitForVerification = async () => {
-  // Validate step 1 and 2
-  const step1Valid = validateStep1();
-  const step2Valid = validateStep2();
+    const handleSubmitForVerification = async () => {
+      const step1Valid = validateStep1();
+      const step2Valid = validateStep2();
 
-  if (!step1Valid || !step2Valid) {
-    await sileo.error({
-      title: "Missing Requirements",
-      description: "Please complete child info and upload requirements",
-      fill: "black",
-      styles: { description: "text-white/75" }
-    });
-    return;
-  }
-
-  setIsSubmitting(true);
-
-  const submitForVerification = async () => {
-    const studentID = editingStudent
-      ? editingStudent.studentID
-      : `${currentSY}-${childLast[0].toUpperCase()}${childFirst[0].toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
-
-    const [birthUrl, cardUrl, picUrl] = await Promise.all([
-      uploadToCloudinary(files.birthCert),
-      uploadToCloudinary(files.reportCard),
-      uploadToCloudinary(files.idPicture)
-    ]);
-
-    await setDoc(doc(db, "students", studentID), {
-      studentID,
-      parentUID: auth.currentUser.uid,
-      firstname: childFirst,
-      middlename: childMiddle,
-      lastname: childLast,
-      suffix,
-      level,
-      grade,
-      birthDate,
-      age: Number(age),
-      sex,
-      studentType,
-      previousSchool: studentType === "Transferee" ? prevSchool : "",
-      isEnrolled: false,
-      status: "Submitted for Verification",
-      requirements: {
-        birthCert: birthUrl,
-        reportCard: cardUrl,
-        idPicture: picUrl
-      },
-      address: userData.address,
-      father: userData.spouse,
-      mother: userData.parent,
-      schoolYear: currentSY,
-      createdAt: serverTimestamp()
-    });
-
-    await setDoc(doc(db, "enrollments", `ENR-${currentSY}-${studentID}`), {
-      studentID,
-      parentUID: auth.currentUser.uid,
-      schoolYear: currentSY,
-      fees: tuitionFees[level],
-      monthlyTracking: tuitionFees[level].months.reduce((acc, month) => {
-        acc[month] = {
-          status: "Unpaid",
-          amount: tuitionFees[level].monthlyRate
-        };
-        return acc;
-      }, {}),
-      verificationStatus: "Pending",
-      payment: {
-        method: "",
-        proofImage: "",
-        status: "Pending",
-        dateEnrolled: serverTimestamp()
+      if (!step1Valid || !step2Valid) {
+        await sileo.error({
+          title: "Missing Requirements",
+          description: "Please complete child info and upload requirements",
+          fill: "black",
+          styles: { description: "text-white/75" }
+        });
+        return;
       }
-    });
 
-    setSubmittedStudentID(studentID);
-    setVerificationStatus("Pending");
-  };
+      setIsSubmitting(true);
 
-  try {
-    await sileo.promise(submitForVerification(), {
-      loading: { title: "Submitting for Verification..." },
-      success: {
-        title: "Submitted Successfully",
-        description: "Waiting for admin verification",
-        fill: "black"
-      },
-      error: { title: "Submission Failed" }
-    });
+      const submitForVerification = async () => {
+        const studentID = editingStudent
+          ? editingStudent.studentID
+          : `${currentSY}-${childLast[0].toUpperCase()}${childFirst[0].toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
 
-    setStep(3); // Proceed to admin verification step
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+        const [birthUrl, cardUrl, picUrl] = await Promise.all([
+          uploadToCloudinary(files.birthCert),
+          uploadToCloudinary(files.reportCard),
+          uploadToCloudinary(files.idPicture)
+        ]);
 
-const handleSubmitEnrollment = async () => {
-  if (!submittedStudentID) {
-    await sileo.error({
-      title: "No Enrollment Found",
-      description: "Please complete the enrollment process from the beginning",
-      fill: "black",
-      styles: { description: "text-white/75" }
-    });
-    return;
-  }
+        await setDoc(doc(db, "students", studentID), {
+          studentID,
+          parentUID: auth.currentUser.uid,
+          firstname: childFirst, middlename: childMiddle, lastname: childLast, suffix,
+          level, grade, birthDate, age: Number(age), sex, studentType,
+          previousSchool: studentType === "Transferee" ? prevSchool : "",
+          isEnrolled: false,
+          status: "Submitted for Verification",
+          requirements: { birthCert: birthUrl, reportCard: cardUrl, idPicture: picUrl },
+          address: userData.address, father: userData.spouse, mother: userData.parent,
+          schoolYear: currentSY,
+          createdAt: serverTimestamp()
+        });
 
-  // Validate step 4
-  const step4Valid = validateStep4();
+        await setDoc(doc(db, "enrollments", `ENR-${currentSY}-${studentID}`), {
+          studentID, parentUID: auth.currentUser.uid, schoolYear: currentSY,
+          fees: tuitionFees[level],
+          monthlyTracking: tuitionFees[level].months.reduce((acc, month) => {
+            acc[month] = { status: "Unpaid", amount: tuitionFees[level].monthlyRate };
+            return acc;
+          }, {}),
+          verificationStatus: "Pending",
+          payment: { method: "", proofImage: "", status: "Pending", dateEnrolled: serverTimestamp() }
+        });
 
-  if (!step4Valid) {
-    await sileo.error({
-      title: "Missing Payment Info",
-      description: "Please complete payment details",
-      fill: "black",
-      styles: { description: "text-white/75" }
-    });
-    return;
-  }
+        setSubmittedStudentID(studentID);
+        setVerificationStatus("Pending");
+      };
 
-  setIsSubmitting(true);
+      try {
+        await sileo.promise(submitForVerification(), {
+          loading: { title: "Submitting for Verification..." },
+          success: { title: "Submitted Successfully", description: "Waiting for admin verification", fill: "black" },
+          error: { title: "Submission Failed" }
+        });
+        setStep(3);
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
 
-  const submitEnrollment = async () => {
+    const handleSubmitEnrollment = async () => {
+      if (!submittedStudentID) return;
+      if (!validateStep4()) {
+        await sileo.error({ title: "Missing Payment Info", description: "Please complete payment details", fill: "black", styles: { description: "text-white/75" }});
+        return;
+      }
+
+      setIsSubmitting(true);
+      const submitEnrollmentAction = async () => {
         const selectedKeys = paymentType === "Full" ? ['registration', 'misc', 'books', 'instructional', 'uniform', 'pta'] : selectedInitialFees;
         const gcashUrl = paymentProof ? await uploadToCloudinary(paymentProof) : null;
 
         await updateDoc(doc(db, "enrollments", `ENR-${currentSY}-${submittedStudentID}`), {
             payment: {
-                method: paymentMethod,
-                proofImage: gcashUrl,
-                status: "Pending Approval",
-                dateEnrolled: serverTimestamp()
+                method: paymentMethod, proofImage: gcashUrl,
+                status: "Pending Approval", dateEnrolled: serverTimestamp()
             },
             paidInitialFees: selectedKeys
         });
 
-    // Update selected months to Paid if Partial or Full payment
-    const monthsToPay = paymentType === "Full" ? (tuitionFees[level]?.months || []) : paymentType === "Partial" ? selectedMonths : [];
-    if (monthsToPay.length > 0) {
-        const updates = {};
-        monthsToPay.forEach(month => {
-            updates[`monthlyTracking.${month}.status`] = "Paid";
+        // Update Students table status to tell Admin we are ready
+        await updateDoc(doc(db, "students", submittedStudentID), {
+            status: "Payment Submitted"
         });
-        await updateDoc(doc(db, "enrollments", `ENR-${currentSY}-${submittedStudentID}`), updates);
-    }
-  };
 
-  try {
-    await sileo.promise(submitEnrollment(), {
-      loading: { title: "Submitting Payment..." },
-      success: {
-        title: "Payment Submitted",
-        description: `Waiting for admin approval to complete enrollment for S.Y. ${currentSY}`,
-        fill: "black"
-      },
-      error: { title: "Enrollment Failed" }
-    });
+        const monthsToPay = paymentType === "Full" ? (tuitionFees[level]?.months || []) : paymentType === "Partial" ? selectedMonths : [];
+        if (monthsToPay.length > 0) {
+            const updates = {};
+            monthsToPay.forEach(month => { updates[`monthlyTracking.${month}.status`] = "Paid"; });
+            await updateDoc(doc(db, "enrollments", `ENR-${currentSY}-${submittedStudentID}`), updates);
+        }
+      };
 
-    fetchMyStudents(auth.currentUser.uid);
-    
-    // reset form
-    handleAddNewChild();
-    setSubmittedStudentID(null);
-    setStep(1);
-    setPage("archive");
+      try {
+        await sileo.promise(submitEnrollmentAction(), {
+          loading: { title: "Submitting Payment..." },
+          success: { title: "Payment Submitted", description: `Waiting for admin approval for S.Y. ${currentSY}`, fill: "black" },
+          error: { title: "Enrollment Failed" }
+        });
 
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+        fetchMyStudents(auth.currentUser.uid);
+        handleAddNewChild();
+        setPage("archive");
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
 
     if (!userData) return <p className='text-center mt-20 font-bold animate-pulse text-gray-400'>Loading MCS Portal...</p>;
 
     const fullAddress = `${userData.address.purok}, ${userData.address.barangay}, ${userData.address.city}, ${userData.address.province}`;
 
     return (
-        <div className=' dark:bg-black bg-white font-sans text-[#2D3748]'>
-            
-            {/* Minimal Header */}
+        <div className='dark:bg-black bg-white font-sans text-[#2D3748]'>
           <header className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 px-6 py-3 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-4">
-              {/* Mobile Menu Button */}
-              <button 
-                className="p-2 hover:bg-gray-100 rounded-lg tablet:hidden transition-colors" 
-                onClick={() => setIsOpen(!isOpen)}
-              >
-                {/* <Menu className="w-5 h-5 text-gray-600 hidden" /> */}
-              </button>
-              
-              {/* Logo & Branding - Clickable to Home */}
+              <button className="p-2 hover:bg-gray-100 rounded-lg tablet:hidden transition-colors" onClick={() => setIsOpen(!isOpen)}></button>
               <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
                 <img className="w-10 h-10 object-contain" src={logo} alt="Logo" />
-                
-                {/* Vertical Divider & Text */}
                 <div className="hidden phone:block border-l border-gray-200 pl-4 py-1">
-                  <h1 className="text-[14px] font-black tracking-tight text-gray-800 uppercase leading-none">
-                    Myrtle Christian School Inc.
-                  </h1>
-                  <p className="text-[10px] text-green-800 font-bold tracking-[0.15em] uppercase mt-1">
-                    Parent Portal
-                  </p>
+                  <h1 className="text-[14px] font-black tracking-tight text-gray-800 uppercase leading-none">Myrtle Christian School Inc.</h1>
+                  <p className="text-[10px] text-green-800 font-bold tracking-[0.15em] uppercase mt-1">Parent Portal</p>
                 </div>
               </Link>
             </div>
-
-
           </header>
                 
-      
-            <div className="flex ">
-      
-
-          {/* SIDEBAR / TABS */}
-          {/* MOBILE OVERLAY */}
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-auto min-w-[280px] z-50 tablet:hidden">
-          <div className="bg-white/80 dark:bg-neutral-950/90 backdrop-blur-md border border-gray-200/50 dark:border-neutral-800 shadow-xl rounded-full px-4 py-2 flex justify-between items-center gap-6">
-            
-            {/* Enrollment */}
-            <button 
-              onClick={() => setPage("personal")}
-              className={`flex flex-col items-center transition-all duration-300 ${setpage === "personal" ? "text-blue-600" : "text-gray-400"}`}
-            >
-              <div className={`p-1.5 rounded-xl transition-colors ${setpage === "personal" ? "bg-blue-50 dark:bg-blue-600/10" : ""}`}>
-                <FileUser size={18} strokeWidth={2} />
-              </div>
-              <span className="text-[9px] font-bold tracking-tight">Enroll</span>
-            </button>
-
-            {/* Records */}
-            <button 
-              onClick={() => setPage("archive")}
-              className={`flex flex-col items-center transition-all duration-300 ${setpage === "archive" ? "text-blue-600" : "text-gray-400"}`}
-            >
-              <div className={`p-1.5 rounded-xl transition-colors ${setpage === "archive" ? "bg-blue-50 dark:bg-blue-600/10" : ""}`}>
-                <Archive size={18} strokeWidth={2} />
-              </div>
-              <span className="text-[9px] font-bold tracking-tight">Records</span>
-            </button>
-
-            {/* Account - Small Profile Circle */}
-            <button className="flex flex-col items-center transition-all duration-300 text-gray-400">
-              <div className="p-0.5 rounded-full border border-gray-200 dark:border-neutral-800">
-                <img className="w-6 h-6 rounded-full object-cover grayscale-[0.5]" src={userData.profilePicture} alt="" />
-              </div>
-              <span className="text-[9px] font-bold tracking-tight">Account</span>
-            </button>
-
-            {/* Logout - Red Accent */}
-            <button 
-              onClick={async () => { await auth.signOut(); navigate("/auth"); }}
-              className="flex flex-col items-center text-red-500/70"
-            >
-              <div className="p-1.5">
-                <LogOut size={18} strokeWidth={2} />
-              </div>
-              <span className="text-[9px] font-bold tracking-tight">Exit</span>
-            </button>
-
-          </div>
-        </div>
- 
-                {/* (TABS MENU) --- */}
-                <div className='p-5 hidden dark:text-neutral-700 tablet:block tablet:sticky tablet:top-20 tablet:h-[calc(100vh-5rem)] relative '>
-                <div className='w-[15rem] gap-2'>
-                 <h1 className='font-semibold'>Child</h1>  
-                 <div className='flex flex-col mt-1 gap-1'>
-
-                <button className={`px-6 flex gap-2 w-full dark:text-white  items-center py-2 rounded-2xl transition-all duration-200 ease-out
-                 ${setpage === "personal" ? "bg-gray-100 dark:bg-neutral-900 scale-[0.98]" : "hover:bg-gray-100 hover:dark:bg-neutral-900"}`}
-                 onClick={() => setPage("personal")}>
-                 <FileUser/>
-                 Enrollment
-                 </button>
-
-                <button   className={`px-6 flex gap-2 w-full dark:text-white items-center py-2 rounded-2xl transition-all  duration-200 ease-out  
-                 ${setpage === "archive" ? "bg-gray-100 dark:bg-neutral-900 scale-[0.98]" : "hover:bg-gray-100 hover:dark:bg-neutral-900"}
-                 `}
-                onClick={() => setPage("archive")}
-                ><Archive/>
-                 Records
+          <div className="flex">
+            <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-auto min-w-[280px] z-50 tablet:hidden">
+              <div className="bg-white/80 dark:bg-neutral-950/90 backdrop-blur-md border border-gray-200/50 dark:border-neutral-800 shadow-xl rounded-full px-4 py-2 flex justify-between items-center gap-6">
+                <button onClick={() => setPage("personal")} className={`flex flex-col items-center transition-all duration-300 ${setpage === "personal" ? "text-blue-600" : "text-gray-400"}`}>
+                  <div className={`p-1.5 rounded-xl transition-colors ${setpage === "personal" ? "bg-blue-50 dark:bg-blue-600/10" : ""}`}><FileUser size={18} strokeWidth={2} /></div>
+                  <span className="text-[9px] font-bold tracking-tight">Enroll</span>
                 </button>
+                <button onClick={() => setPage("archive")} className={`flex flex-col items-center transition-all duration-300 ${setpage === "archive" ? "text-blue-600" : "text-gray-400"}`}>
+                  <div className={`p-1.5 rounded-xl transition-colors ${setpage === "archive" ? "bg-blue-50 dark:bg-blue-600/10" : ""}`}><Archive size={18} strokeWidth={2} /></div>
+                  <span className="text-[9px] font-bold tracking-tight">Records</span>
+                </button>
+                <button className="flex flex-col items-center transition-all duration-300 text-gray-400">
+                  <div className="p-0.5 rounded-full border border-gray-200 dark:border-neutral-800"><img className="w-6 h-6 rounded-full object-cover grayscale-[0.5]" src={userData.profilePicture} alt="" /></div>
+                  <span className="text-[9px] font-bold tracking-tight">Account</span>
+                </button>
+                <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className="flex flex-col items-center text-red-500/70">
+                  <div className="p-1.5"><LogOut size={18} strokeWidth={2} /></div>
+                  <span className="text-[9px] font-bold tracking-tight">Exit</span>
+                </button>
+              </div>
+            </div>
+ 
+            <div className='p-5 hidden dark:text-neutral-700 tablet:block tablet:sticky tablet:top-20 tablet:h-[calc(100vh-5rem)] relative '>
+              <div className='w-[15rem] gap-2'>
+                <h1 className='font-semibold'>Child</h1>  
+                <div className='flex flex-col mt-1 gap-1'>
+                  <button className={`px-6 flex gap-2 w-full dark:text-white items-center py-2 rounded-2xl transition-all duration-200 ease-out ${setpage === "personal" ? "bg-gray-100 dark:bg-neutral-900 scale-[0.98]" : "hover:bg-gray-100 hover:dark:bg-neutral-900"}`} onClick={() => setPage("personal")}>
+                    <FileUser/> Enrollment
+                  </button>
+                  <button className={`px-6 flex gap-2 w-full dark:text-white items-center py-2 rounded-2xl transition-all duration-200 ease-out ${setpage === "archive" ? "bg-gray-100 dark:bg-neutral-900 scale-[0.98]" : "hover:bg-gray-100 hover:dark:bg-neutral-900"}`} onClick={() => setPage("archive")}>
+                    <Archive/> Records
+                  </button>
                 </div> 
-
-              <h1 className=' mt-2 font-semibold'>Account</h1>
-              <div className='flex gap-1 flex-col'>
+                <h1 className='mt-2 font-semibold'>Account</h1>
+                <div className='flex gap-1 flex-col'>
                   <button className='px-6 hover:bg-gray-100 hover:rounded-2xl hover:dark:bg-neutral-900 flex items-center gap-2 py-2 dark:text-white'><User/>Profile</button>
-               
-              <button className='px-6 dark:text-white py-2 flex items-center gap-2'
-               onClick={() => setOpen(!open)}
-               >
-              <Settings/>Settings
-              <ChevronDown className=' dark:text-white'/>
-              </button>
-
-              {open && (
-                <div className='flex ml-8 flex-col justify-end '>
-                <NavLink
-                to=""
-                className="px-6 hover:bg-gray-100 py-2 rounded-2xl"
-                >
-                Personal Details  
-                </NavLink>
-                
-                <NavLink
-                to=""
-                className="px-6 hover:bg-gray-100 py-2 rounded-2xl"
-                >
-                Change Password
-                </NavLink>
+                  <button className='px-6 dark:text-white py-2 flex items-center gap-2' onClick={() => setOpen(!open)}>
+                    <Settings/>Settings <ChevronDown className=' dark:text-white'/>
+                  </button>
+                  {open && (
+                    <div className='flex ml-8 flex-col justify-end'>
+                      <NavLink to="" className="px-6 hover:bg-gray-100 py-2 rounded-2xl">Personal Details</NavLink>
+                      <NavLink to="" className="px-6 hover:bg-gray-100 py-2 rounded-2xl">Change Password</NavLink>
+                    </div>
+                  )}
                 </div>
-              )}
-               
-                </div>
-                </div>
-                <div className='flex absolute bottom-3 w-[15rem] items-center justify-center px-6 py-1 rounded-2xl bg-gray-100 dark:text-white dark:bg-neutral-900 gap-2'> 
+              </div>
+              <div className='flex absolute bottom-3 w-[15rem] items-center justify-center px-6 py-1 rounded-2xl bg-gray-100 dark:text-white dark:bg-neutral-900 gap-2'> 
                 <img className='w-8 h-8 rounded-full' src={userData.profilePicture} alt="" />
-                  <h1 className='text-nowrap'>{userData.parent ?. firstname} {userData.parent ?. lastname}</h1> 
-                  <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className=" text-red-600">
-                 <LogOut/>
-                 </button>
-                 </div>
-                </div>
-                {setpage === "archive" ? (
-                    <EnrollmentArchive {...{setpage, 
-                        myStudents, 
-                        handleAddNewChild, 
-                        setChildFirst, 
-                        setChildMiddle,
-                        setChildLast, 
-                        setSuffix, 
-                        setAge, 
-                        setSex, 
-                        setStudentType, 
-                        setPrevSchool, 
-                        setLevel, 
-                        setGrade, 
-                        setFiles, 
-                        setPaymentMethod, 
-                        setEditingStudent, 
-                        setPage}} />
-                ) : (
-        <div className='space-y-2 animate-in  w-full fade-in slide-in-from-bottom-4 duration-700 overflow-hidden'>
-        {/* stepper */}
-        <ol className="flex justify-between items-center mt-1 relative">
-        {[1, 2, 3, 4].map((s, i) => (
-        <li key={s} className="relative flex-1 flex flex-col items-center">
-                
-        {/* Circle */}
-        <span
-        className={`w-8 h-8  rounded-full flex justify-center items-center text-sm z-10
-        ${step === s ? "bg-green-950 text-white" : step > s ? "bg-green-600 text-white" : "bg-gray-50 border-2 border-gray-200 text-gray-600"}`}
-        >
-        {step > s ? (
-        <Check className='w-4 h-4'/>
-        ) : s === 1 ? (
-        <UserPen className=' w-4 h-4'/>
-        ) : s === 2 ? (
-        <BookOpenCheck className='w-4 h-4'/>
-        ) : s === 3 ? (
-        <Users className='w-4 h-4'/>
-        ) : (
-        <CreditCard className='w-4 h-4'/>
-        )}
-        </span>
+                <h1 className='text-nowrap'>{userData.parent?.firstname} {userData.parent?.lastname}</h1> 
+                <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className=" text-red-600"><LogOut/></button>
+              </div>
+            </div>
 
-        {/* Connecting line */}
-        {i < 3 && (
-        <div className="absolute top-4 left-1/2  border dark:border-neutral-900 w-full bg-gray-300 z-0"></div>
-        )}
+            {setpage === "archive" ? (
+                <EnrollmentArchive {...{setpage, myStudents, handleAddNewChild, setChildFirst, setChildMiddle, setChildLast, setSuffix, setAge, setSex, setStudentType, setPrevSchool, setLevel, setGrade, setFiles, setPaymentMethod, setEditingStudent, setPage}} />
+            ) : (
+            <div className='space-y-2 animate-in w-full fade-in slide-in-from-bottom-4 duration-700 overflow-hidden'>
+              <ol className="flex justify-between items-center mt-1 relative p-5">
+                {[1, 2, 3, 4].map((s, i) => (
+                  <li key={s} className="relative flex-1 flex flex-col items-center">
+                    <span className={`w-8 h-8 rounded-full flex justify-center items-center text-sm z-10 ${step === s ? "bg-[#2D5B60] text-white" : step > s ? "bg-green-600 text-white" : "bg-gray-50 border-2 border-gray-200 text-gray-600"}`}>
+                      {step > s ? <Check className='w-4 h-4'/> : s === 1 ? <UserPen className=' w-4 h-4'/> : s === 2 ? <BookOpenCheck className='w-4 h-4'/> : s === 3 ? <Users className='w-4 h-4'/> : <CreditCard className='w-4 h-4'/>}
+                    </span>
+                    {i < 3 && <div className="absolute top-4 left-1/2 border dark:border-neutral-900 w-full bg-gray-300 z-0"></div>}
+                    <div className="text-center mt-6">
+                      <h4 className={`tablet:text-base mb-1 text-[10px] text-nowrap font-bold ${step >= s ? "text-[#2D5B60]" : "text-gray-400 dark:text-neutral-600"}`}>
+                        {s === 1 && "Child Info"} {s === 2 && "Requirements"} {s === 3 && "Verification"} {s === 4 && "Payment"}
+                      </h4>
+                    </div>
+                  </li>
+                ))}
+              </ol>
 
-        {/* Step Content */}
-        <div className="text-center mt-6">
-        <h4 className={`tablet:text-base mb-1 text-[10px] text-nowrap ${step >= s ? "text-green-600" : "text-gray-900 dark:text-neutral-600"}`}>
-        {s === 1 && "Child Info"}
-        {s === 2 && "Upload Requirements"}
-        {s === 3 && "Admin Verification"}
-        {s === 4 && "Payment"}
-        </h4>
-        <p className="text-sm text-gray-600 max-w-xs">
-        {s === 1 && ""}
-        {s === 2 && ""}
-        {s === 3 && ""}
-        {s === 4 && ""}
-        </p>
-        </div>
-        </li>
-        ))}
-
-        </ol>
-
-        {/* FORM CONTENT */}
-        <div className=' p-5'>
-        {/* SECTION: CHILD */}
-        { step === 1 && (
-        <section>
-        <div className='flex gap-2 items-center'>
-        <div className='w-1 h-6 bg-green-950 rounded-full'></div>
-        <h3 className='font-semibold uppercase tracking-widest text-sm dark:text-neutral-600'>Child Information</h3>
-        </div>
-                                
-        <div className='flex flex-col tablet:flex-row gap-2'>
+              <div className='p-5'>
+                {/* STEP 1 */}
+                { step === 1 && (
+                  <section>
+                    <div className='flex gap-2 items-center mb-4'>
+                      <div className='w-1 h-6 bg-[#2D5B60] rounded-full'></div>
+                      <h3 className='font-bold uppercase tracking-widest text-sm dark:text-neutral-600'>Child Information</h3>
+                    </div>
+                    {/* ... (Existing Step 1 Inputs exactly as you had them) ... */}
+                    <div className='flex flex-col tablet:flex-row gap-2'>
          <div className='flex flex-col w-full gap-2'>
          <label className='flex gap-2 dark:text-neutral-600'><span className='text-red-600'>*</span>First name</label>
          <FloatingInput
@@ -940,7 +706,7 @@ const handleSubmitEnrollment = async () => {
           )}
           </div>
           )}
-</div>
+          </div>
           <div className='flex gap-5 mt-5'>
           <div className='flex flex-col w-full gap-2'>
           <label className='flex gap-1 dark:text-neutral-600'><span className='text-red-600'>*</span>Level</label>
@@ -977,14 +743,15 @@ const handleSubmitEnrollment = async () => {
          )}
          </div>
          </div>
-         </section>
-         )}
-        
-         {/* Upload Requirments */}
-         { step === 2 && (
-         <section className="space-y-4">
-         <h3 className="font-bold text-slate-700 dark:text-neutral-400">Upload Requirements</h3>
-        <div className='flex justify-center'>
+                  </section>
+                )}
+
+                {/* STEP 2 */}
+                { step === 2 && (
+                  <section className="space-y-4">
+                    <h3 className="font-bold text-slate-700 dark:text-neutral-400">Upload Requirements</h3>
+                    {/* ... (Existing Step 2 Inputs) ... */}
+                    <div className='flex justify-center'>
         <div className='flex flex-col w-full tablet:w-96'>
         <UploadBox
          label="ID Picture 2x2"
@@ -1021,48 +788,52 @@ const handleSubmitEnrollment = async () => {
          <p className='text-red-600 text-sm'>{errors.reportCard}</p>   
          )}
         </div>
+        </div>
+                  </section>
+                )}
 
-         </div>
-         </section>
-         )}
+                {/* STEP 3 */}
+                { step === 3 && (
+                  <section>
+                    <div className='flex gap-2 items-center'>
+                      <div className='w-1 h-6 bg-[#2D5B60] rounded-full'></div>
+                      <h3 className='font-semibold uppercase tracking-widest text-sm dark:text-neutral-600'>Admin Verification</h3>
+                    </div>
+                    <div className='mt-4 p-8 bg-gray-50 dark:bg-neutral-900 rounded-2xl border text-center'>
+                      <h4 className='text-xl font-bold mb-2'>Documents Submitted</h4>
+                      <p className='text-gray-600 dark:text-neutral-400 mb-6'>We are currently reviewing the uploaded documents for {childFirst}.</p>
+                      
+                      <div className='inline-block px-6 py-3 rounded-full font-bold uppercase tracking-widest text-sm
+                        ${verificationStatus === "Approved" ? "bg-green-100 text-green-700" : 
+                          verificationStatus === "Rejected" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700 animate-pulse"}'>
+                        {verificationStatus === "Pending" ? "⏳ AWAITING VERIFICATION" : verificationStatus}
+                      </div>
 
-         {/* Admin Verification */}
-         { step === 3 && (
-         <section>
-         <div className='flex gap-2 items-center'>
-         <div className='w-1 h-6 bg-green-950 rounded-full'></div>
-         <h3 className='font-semibold uppercase tracking-widest text-sm dark:text-neutral-600'>Admin Verification</h3>
-         </div>
-         <div className='mt-4 p-6 bg-gray-50 dark:bg-neutral-900 rounded-2xl'>
-         <p className='text-center text-gray-600 dark:text-neutral-400'>
-         Verification Status: {verificationStatus}
-         </p>
-         {verificationStatus === "Approved" && (
-         <p className='text-center text-green-600 mt-2'>You can now proceed to payment.</p>
-         )}
-         {verificationStatus === "Pending" && (
-         <p className='text-center text-orange-600 mt-2'>Waiting for admin approval.</p>
-         )}
-         {verificationStatus === "Rejected" && (
-         <div className='mt-4'>
-         <p className='text-center text-red-600'>Your application has been rejected. Please review and resubmit.</p>
-         <button
-           onClick={handleAddNewChild}
-           className="mt-4 block mx-auto px-6 py-2 rounded-xl bg-red-600 text-white"
-         >
-           Restart Application
-         </button>
-         </div>
-         )}
-         </div>
-         </section>
-         )}
+                      {verificationStatus === "Approved" && (
+                        <div className="mt-8">
+                          <p className='text-green-700 font-medium mb-4'>Great! Requirements are verified. You can now proceed to payment.</p>
+                          <button onClick={() => setStep(4)} className="px-8 py-3 rounded-xl bg-[#2D5B60] text-white font-bold hover:bg-black transition-colors">
+                            Continue to Payment →
+                          </button>
+                        </div>
+                      )}
 
-                    {/* LEDGER VIEW */}
-                    { step == 4 && (
-                    <section>
+                      {verificationStatus === "Rejected" && (
+                        <div className='mt-8'>
+                          <p className='text-red-600'>Your application was rejected. Please review and resubmit the correct files.</p>
+                          <button onClick={handleAddNewChild} className="mt-4 px-6 py-2 rounded-xl bg-red-600 text-white font-bold">Restart Application</button>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                )}
+
+                {/* STEP 4 */}
+                { step === 4 && (
+                  <section>
                     <div className='bg-gray-50 dark:bg-neutral-900 rounded-3xl p-6'>
-                    <div className='flex justify-between items-center mb-6 text-neutral-400'>
+                      {/* ... (Existing Step 4 Inputs & logic exactly as you had them) ... */}
+                      <div className='flex justify-between items-center mb-6 text-neutral-400'>
                     <h4 className='text-[10px] font-black uppercase text-gray-400 tracking-widest'>Financial Summary</h4>
                     <span className='text-[10px] font-bold text-green-950'>S.Y. {currentSY}</span>
                     </div>
@@ -1120,9 +891,6 @@ const handleSubmitEnrollment = async () => {
                     </div>
                 </div>
 
-                <div className='space-y-3'>
-                </div>
-
                     {/* Advance Tuition Payment */}
                     {(paymentType === "Partial" || paymentType === "Full") && (
                     <div className='mt-8 pt-6 border-t border-gray-200'>
@@ -1159,7 +927,7 @@ const handleSubmitEnrollment = async () => {
                         <div className='mt-6 pt-6 border-t border-gray-200'>
                             <div className='flex justify-between items-center'>
                                 <span className='text-lg font-bold text-gray-700'>Total Amount to Pay</span>
-                                <span className='text-2xl font-black text-green-950 italic'>
+                                <span className='text-2xl font-black text-[#2D5B60] italic'>
                                     ₱{(() => {
                                         const selectedKeys = paymentType === "Full" ? ['registration', 'misc', 'books', 'instructional', 'uniform', 'pta'] : selectedInitialFees;
                                         const initialTotal = selectedKeys.reduce((acc, key) => acc + (tuitionFees[level]?.[key] || 0), 0);
@@ -1199,165 +967,64 @@ const handleSubmitEnrollment = async () => {
                             {errors.selectedMonths && (
                                 <p className='text-red-600 text-sm mt-2'>{errors.selectedMonths}</p>
                             )}
-
                         </div>
                     </div>
-
-                </div>
-
-                        </section>   
-)}
-                            {/* SECTION: Final Review */}
-            <section className='pt-10 border-gray-50 flex flex-col md:flex-row justify-between items-center gap-8'>
-            <div className='bg-gray-50 dark:bg-neutral-900 p-6 rounded flex-1 w-full'>
-
-              <h4 className='text-lg mb-4 flex gap-2 items-center'>
-                <Users/>
-                Family Background
-              </h4>
-
-              {/* MAIN PERSON (parent) */}
-            <div className="grid tablet:grid-cols-2 grid-cols-1 gap-4">
-
-              {/* PARENT (Mother or primary parent) */}
-            <div>
-              {/* PARENT */}
-              <p className="font-semibold text-gray-600">
-                {userData.role === "father"
-                  ? "Father"
-                  : userData.role === "mother"
-                  ? "Mother"
-                  : "Parent"}
-              </p>
-
-              <p className="border px-2 uppercase text-gray-700">
-                {userData.parent?.firstname} {userData.parent?.lastname}
-              </p>
-
-              {/* SPOUSE */}
-              {userData.spouse && (
-                <>
-                  <p className="mt-2 font-semibold text-gray-600">
-                    {userData.role === "father"
-                      ? "Mother"
-                      : userData.role === "mother"
-                      ? "Father"
-                      : "Parent"}
-                  </p>
-
-                  <p className="border px-2 uppercase text-gray-700">
-                    {userData.spouse?.firstname} {userData.spouse?.lastname}
-                  </p>
-                </>
-              )}
-            </div>
-
-            {/* CONTACT */}
-            <div>
-              <p className="font-bold flex gap-1">
-                <span className="text-red-600">*</span>Contact
-              </p>
-
-              <p className="border flex items-center gap-2 px-2">
-                <Phone size={18} />
-                {userData.parent?.contact}
-              </p>
-            </div>
-
-          </div>
-
-          {/* SPOUSE (optional lang) */}
-          <hr className="border-t border-gray-300 my-8" />
-          <div className='flex flex-col tablet:flex-row items-center gap-5 mt-5'>
-          {/* {userData.spouse && (
-            <div className='flex flex-col w-full'>
-              <p className='font-bold flex gap-1'><span className=' text-red-600'>*</span>Spouse</p>
-              <p className='border px-2 uppercase'>
-                {userData.spouse.firstname} {userData.spouse.lastname}
-              </p>
-            </div>
-          )} */}
-
-          <div className='flex flex-col w-full'>
-            <p className='font-bold flex gap-1'><span className='text-red-600'>*</span>Full Address</p>
-            <p className=' px-2 border'>
-              {fullAddress}
-            </p>
-          </div>
-
-        </div>
-   
-            <hr className="border-t border-gray-300 mt-8" />
-          <div className='flex flex-col tablet:flex-row gap-5 mt-5 items-center'>
-          <div className='w-full'>
-            <p className='font-bold'>Guardian's Name</p>
-            <p className='border px-2 uppercase'>{userData.emergency.name}</p>
-          </div>
-
-          <div className='w-full'>
-            <p className='font-bold'>Relationship</p>
-            <p className='border px-2 uppercase'>{userData.emergency.relation}</p>
-          </div>
-          </div>
-        </div>
-          
-          <div className='flex flex-col items-center md:items-end h-[15rem] tablet:h-[10rem]  w-full md:w-auto'>
-          <p className='text-[10px] text-gray-400 italic text-center md:text-right max-w-[250px]'>By clicking submit, you agree to MCS terms for S.Y. {currentSY}.</p>
-
-          <section className='pt-10 border-t border-gray-50 flex justify-center items-center gap-4'>
-            {step > 1 && step !== 4 && (
-              <button
-                onClick={prevStep}
-                className="px-6 py-2 rounded-xl bg-gray-200"
-              >
-                Previous
-              </button>
-            )}
-
-            {step < 2 && (
-              <button
-                onClick={nextStep}
-                className="px-10 py-2 rounded-xl bg-green-900 text-white"
-              >
-                Next
-              </button>
-            )}
-
-            {step === 2 && (
-              <button
-                onClick={handleSubmitForVerification}
-                disabled={isSubmitting}
-                className={`px-6 py-2 rounded-xl bg-[#1a1a1a] text-white font-black ${isSubmitting ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'hover:bg-yellow-500'}`}
-              >
-                {isSubmitting ? "Submitting..." : "Submit for Verification"}
-              </button>
-            )}
-
-            {step === 3 && verificationStatus === "Approved" && (
-              <button
-                onClick={() => setStep(4)}
-                className="px-6 py-2 rounded-xl bg-green-900 text-white"
-              >
-                Proceed to Payment
-              </button>
-            )}
-
-            {step === 4 && (
-              <button
-                onClick={handleSubmitEnrollment}
-                disabled={isSubmitting}
-                className={`px-6 py-2 rounded-xl bg-[#1a1a1a] text-white font-black ${isSubmitting ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'hover:bg-yellow-500'}`}
-              >
-                {isSubmitting ? "Processing..." : "Submit Enrollment"}
-              </button>
-            )}
-          </section>
-                                </div>
-                            </section>
-                        </div>
                     </div>
+                  </section>   
                 )}
+
+                {/* Final Review & Controls */}
+                <section className='pt-10 flex flex-col md:flex-row justify-between items-center gap-8'>
+                  <div className='bg-gray-50 dark:bg-neutral-900 p-6 rounded-2xl flex-1 w-full border border-gray-100'>
+                    <h4 className='text-lg mb-4 flex gap-2 items-center font-bold text-[#2D5B60]'><Users/> Family Background</h4>
+                    <div className="grid tablet:grid-cols-2 grid-cols-1 gap-4">
+                      <div>
+                        <p className="font-semibold text-gray-500 uppercase text-[10px] mb-1">{userData.role === "father" ? "Father" : userData.role === "mother" ? "Mother" : "Parent"}</p>
+                        <p className="font-bold text-gray-800 uppercase">{userData.parent?.firstname} {userData.parent?.lastname}</p>
+                        {userData.spouse && (
+                          <div className="mt-4">
+                            <p className="font-semibold text-gray-500 uppercase text-[10px] mb-1">{userData.role === "father" ? "Mother" : userData.role === "mother" ? "Father" : "Parent"}</p>
+                            <p className="font-bold text-gray-800 uppercase">{userData.spouse?.firstname} {userData.spouse?.lastname}</p>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-500 uppercase text-[10px] mb-1">Contact</p>
+                        <p className="font-bold text-gray-800 flex items-center gap-2"><Phone size={16} />{userData.parent?.contact}</p>
+                        <div className="mt-4">
+                            <p className="font-semibold text-gray-500 uppercase text-[10px] mb-1">Full Address</p>
+                            <p className="font-bold text-gray-800 text-sm">{fullAddress}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+          
+                  <div className='flex flex-col items-center md:items-end w-full md:w-auto'>
+                    <p className='text-[10px] text-gray-400 italic text-center md:text-right max-w-[250px] mb-4'>By clicking submit, you agree to MCS terms for S.Y. {currentSY}.</p>
+                    <div className='flex justify-center items-center gap-4 w-full'>
+                      {step > 1 && step !== 4 && step !== 3 && (
+                        <button onClick={prevStep} className="px-6 py-3 rounded-xl bg-gray-200 font-bold text-gray-700 w-full md:w-auto">Back</button>
+                      )}
+                      {step < 2 && (
+                        <button onClick={nextStep} className="px-10 py-3 rounded-xl bg-[#2D5B60] text-white font-bold w-full md:w-auto hover:bg-black transition-colors">Next →</button>
+                      )}
+                      {step === 2 && (
+                        <button onClick={handleSubmitForVerification} disabled={isSubmitting} className={`px-6 py-3 rounded-xl text-white font-black w-full md:w-auto ${isSubmitting ? 'bg-gray-300' : 'bg-[#2D5B60] hover:bg-black'}`}>
+                          {isSubmitting ? "Submitting..." : "Submit for Verification"}
+                        </button>
+                      )}
+                      {step === 4 && (
+                        <button onClick={handleSubmitEnrollment} disabled={isSubmitting} className={`px-6 py-3 rounded-xl text-white font-black w-full md:w-auto ${isSubmitting ? 'bg-gray-300' : 'bg-[#2D5B60] hover:bg-black'}`}>
+                          {isSubmitting ? "Processing..." : "Submit Payment & Enroll"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              </div>
             </div>
+            )}
+          </div>
         </div>
     );
 };

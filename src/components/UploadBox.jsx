@@ -1,45 +1,65 @@
 import { useState } from "react";
 import { ImageUp, X } from "lucide-react";
-import { sileo } from "sileo";
+// import { sileo } from "sileo"; // You might not need this anymore if you don't show size errors
+
 const UploadBox = ({ label, file, setFile, validateSize }) => {
   const [isDragging, setIsDragging] = useState(false);
 
-  // function to handle file with optional validation
+  // function to handle file with automatic resizing
   const handleFile = (file) => {
     if (!file) return;
 
     if (validateSize) {
       const img = new Image();
       img.src = URL.createObjectURL(file);
+      
       img.onload = () => {
-        const width = img.width;
-        const height = img.height;
-
-        // 2x2 inches at 300dpi ~ 600x600px
         const expectedPx = 600;
-        if (Math.abs(width - expectedPx) > 10 || Math.abs(height - expectedPx) > 10) {
-          sileo.error({
-            title: "Invalid image size! ID Picture must be 2x2 inches (600x600px).",
-            fill: "black"
-          });
-          setFile(null);
-          return;
-        }
+        
+        // Create a canvas to resize and crop the image
+        const canvas = document.createElement("canvas");
+        canvas.width = expectedPx;
+        canvas.height = expectedPx;
+        const ctx = canvas.getContext("2d");
 
-        // valid file
-        setFile(file);
+        // Calculate center crop to avoid stretching the image
+        const minSize = Math.min(img.width, img.height);
+        const startX = (img.width - minSize) / 2;
+        const startY = (img.height - minSize) / 2;
+
+        // Draw the cropped image onto the 600x600 canvas
+        ctx.drawImage(
+          img,
+          startX, startY, minSize, minSize, // Source x, y, width, height (cropping area)
+          0, 0, expectedPx, expectedPx      // Destination x, y, width, height (on canvas)
+        );
+
+        // Convert the canvas back to a File object
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          
+          const resizedFile = new File([blob], file.name, {
+            type: file.type || "image/jpeg",
+            lastModified: Date.now(),
+          });
+          
+          setFile(resizedFile);
+        }, file.type || "image/jpeg", 0.9); // 0.9 is the image quality (0 to 1)
       };
+      
       return;
     }
 
-    // normal file without validation
+    // normal file without validation/resizing
     setFile(file);
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    handleFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFile(e.dataTransfer.files[0]);
+    }
   };
 
   const preview = file ? URL.createObjectURL(file) : null;
@@ -64,7 +84,11 @@ const UploadBox = ({ label, file, setFile, validateSize }) => {
             type="file"
             className="hidden"
             accept="image/*"
-            onChange={(e) => handleFile(e.target.files[0])}
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+              }
+            }}
           />
 
           {!preview && (
@@ -82,7 +106,7 @@ const UploadBox = ({ label, file, setFile, validateSize }) => {
         {preview && (
           <img
             src={preview}
-            alt={file?.name}
+            alt={file?.name || "Preview"}
             className="w-full h-full object-contain md:object-cover transition-all rounded-xl"
           />
         )}
@@ -90,8 +114,11 @@ const UploadBox = ({ label, file, setFile, validateSize }) => {
         {/* Remove button */}
         {file && (
           <button
-            onClick={() => setFile(null)}
-            className="absolute top-2 right-2 bg-black/60 text-white p-1 rounded-full hover:bg-black transition"
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent opening the file dialog when clicking remove
+              setFile(null);
+            }}
+            className="absolute top-2 right-2 bg-black/60 text-white p-1 rounded-full hover:bg-black transition z-10"
           >
             <X size={14} />
           </button>

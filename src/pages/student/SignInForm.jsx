@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth, db } from "../../services/firebase";
 import { useNavigate } from "react-router-dom";
-import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc, serverTimestamp, setDoc, deleteDoc } from "firebase/firestore";
 import { useAuth } from "../../context/AuthContext";
 import { sileo } from "sileo";
-import { Eye,
-       EyeClosed, 
-       } from "lucide-react";
+import { Eye, EyeClosed } from "lucide-react";
 import { Link } from "react-router-dom";
+
 const SignInForm = () => {
   const navigate = useNavigate();
   const { user, role, loading: authLoading } = useAuth();
@@ -19,6 +18,7 @@ const SignInForm = () => {
   const [attempts, setAttempts] = useState(0);
   const [lockUntil, setLockUntil] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+
   useEffect(() => {
     if (!authLoading && user) {
       const userRole = role?.toLowerCase();
@@ -28,6 +28,69 @@ const SignInForm = () => {
     }
   }, [user, role, authLoading, navigate]);
 
+  // ===== GOOGLE SIGN IN (ADMIN ACTIVATION FLOW) =====
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    const provider = new GoogleAuthProvider();
+    
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const googleUser = result.user;
+      const userEmail = googleUser.email.toLowerCase();
+
+      // 1. Check if this email is on the VIP Admin Invite List (Using email as ID)
+      const invitedAdminRef = doc(db, "users", userEmail);
+      const invitedAdminSnap = await getDoc(invitedAdminRef);
+
+      if (invitedAdminSnap.exists() && invitedAdminSnap.data().role === "admin") {
+        // ACTIVATE THE ADMIN: Move data to their actual UID document
+        await setDoc(doc(db, "users", googleUser.uid), {
+          email: userEmail,
+          name: googleUser.displayName,
+          profilePicture: googleUser.photoURL,
+          role: "admin",
+          status: "Active",
+          lastActive: serverTimestamp()
+        });
+        
+        await deleteDoc(invitedAdminRef); // Clean up the temp invite
+        navigate("/admin", { replace: true });
+        return;
+      }
+
+      // 2. Check if they are already an active user/admin (Using UID)
+      const existingUserRef = doc(db, "users", googleUser.uid);
+      const existingUserSnap = await getDoc(existingUserRef);
+
+      if (existingUserSnap.exists()) {
+        await updateDoc(existingUserRef, { lastActive: serverTimestamp() });
+        const existingRole = existingUserSnap.data().role?.toLowerCase();
+        
+        if (existingRole === "admin") navigate("/admin", { replace: true });
+        else navigate("/Enrollment", { replace: true, state: { loginSuccess: true } });
+        return;
+      }
+
+      // 3. Brand new standard Parent User
+      await setDoc(existingUserRef, {
+        email: userEmail,
+        name: googleUser.displayName,
+        profilePicture: googleUser.photoURL,
+        role: "parent",
+        isProfileComplete: false,
+        createdAt: serverTimestamp()
+      });
+      navigate("/Enrollment", { replace: true, state: { loginSuccess: true } });
+
+    } catch (error) {
+      console.error("Google Sign-In Error:", error);
+      sileo.error({ title: "Google Login Failed", description: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ===== STANDARD EMAIL/PASSWORD LOGIN =====
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -42,45 +105,16 @@ const SignInForm = () => {
       return;
     }
 
-    // ===== VALIDATION =====
-    if (!email.trim()) {
-      sileo.error({ title: "Email is required", fill: "black" });
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      sileo.error({
-        title: "Invalid Email",
-        fill: "black",
-        description: "Please enter a valid email address",
-        styles: { description: "text-white" },
-      });
-      return;
-    }
-    if (!password.trim()) {
-      sileo.error({ title: "Password is required", fill: "black" });
-      return;
-    }
-    if (password.length < 6) {
-      sileo.error({
-        title: "Validation Error",
-        fill: "black",
-        description: "Password must be at least 6 characters",
-        styles: { description: "text-white" },
-      });
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !password.trim() || password.length < 6) {
+      sileo.error({ title: "Invalid Credentials", fill: "black", styles: { description: "text-white" }});
       return;
     }
 
     setLoading(true);
 
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email.toLowerCase(),
-        password
-      );
-
+      const userCredential = await signInWithEmailAndPassword(auth, email.toLowerCase(), password);
       setAttempts(0);
-
       const firebaseUser = userCredential.user;
       const docRef = doc(db, "users", firebaseUser.uid);
       const docSnap = await getDoc(docRef);
@@ -99,30 +133,14 @@ const SignInForm = () => {
       else sileo.error({ title: "Login Error", description: "User role undefined" });
 
     } catch (error) {
-      console.log(error);
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
 
-      let description = "Something went wrong. Please try again.";
-      if (error.code === "auth/user-not-found") description = "No account found with this email.";
-      if (error.code === "auth/wrong-password") description = "Incorrect password.";
-      if (error.code === "auth/invalid-email") description = "Invalid email format.";
-      if (error.code === "auth/too-many-requests") description = "Too many attempts. Try again later.";
-
       if (newAttempts >= 5) {
-        const timeout = Date.now() + 60000;
-        setLockUntil(timeout);
-        sileo.error({
-          title: "Too many login attempts",
-          fill: "black",
-          description: "Locked for 30 seconds.",
-          styles: { description: "text-white" },
-        });
+        setLockUntil(Date.now() + 60000);
+        sileo.error({ title: "Too many login attempts", fill: "black", description: "Locked for 60 seconds." });
       } else {
-        sileo.error({
-          title: "Login Failed",
-          fill: "black"
-        });
+        sileo.error({ title: "Login Failed", fill: "black", description: "Invalid email or password." });
       }
     } finally {
       setLoading(false);
@@ -140,7 +158,7 @@ const SignInForm = () => {
 
   return (
     <div className="w-full flex flex-col items-center justify-center mt-20">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full phone:w-96">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full phone:w-96 mb-6">
         <div className="px-5 w-full border-2 py-3 rounded-2xl">
           <input
             className="outline-none w-full"
@@ -148,40 +166,55 @@ const SignInForm = () => {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)} 
-            disabled={authLoading}
+            disabled={authLoading || loading}
           />
         </div>
         
-        <div  className=" flex gap-2 items-center justify-center px-5 py-3 border-2 rounded-2xl">
-        <input
-          type={showPassword ? "text" : "password"}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-         className="outline-none w-full"
-          disabled={authLoading}
-        />
-        <button
-        className="outline-none" 
-        type="button"
-        onClick={() => setShowPassword(!showPassword)}
-        >
-          {showPassword ? <Eye className="text-black"/> :<EyeClosed className="text-black"/>}
-        </button>
+        <div className="flex gap-2 items-center justify-center px-5 py-3 border-2 rounded-2xl">
+          <input
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            className="outline-none w-full"
+            disabled={authLoading || loading}
+          />
+          <button className="outline-none" type="button" onClick={() => setShowPassword(!showPassword)}>
+            {showPassword ? <Eye className="text-black"/> : <EyeClosed className="text-black"/>}
+          </button>
         </div>
-        <Link to="/forgotpassword" className="text-neutral-600 text-cente text-center leading-4" >Forgot Password ?</Link>
+        
+        <Link to="/forgotpassword" className="text-neutral-600 text-center leading-4 text-sm hover:underline">Forgot Password?</Link>
+        
         <button
           type="submit"
           disabled={loading || authLoading}
-          className={`py-3 rounded-full font-semibold text-white transition-colors ${
-            loading || authLoading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-[#2D5B60] hover:bg-green-950"
+          className={`py-3 rounded-full font-semibold text-white transition-colors mt-2 ${
+            loading || authLoading ? "bg-gray-400 cursor-not-allowed" : "bg-[#2D5B60] hover:bg-green-950"
           }`}
         >
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>
+
+      {/* GOOGLE SIGN IN BUTTON */}
+      <div className="w-full phone:w-96 flex flex-col items-center">
+        <div className="flex items-center w-full mb-6">
+           <div className="flex-1 h-px bg-gray-200"></div>
+           <span className="px-4 text-xs text-gray-400 font-bold uppercase">OR</span>
+           <div className="flex-1 h-px bg-gray-200"></div>
+        </div>
+
+        <button 
+          type="button"
+          onClick={handleGoogleSignIn}
+          disabled={loading || authLoading}
+          className="w-full flex items-center justify-center gap-3 py-3 rounded-full border-2 border-gray-200 font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
+          Continue with Google
+        </button>
+      </div>
     </div>
   );
 };
