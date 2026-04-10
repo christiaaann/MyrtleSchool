@@ -142,13 +142,13 @@ useEffect(() => {
      </div> */}
 
     <div id='home' className="min-h-screen bg-gradient-to-tr relative from-white via-green-100 to-white flex items-center"> 
-       <div className="absolute inset-0 z-0 bg-[radial-gradient(circle,_#cbd5e1_1px,_transparent_1px)] bg-[length:10px_10px] pointer-events-none" />
+       {/* <div className="absolute inset-0 z-0 bg-[radial-gradient(circle,_#cbd5e1_1px,_transparent_1px)] bg-[length:10px_10px] pointer-events-none" /> */}
       <div className='flex z-10  h-full w-full p-5 mx-auto tablet:justify-between justify-center'>
       <div className="flex w-full  flex-col justify-center items-center gap-5 tablet:items-start">
         <div className='flex flex-col gap-1 justify-center items-center w-full'>
         <h1 className="tablet:text-7xl font-bold text-4xl text-nowrap"> Start Your Child’s </h1>
         <h1 className="tablet:text-6xl text-[#2D5B60] font-bold text-4xl"> Future Today!</h1>
-      <button onClick={handleEnrollNow} className="bg-[#2D5B60] mt-2 text-white px-10 py-3 tablet:py-4 tablet:text-lg text-sm rounded-2xl">Enroll Now</button> 
+      <button onClick={handleEnrollNow} className="bg-[#2D5B60] mt-2 text-white px-10 py-2 tablet:py-2 tablet:text-lg text-sm rounded-2xl">Enroll Now</button> 
        </div>
         <div className='flex justify-center w-full'>
         {announcements.length > 0 ? (

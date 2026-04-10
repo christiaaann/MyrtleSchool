@@ -212,7 +212,7 @@ const Navbar = () => {
 
       {/* MOBILE SIDEBAR */}
       <aside
-        className={`fixed inset-y-0 right-0 z-[60] w-72 bg-white shadow-2xl transform transition-transform duration-300 ${
+        className={`fixed inset-y-0 right-0 z-[60] tablet:hidden w-72 bg-white shadow-2xl transform transition-transform duration-300 ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -225,7 +225,7 @@ const Navbar = () => {
 
         <div className="p-6 space-y-6">
           {!loading && user && (
-            <div className="flex items-center gap-3 p-4 bg-teal-50 rounded-2xl">
+            <div className="flex items-center gap-2">
               <img
                 className="w-12 h-12 rounded-full object-cover"
                 src={user.profilePicture}
@@ -236,8 +236,15 @@ const Navbar = () => {
                   {user.parent?.firstname}
                 </p>
                 <p className="text-xs text-gray-500">{user.email}</p>
+                 <Link
+                  to="/Enrollment"
+                  className="flex items-center mt-1 gap-1 px-4 py-3 text-sm hover:bg-gray-50 rounded-xl"
+                  >
+                  <Settings size={20} /> Dashboard
+                  </Link>
               </div>
             </div>
+            
           )}
 
           <nav className="flex flex-col gap-4 font-bold text-gray-600">

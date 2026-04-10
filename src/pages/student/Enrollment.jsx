@@ -69,6 +69,17 @@ const Enrollment = () => {
     const [myStudents, setMyStudents] = useState([]);
     const [editingStudent, setEditingStudent] = useState(null);
     
+
+useEffect(() => {
+  if (!editingStudent) {
+    if (myStudents.length > 0) {
+      setPage((prev) => (prev === "personal" ? "archive" : prev));
+    } else {
+      setPage("personal");
+    }
+  }
+}, [myStudents, editingStudent]);
+    
     const validateStep1 = () => {
       const newErrors = {};
       if (!childFirst.trim()) newErrors.childFirst = "First name is required";
@@ -505,14 +516,13 @@ const Enrollment = () => {
                 </div> 
                 <h1 className='mt-2 font-semibold'>Account</h1>
                 <div className='flex gap-1 flex-col'>
-                  <button className='px-6 hover:bg-gray-100 hover:rounded-2xl hover:dark:bg-neutral-900 flex items-center gap-2 py-2 dark:text-white'><User/>Profile</button>
+                  <NavLink to="/profile" className='px-6 hover:bg-gray-100 hover:rounded-2xl hover:dark:bg-neutral-900 flex items-center gap-2 py-2 dark:text-white'><User/>Profile</NavLink>
                   <button className='px-6 dark:text-white py-2 flex items-center gap-2' onClick={() => setOpen(!open)}>
                     <Settings/>Settings <ChevronDown className=' dark:text-white'/>
                   </button>
                   {open && (
                     <div className='flex ml-8 flex-col justify-end'>
-                      <NavLink to="" className="px-6 hover:bg-gray-100 py-2 rounded-2xl">Personal Details</NavLink>
-                      <NavLink to="" className="px-6 hover:bg-gray-100 py-2 rounded-2xl">Change Password</NavLink>
+                      <NavLink to="/changepassword" className="px-6 hover:bg-gray-100 py-2 rounded-2xl">Change Password</NavLink>
                     </div>
                   )}
                 </div>

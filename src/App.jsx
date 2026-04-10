@@ -12,6 +12,8 @@ const Enrollment = lazy(() => import("./pages/student/Enrollment"));
 const CompleteProfile = lazy(() => import("./pages/student/CompleteProfile"));
 const SignUpForm = lazy(() => import("./pages/student/SignUpForm"));
 const AdminRoutes = lazy(() => import("./routes/AdminRoutes"));
+const Profile = lazy(() =>import("./pages/student/Profile"));
+const ChangePassword = lazy(() =>import("./pages/student/ChangePassword"));
 
 const App = () => {
   return (
@@ -31,6 +33,22 @@ const App = () => {
               element={
                 <ProtectedRoute requiredRole="user">
                   <CompleteProfile />
+                </ProtectedRoute>
+              }
+            />
+              <Route
+              path="/profile"
+              element={
+                <ProtectedRoute requiredRole="user">
+                 <Profile/>
+                </ProtectedRoute>
+              }
+            />
+               <Route
+              path="/changepassword"
+              element={
+                <ProtectedRoute requiredRole="user">
+                <ChangePassword/>
                 </ProtectedRoute>
               }
             />

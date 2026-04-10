@@ -207,7 +207,7 @@ const Auth = () => {
         </div>
       </div>
 
-      <footer className="w-full bg-white p-5 border-t-4">
+      {/* <footer className="w-full bg-white p-5 border-t-4">
         <div className="flex flex-col gap-1 tablet:gap-10 tablet:flex-row justify-around">
           <div className="text-neutral-500 w-full leading-6 text-sm">
             <h1 className="text-xl font-bold text-neutral-500">
@@ -225,7 +225,7 @@ const Auth = () => {
             <p>Contact Admin:</p>
           </div>
         </div>
-      </footer>
+      </footer> */}
     </>
   );
 };
