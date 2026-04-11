@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth, db } from "../../services/firebase";
+import { auth, db, functions } from "../../services/firebase";  // ← functions comes from here
 import { useNavigate, Link } from "react-router-dom";
-// FIX: Added deleteDoc to clean up pending invites
-import { doc, getDoc, updateDoc, serverTimestamp, setDoc, deleteDoc } from "firebase/firestore";
+import { doc, updateDoc, serverTimestamp } from "firebase/firestore";  // ← removed unused imports
 import { useAuth } from "../../context/AuthContext";
 import { sileo } from "sileo";
 import { Eye, EyeClosed } from "lucide-react";
+import { httpsCallable } from "firebase/functions";  // ← only httpsCallable, NOT getFunctions
 
 const SignInForm = () => {
   const navigate = useNavigate();
@@ -39,7 +39,6 @@ const handleGoogleSignIn = async () => {
     await signInWithPopup(auth, provider);
 
     // Let the Cloud Function handle user creation and invite claiming
-    const functions = getFunctions();
     const claimInvite = httpsCallable(functions, "claimInviteOnSignIn");
     await claimInvite();
 

@@ -227,7 +227,7 @@ useEffect(() => {
     </span>
 
     <h1 className="text-2xl font-bold drop-shadow-lg text-yellow-300 leading-relaxed text-justify mb-4">
-      VISSION
+      VISION
     </h1>
     <p className="text-sm font-semibold text-justify">
         MSCI is dedicated to a continuing tradition of excellence

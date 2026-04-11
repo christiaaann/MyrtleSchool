@@ -2,6 +2,7 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 import { db } from "../services/firebase";
 import { collection, onSnapshot } from "firebase/firestore";
 import { logAdminAction } from "../services/systemLogger";
+import { functions } from "../services/firebase";
 
 const AdminManagement = () => {
   const [email, setEmail] = useState("");
@@ -35,7 +36,6 @@ const AdminManagement = () => {
     setIsProcessing(true);
 
     try {
-      const functions = getFunctions();
       const assignStaffRole = httpsCallable(functions, "assignStaffRole");
       const result = await assignStaffRole({ targetEmail: email, role, branch });
       await logAdminAction("STAFF_INVITED", result.data.message);
@@ -52,7 +52,7 @@ const AdminManagement = () => {
   const handleRevokeActive = async (userId, userEmail) => {
     if (!window.confirm(`Revoke staff access for ${userEmail}?`)) return;
     try {
-      const functions = getFunctions();
+      // const functions = getFunctions();
       const revokeStaffRole = httpsCallable(functions, "revokeStaffRole");
       await revokeStaffRole({ targetUserId: userId });
       await logAdminAction("STAFF_REVOKED", `Demoted ${userEmail} to Parent.`);
