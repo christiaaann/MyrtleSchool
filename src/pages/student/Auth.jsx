@@ -181,13 +181,13 @@ const Auth = () => {
             <SignInForm />
              <h1 className=" text-neutral-500 flex gap-1 mt-2">Don't have an account?<Link className=" text-neutral-700" to="/signup">Signup</Link></h1>
             <div className="flex justify-center mt-2 text-neutral-500 items-center gap-2">
-              <hr className="w-36" />
+              {/* <hr className="w-36" />
               <h1>Or</h1>
-              <hr className="w-36" />
+              <hr className="w-36" /> */}
             </div>
 
-            <div className="flex justify-center gap-5">
-              {/* Facebook */}
+            {/* <div className="flex justify-center gap-5">
+        
               <button
                 onClick={handleFacebookLogin}
                 className="w-12 h-12 rounded-full mt-5 bg-blue-100 flex items-center justify-center"
@@ -195,14 +195,13 @@ const Auth = () => {
                 <img className="w-8" src={facebook} alt="" />
               </button>
 
-              {/* Google */}
               <button
                 onClick={handleGoogleLogin}
                 className="w-12 h-12 rounded-full mt-5 bg-gray-100 flex items-center justify-center"
               >
                 <img className="w-8" src={google} alt="Google" />
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

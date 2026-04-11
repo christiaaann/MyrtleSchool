@@ -63,9 +63,17 @@ const CompleteProfile = () => {
   if (!city.trim()) newErrors.city = "City is required.";
   if (!province.trim()) newErrors.province = "Province is required.";
 
+  // branch
+  if (!branch.trim()) 
+  newErrors.branch = "Branch is required.";
+
   setErrors(newErrors);
   return Object.keys(newErrors).length === 0;
 };
+
+// branches
+const [branch, setBranch] = useState("");
+
 
 
 
@@ -160,6 +168,7 @@ useEffect(() => {
 
         if (docSnap.exists()) {
           const data = docSnap.data();
+          setBranch(data.branch || user.branch || "");
           setNoSpouse(data.noSpouse || false);
 
           const finalPhoto = (data.profilePicture && data.profilePicture.trim() !== "") 
@@ -211,7 +220,8 @@ useEffect(() => {
     }
     try {
    await updateDoc(doc(db, "users", uid), {
-      role: role,
+  role: role,
+   branch: branch,
    parent: { 
     firstname: parentFirst, 
     middlename: parentMiddle, 
@@ -250,6 +260,7 @@ useEffect(() => {
     if (loading) return <CompleteSkeleton />;
   return (
     <div className="min-h-screen p-4 font-sans text-slate-900">
+      
       <div className="max-w-6xl flex mx-auto gap-8">
         <div className=" w-full">
         <div className="lg:col-span-8  w-full p-8">
@@ -327,7 +338,23 @@ useEffect(() => {
       </button>
     ))}
   </div>
+  
 </div>
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-medium">Branch</span>
+        <select
+          value={branch}
+          onChange={(e) => setBranch(e.target.value)}
+          className="border p-2 rounded-xl"
+        >
+          <option value="">Select branch</option>
+            <option value="gubat">Irosin</option>
+          <option value="matnog">Matnog</option>
+        </select>
+        {errors.branch && (
+      <p className="text-red-500 text-sm">{errors.branch}</p>
+     )}
+      </div>
               <h3 className="font-bold text-slate-700">Personal Info (Parent)</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex flex-col tablet:flex-row gap-4">

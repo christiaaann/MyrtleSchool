@@ -99,7 +99,6 @@ const SignInForm = () => {
       sileo.error({
         title: "Too many login attempts",
         fill: "black",
-        description: `Please wait ${seconds} seconds before trying again.`,
         styles: { description: "text-white" },
       });
       return;

@@ -12,34 +12,90 @@ import logo from "../../assets/logo.png"
 import { useState, useEffect } from 'react'
 import boy from "../../assets/boy.png"
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
+import girl1 from '../../assets/girl1.png'
+import boy2 from '../../assets/boy2.png'
+import { Facebook } from 'lucide-react';
 const Landing = () => {
   const navigate = useNavigate("");
+
+
+
+  // demo tutorial
+    const [showTutorial, setShowTutorial] = useState(true);
+    const [play, setPlay] = useState(false);
+    const handleSkip = () => {
+    setShowTutorial(false);
+    localStorage.setItem("tutorialSeen", "true");
+    };
+    useEffect(() => {
+    const seen = localStorage.getItem("tutorialSeen");
+
+    if (seen === "true") {
+      setShowTutorial(false);
+    }
+  }, []);
+
+
+
   
+//  announcements
   const [announcements, setAnnouncements] = useState([]);
-const [current, setCurrent] = useState(0);
+  const [current, setCurrent] = useState(0);
 
-useEffect(() => {
-  const q = query(
-    collection(db, "announcements"),
-    orderBy("createdAt", "desc"),
-    limit(3)
-  );
+  const [isManual, setIsManual] = useState(false);
 
-  // Real-time listener
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    setAnnouncements(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-  });
+  // =========================
+  // FIRESTORE LISTENER
+  // =========================
+  useEffect(() => {
+    const q = query(
+      collection(db, "announcements"),
+      orderBy("createdAt", "desc"),
+      limit(3)
+    );
 
-  // Cleanup kapag component 
-  return () => unsubscribe();
-}, []);
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
 
-useEffect(() => {
-  const interval = setInterval(() => {
-    setCurrent(prev => announcements.length ? (prev + 1) % announcements.length : 0);
-  }, 3000); // change slide every 3s
-  return () => clearInterval(interval);
-}, [announcements]);
+      setAnnouncements(data);
+      setCurrent(0);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // =========================
+  // AUTO SLIDE
+  // =========================
+  useEffect(() => {
+    if (isManual || announcements.length === 0) return;
+
+    const interval = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % announcements.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isManual, announcements.length]);
+
+  // =========================
+  // BACK TO AUTO AFTER USER ACTION
+  // =========================
+  useEffect(() => {
+    if (!isManual) return;
+
+    const timeout = setTimeout(() => {
+      setIsManual(false);
+    }, 8000);
+
+    return () => clearTimeout(timeout);
+  }, [isManual]);
+
+
+
+
  
 
   const faqData = [
@@ -141,49 +197,243 @@ useEffect(() => {
       </div>
      </div> */}
 
+
+     {showTutorial && (
+  <div className="fixed inset-0 z-[999] bg-black/60 flex items-center justify-center p-4">
+    <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full overflow-hidden animate-in fade-in zoom-in">
+
+      {/* VIDEO */}
+      <div className="w-full aspect-video">
+        <iframe
+          className="w-full h-full"
+          src=""
+          title="Tutorial"
+          allowFullScreen
+        ></iframe>
+      </div>
+
+      {/* ACTIONS */}
+      <div className="p-4 flex justify-between items-center">
+        <h2 className="font-bold text-gray-700">Welcome! Watch Demo tutorial?</h2>
+        <div className="flex gap-2">
+          <button
+            onClick={handleSkip}
+            className="px-4 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-sm"
+          >
+            Skip ?
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
     <div id='home' className="min-h-screen bg-gradient-to-tr relative from-white via-green-100 to-white flex items-center"> 
        {/* <div className="absolute inset-0 z-0 bg-[radial-gradient(circle,_#cbd5e1_1px,_transparent_1px)] bg-[length:10px_10px] pointer-events-none" /> */}
       <div className='flex z-10  h-full w-full p-5 mx-auto tablet:justify-between justify-center'>
-      <div className="flex w-full  flex-col justify-center items-center gap-5 tablet:items-start">
-        <div className='flex flex-col gap-1 justify-center items-center w-full'>
+      <div className="flex w-full absolute top-10 flex-col justify-center items-center gap-5 tablet:items-start">
+        <div className='flex flex-col gap-1 items-center w-full'>
         <h1 className="tablet:text-7xl font-bold text-4xl text-nowrap"> Start Your Child’s </h1>
         <h1 className="tablet:text-6xl text-[#2D5B60] font-bold text-4xl"> Future Today!</h1>
       <button onClick={handleEnrollNow} className="bg-[#2D5B60] mt-2 text-white px-10 py-2 tablet:py-2 tablet:text-lg text-sm rounded-2xl">Enroll Now</button> 
        </div>
-        <div className='flex justify-center w-full'>
-        {announcements.length > 0 ? (
-          <div className=" max-w-7xl rounded-xl shadow-lg flex justify-center overflow-hidden">
-            <img
-              src={announcements[current].imageUrl}
-              alt="announcement"
-              className=" border-[1rem] w-[48rem] h-[23rem] tablet:h-[28rem] border-white transition-all duration-500"
-            />
+      </div>
+      
+      <div className="flex flex-col text-center text-xl absolute bottom-5 justify-start p-2">
+      {announcements.length > 0 ? (
+        <div className="relative w-full max-w-[45rem] overflow-hidden border-4 border-green-900 rounded-xl shadow-lg group">
+
+          {/* SLIDER */}
+          <div
+            className="flex transition-transform duration-700 ease-in-out"
+            style={{
+              transform: `translateX(-${current * 100}%)`,
+            }}
+          >
+            {announcements.map((item) => (
+              <img
+                key={item.id}
+                src={item.imageUrl}
+                alt="announcement"
+                className="w-full h-[23rem] tablet:h-[28rem] flex-shrink-0"
+              />
+            ))}
           </div>
-        ) : (
-          <div className="text-center py-10 text-gray-400">No announcements yet.</div>
-        )}
+
+          {/* LEFT BUTTON */}
+          <button
+            onClick={() => {
+              setIsManual(true);
+              setCurrent((prev) =>
+                (prev - 1 + announcements.length) % announcements.length
+              );
+            }}
+            className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white w-10 h-10 rounded-full opacity-0 group-hover:opacity-100 transition"
+          >
+            ‹
+          </button>
+
+          {/* RIGHT BUTTON */}
+          <button
+            onClick={() => {
+              setIsManual(true);
+              setCurrent((prev) =>
+                (prev + 1) % announcements.length
+              );
+            }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white w-10 h-10 rounded-full opacity-0 group-hover:opacity-100 transition"
+          >
+            ›
+          </button>
+
+          {/* DOTS */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+            {announcements.map((_, i) => (
+              <div
+                key={i}
+                className={`h-1.5 rounded-full transition-all ${
+                  current === i ? "w-6 bg-white" : "w-2 bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
+
+        </div>
+      ) : (
+        <div className="py-10 text-gray-400 w-full border-2 border-dashed border-gray-200 rounded-xl text-center">
+          No announcements yet.
+        </div>
+      )}
       </div>
 
-      </div>
-      <div className='tablet:flex hidden absolute bottom-0 justify-end w-full'>
-        <img className=' laptop:w-72 object-contain tablet:block hidden bottom-0 absolute duration-300' src={boy} alt="" />
-        <img className=' w-64 laptop:w-80 hidden tablet:block object-contain absolute bottom-0 right-32 ' src={model1} alt="" />
+      <div className='tablet:flex hidden  absolute bottom-0 w-full'>
+        <img className=' laptop:w-[25rem] drop-shadow-lg object-contain tablet:block hidden bottom-0 absolute duration-300 right-[3rem]' src={boy} alt="" />
+        <img className=' w-64 laptop:w-[25rem] drop-shadow-lg hidden tablet:block object-contain absolute bottom-0 right-[15rem]  ' src={model1} alt="" />
         </div>
       </div>
     </div>
               
 
      {/* programs */}
-     {/* <div className="h-screen max-w-4xl mx-auto ">
-     <h1 className="text-center text-5xl">Our Program</h1>
-     <div className=" bg-yellow-100/20 p-10 rounded-3xl shadow-lg border-e-4 border-b-4 border-black w-full flex flex-col">
-      <span  className="border-b-4 border-black bg-orange-400 font-bold w-10 h-10 rounded-full flex justify-center items-center">1</span>
-      <span  className="border-b-4 border-black bg-orange-400 font-bold w-10 h-10 rounded-full flex justify-center items-center">2</span>
-      <span  className="border-b-4 border-black bg-orange-400 font-bold w-10 h-10 rounded-full flex justify-center items-center">3</span>
-      <span  className="border-b-4 border-black bg-orange-400 font-bold w-10 h-10 rounded-full flex justify-center items-center">4</span>
-      <span  className="border-b-4 border-black bg-orange-400 font-bold w-10 h-10 rounded-full flex justify-center items-center">5</span>
+     <div className="min-h-screen bg-green-200 p-10">
+      
+      <div className='flex  items-center justify-evenly '>
+       <div className='bg-green-950 text-white px-5 tablet:px-10 py-2 text-nowrap rounded-full border-4 border-white font-baloo'>PR-SCHOOL UNIFORM</div>
+       <div className='bg-green-950 text-white px-5 tablet:px-10 py-2 rounded-full text-nowrap border-4 border-white font-baloo'>GRADE SCHOOL UNIFORM</div>
+      </div>
+        <div className='flex flex-col tablet:flex-row justify-between relative p-10'>
+       <div className='flex flex-col gap-5'>
+        
+         <div className='text-neutral-900'>
+        <h1 className='text-2xl font-semibold relative -ml-5'>BLOUSE</h1>
+         <p>Color Cream</p>
+         <p>Should be clean, ironed and fitted</p>
+         <p>properly.Embroidered school logo</p>
+         <p>is placed at the bottom pf the left</p>
+         <p>color.Colored and printed</p>
+         <p>undershirt is highly discouraged</p>
+         </div>
+        
+        
+        <div className='text-neutral-900'>
+        <h1 className='text-2xl font-semibold relative -ml-5'>SKIRT</h1>
+         <p>Checkered green with continues or</p>
+         <p>side pleats.Hemline must be knee</p>
+         <p>length</p>
+         <p>should be clean and ironed.The size</p>
+         <p>and length should be fitted properly</p>
+         </div>
+
+        <div className='text-neutral-900'>
+        <h1 className='text-2xl font-semibold relative -ml-5'>SOCKS</h1>
+         <p>WHITE knee length socks with two</p>
+         <p>black stripes on top</p>
+         <p>Wearing of ankle length and colored</p>
+         <p>socks is highly discouraged.</p>
+         </div>
+        
+
+       </div>
+
+         <div className='flex flex-col gap-5'>
+        
+         <div className='text-neutral-900'>
+        <h1 className='text-2xl font-semibold relative -ml-5'>POLO</h1>
+         <p>Color Cream</p>
+         <p>Should be clean, ironed and fitted</p>
+         <p>properly.Embroidered school logo</p>
+         <p>is placed at the bottom pf the left</p>
+         <p>color.Colored and printed</p>
+         <p>undershirt is highly discouraged</p>
+         </div>
+        
+        
+        <div className='text-neutral-900'>
+        <h1 className='text-2xl font-semibold relative -ml-5'>NECKTIE</h1>
+         <p>Checkered green with continues or</p>
+         <p>side pleats.Hemline must be knee</p>
+         <p>length</p>
+         <p>should be clean and ironed.The size</p>
+         <p>and length should be fitted properly</p>
+         </div>
+
+        <div className='text-neutral-900'>
+        <h1 className='text-2xl font-semibold relative -ml-5'>PANTS/ SHORTS</h1>
+         <p>WHITE knee length socks with two</p>
+         <p>black stripes on top</p>
+         <p>Wearing of ankle length and colored</p>
+         <p>socks is highly discouraged.</p>
+         </div>
+
+        <div className='text-neutral-900'>
+        <h1 className='text-2xl font-semibold relative -ml-5'>SHOES</h1>
+         <p>WHITE knee length socks with two</p>
+         <p>black stripes on top</p>
+         <p>Wearing of ankle length and colored</p>
+         <p>socks is highly discouraged.</p>
+         </div>
+        
+
+       </div>
+
+              <div className='flex flex-col gap-5'>
+        
+         <div className='text-neutral-900'>
+        <h1 className='text-2xl font-semibold relative -ml-5'>BLOUSE</h1>
+         <p>Color Cream</p>
+         <p>Should be clean, ironed and fitted</p>
+         <p>properly.Embroidered school logo</p>
+         <p>is placed at the bottom pf the left</p>
+         <p>color.Colored and printed</p>
+         <p>undershirt is highly discouraged</p>
+         </div>
+        
+        
+        <div className='text-neutral-900'>
+        <h1 className='text-2xl font-semibold relative -ml-5'>SKIRT</h1>
+         <p>Checkered green with continues or</p>
+         <p>side pleats.Hemline must be knee</p>
+         <p>length</p>
+         <p>should be clean and ironed.The size</p>
+         <p>and length should be fitted properly</p>
+         </div>
+
+        <div className='text-neutral-900'>
+        <h1 className='text-2xl font-semibold relative -ml-5'>SOCKS</h1>
+         <p>WHITE knee length socks with two</p>
+         <p>black stripes on top</p>
+         <p>Wearing of ankle length and colored</p>
+         <p>socks is highly discouraged.</p>
+         </div>
+        
+
+       </div>
+{/* 
+       <img className=' border absolute left-[33rem] w-[35rem] -bottom-[2rem] border-black ' src={girl1} alt="" />
+         <img className=' border absolute left-[20rem] w-[28rem] -bottom-[6rem] border-black ' src={boy2} alt="" /> */}
+       </div>
+    
      </div>
-     </div> */}
 
       
       {/* about */}
@@ -346,12 +596,11 @@ useEffect(() => {
             <p>Purok 1, Hacienda de Ortube, Irosin, Sorsogon, 4707</p>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-gray-400 text-xs font-medium uppercase">Phone</span>
-            <p className="hover:text-white transition-colors">+63 991 910 7871</p>
+            <span className=" font-medium">Phone: +63 991 910 7871 </span>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-gray-400 text-xs font-medium uppercase">Email</span>
-            <p className="hover:text-white transition-colors font-medium">admin@myrtlechristian.edu.ph</p>
+            <span className="font-semibold">Email: admin@myrtlechristian.edu.ph</span>
+             <a className='bg-white mt-2 w-10 h-10 text-4xl rounded-full flex justify-center items-center text-blue-800 font-bold' href="https://www.facebook.com/MyrtleCSI">f</a>
           </div>
         </div>
       </div>

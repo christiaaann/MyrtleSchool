@@ -15,6 +15,8 @@ const Navbar = () => {
 
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+    const dashboardRoute =
+    user?.role === "admin" ? "/admin" : "/Enrollment"; 
 
   const closeMenu = () => setOpen(false);
 
@@ -79,6 +81,7 @@ const Navbar = () => {
     navigate("/");
   };
 
+
   return (
     <>
       {/* HEADER */}
@@ -125,6 +128,9 @@ const Navbar = () => {
               <a href="#courses" className="hover:text-teal-700 transition">
                 Program
               </a>
+            </li>
+            <li>
+                 <a href="#" onClick={closeMenu}>Announcements</a>
             </li>
             <li>
               <a href="#contact" className="hover:text-teal-700 transition">
@@ -182,7 +188,7 @@ const Navbar = () => {
                     </div>
 
                     <Link
-                      to="/Enrollment"
+                      to={dashboardRoute}
                       className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-gray-50 rounded-xl"
                     >
                       <Settings size={16} /> Dashboard
@@ -237,7 +243,7 @@ const Navbar = () => {
                 </p>
                 <p className="text-xs text-gray-500">{user.email}</p>
                  <Link
-                  to="/Enrollment"
+                  to={dashboardRoute}
                   className="flex items-center mt-1 gap-1 px-4 py-3 text-sm hover:bg-gray-50 rounded-xl"
                   >
                   <Settings size={20} /> Dashboard
@@ -251,7 +257,9 @@ const Navbar = () => {
             <a href="#home" onClick={closeMenu}>Home</a>
             <a href="#about" onClick={closeMenu}>About</a>
             <a href="#courses" onClick={closeMenu}>Program</a>
+             <a href="#" onClick={closeMenu}>Announcements</a>
             <a href="#contact" onClick={closeMenu}>Contact</a>
+           
           </nav>
 
           <div className="pt-6 border-t">

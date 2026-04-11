@@ -14,7 +14,7 @@ import { sileo } from 'sileo';
 import EnrollmentArchive from './EnrollmentArchive';
 import { useLocation } from 'react-router-dom';
 import logo from '../../assets/logo.png'
-
+import GCashQR from '../../assets/GCash-QR.png'
 import { Archive,
       BookOpenCheck, 
       Check, 
@@ -950,35 +950,68 @@ useEffect(() => {
                         </div>
 
                     {/* Payment Method Section */}
-                    <div className='mt-8 pt-6 border-t border-gray-200'>
-                        <div className='flex flex-col gap-4'>
-                            <div className='flex flex-col gap-2'>
-                                <label className='text-[10px] font-black text-gray-400 uppercase'>Payment Method</label>
-                                <select className='w-full bg-white border border-gray-200 rounded-2xl px-5 py-3 text-sm font-bold focus:ring-2 ring-orange-100 outline-none cursor-pointer'
-                                 value={paymentMethod} 
-                                 onChange={(e)=>{setPaymentMethod(e.target.value);
-                                    setErrors(prev => ({...prev,paymentMethod : ""}));
-                                 }}
-                                 >   
-                                    <option value="">Choose Method</option>
-                                    <option value="Cash">Cash Payment</option>
-                                    <option value="GCash">GCash Transfer</option>
-                                </select>
-                            </div>
-                            {paymentMethod === "GCash" && (
-                                <div className='animate-in slide-in-from-top-2'>
-                                    <label className='text-[10px] font-black text-gray-400 uppercase'>Proof of Transaction</label>
-                                    <input type="file" className='w-full mt-2 text-xs bg-white p-2 rounded-xl border border-dashed border-orange-300'
-                                     onChange={(e)=>{setPaymentProof(e.target.files[0]);
-                                     setErrors (prev => ({...prev , paymentProof : ""}));   
-                                     }} />
-                                </div>
-                            )}
-                            {errors.selectedMonths && (
-                                <p className='text-red-600 text-sm mt-2'>{errors.selectedMonths}</p>
-                            )}
-                        </div>
+<div className='mt-8 pt-6 border-t border-gray-200'>
+    <div className='flex flex-col gap-4'>
+        <div className='flex flex-col gap-2'>
+            <label className='text-[10px] font-black text-gray-400 uppercase'>Payment Method</label>
+            <select 
+                className='w-full bg-white border border-gray-200 rounded-2xl px-5 py-3 text-sm font-bold focus:ring-2 ring-orange-100 outline-none cursor-pointer'
+                value={paymentMethod} 
+                onChange={(e) => {
+                    setPaymentMethod(e.target.value);
+                    setErrors(prev => ({ ...prev, paymentMethod: "" }));
+                }}
+            >   
+                <option value="">Choose Method</option>
+                <option value="Cash">Cash Payment</option>
+                <option value="GCash">GCash Transfer</option>
+            </select>
+        </div>
+
+        {/* GCash Details & Upload Section */}
+        {paymentMethod === "GCash" && (
+            <div className='animate-in slide-in-from-top-2 flex flex-col gap-4'>
+                
+                {/* GCash Information Card */}
+                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex flex-col items-center text-center gap-3">
+                    <div className="bg-white p-2 rounded-xl shadow-sm border border-blue-50">
+                        {/* Palitan mo ang src ng actual path ng QR Code mo */}
+                        <img 
+                            src={GCashQR}
+                            alt="GCash QR" 
+                            className="w-32 h-32 object-contain"
+                        />
                     </div>
+                    <div>
+                        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Send Payment To</p>
+                        <p className="text-lg font-black text-blue-900 leading-tight">0912 345 6789</p>
+                        <p className="text-xs font-bold text-blue-700">ACCOUNT NAME: MYRTLE SCHOOL</p>
+                    </div>
+                </div>
+
+                {/* File Upload Field */}
+                <div>
+                    <label className='text-[10px] font-black text-gray-400 uppercase'>Proof of Transaction (Screenshot)</label>
+                    <input 
+                        type="file" 
+                        accept="image/*"
+                        className='w-full mt-2 text-xs bg-white p-2 rounded-xl border border-dashed border-orange-300'
+                        onChange={(e) => {
+                            setPaymentProof(e.target.files[0]);
+                            setErrors(prev => ({ ...prev, paymentProof: "" }));   
+                        }} 
+                    />
+                    <p className="text-[9px] text-gray-400 mt-1 italic">Please upload a clear screenshot of your GCash receipt.</p>
+                </div>
+
+            </div>
+        )}
+
+        {errors.selectedMonths && (
+            <p className='text-red-600 text-sm mt-2'>{errors.selectedMonths}</p>
+        )}
+    </div>
+</div>
                     </div>
                   </section>   
                 )}
