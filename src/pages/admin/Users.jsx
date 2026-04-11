@@ -3,13 +3,20 @@ import { collection, doc, deleteDoc, onSnapshot, updateDoc, serverTimestamp, que
 import { auth, db } from "../../services/firebase";
 import defaultPic from "../../assets/default.png";
 import UsersSkeleton from "../../components/Skeleton/UsersSkeleton";
+import { useOutletContext } from "react-router-dom";
+import { Filter, MessageSquare, Mail, Trash2 } from "lucide-react";
+
 const Users = () => {
+  const { userData } = useOutletContext();
+  const isSuperAdmin = userData?.role === "superadmin";
+  
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedPicture, setSelectedPicture] = useState(null);
   const [studentStats, setStudentStats] = useState({ enrolled: 0, pending: 0 });
   
+  const [branchFilter, setBranchFilter] = useState(isSuperAdmin ? "All" : userData?.branch);
 
   function getLastSeen(ts) {
     if (!ts) return "Offline";
@@ -22,7 +29,6 @@ const Users = () => {
     return Math.floor(diff / 86400) + "d ago";
   }
 
-  // fetch users
   useEffect(() => {
     const getCounts = async () => {
       if (selectedUser?.id) {
@@ -32,7 +38,7 @@ const Users = () => {
           const students = snapshot.docs.map(doc => doc.data());
           setStudentStats({
             enrolled: students.filter(s => s.status === "Enrolled").length,
-            pending: students.filter(s => s.status === "Pending").length
+            pending: students.filter(s => s.status === "Waiting for Payment" || s.status === "Submitted for Verification").length
           });
         } catch (err) {
           console.error("Error counts:", err);
@@ -43,7 +49,7 @@ const Users = () => {
     getCounts();
   }, [selectedUser?.id]); 
 
-  //  FETCH USERS
+  // FETCH USERS
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "users"), (snapshot) => {
       const list = snapshot.docs
@@ -55,6 +61,7 @@ const Users = () => {
             email: data.email,
             contact: data.parent?.contact || "",
             role: data.role,
+            branch: data.branch || "", 
             profilePicture: data.profilePicture || data.photoURL || defaultPic,
             parent: data.parent || null,
             spouse: data.spouse || null,
@@ -62,145 +69,153 @@ const Users = () => {
             lastActive: data.lastActive || null,
           };
         })
-        .filter((u) => (u.role || "").toLowerCase() !== "admin");
+        .filter((u) => !["admin", "superadmin", "registrar"].includes((u.role || "").toLowerCase()));
 
       setUsers(list);
 
-      //selected user
       setSelectedUser((currentSelected) => {
         if (!currentSelected && list.length > 0) return list[0]; 
         if (currentSelected) {
-        
           const updatedData = list.find((u) => u.id === currentSelected.id);
           return updatedData || list[0];
         }
         return null;
       });
 
-       setTimeout(() => {
-    setLoading(false);
-  }, 1000);
+      setTimeout(() => setLoading(false), 1000);
     });
     return () => unsub();
   }, []); 
 
-  //  HEARTBEAT ---
   useEffect(() => {
     const interval = setInterval(async () => {
       if (auth.currentUser) {
-        await updateDoc(doc(db, "users", auth.currentUser.uid), {
-          lastActive: serverTimestamp(),
-        });
+        await updateDoc(doc(db, "users", auth.currentUser.uid), { lastActive: serverTimestamp() });
       }
     }, 15000); 
     return () => clearInterval(interval);
   }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this user? This action cannot be undone.")) return;
-    try {
-      await deleteDoc(doc(db, "users", id));
-     
-    } catch (err) { console.error("Delete error:", err); }
+    if (!window.confirm("WARNING: Delete this parent account permanently? This action cannot be undone.")) return;
+    try { 
+      await deleteDoc(doc(db, "users", id)); 
+      setSelectedUser(null); // Clear view
+    } catch (err) { 
+      alert("Failed to delete user.");
+    }
   };
 
- if (loading) return <UsersSkeleton/>;
+  const handleOpenChat = () => {
+    alert("In-App Chat Module is coming soon! For now, you can email the parent directly.");
+  };
+
+  if (loading) return <UsersSkeleton/>;
+
+  const filteredUsers = users.filter(u => branchFilter === "All" ? true : u.branch === branchFilter);
 
   return (
     <div className="flex h-[90vh] bg-[#F8F9FA] overflow-hidden rounded-2xl shadow-lg border">
       
       {/* LEFT SIDEBAR */}
       <div className="w-1/3 border-r bg-white flex flex-col">
-        <div className="p-5 border-b bg-gray-50/50">
+        <div className="p-5 border-b bg-gray-50/50 flex justify-between items-center">
           <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[2px]">Parents</h2>
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          {users.map((user) => {
-            const isOnline = user.lastActive?.toDate && Date.now() - user.lastActive.toDate().getTime() < 60000;
-            return (
-              <div 
-                key={user.id} 
-                onClick={() => setSelectedUser(user)}
-                className={`flex items-center gap-3 p-4 cursor-pointer border-b border-gray-50 transition-all ${
-                  selectedUser?.id === user.id ? "bg-[#F0F7F7] border-l-4 border-[#2D5B60]" : "hover:bg-gray-50"
-                }`}
+          
+          {isSuperAdmin && (
+            <div className="relative">
+              <Filter className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={12}/>
+              <select 
+                value={branchFilter} 
+                onChange={(e) => setBranchFilter(e.target.value)}
+                className="pl-6 pr-2 py-1 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-[#2D5B60] outline-none cursor-pointer"
               >
-                <div className="relative flex-shrink-0">
-                  <img src={user.profilePicture} className="w-12 h-12 rounded-full object-cover shadow-sm border border-gray-100"
-                   alt="User Profile"
-                   referrerPolicy="no-referrer" 
-                   crossOrigin="anonymous"
-                   />
-                  <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${isOnline ? "bg-green-500" : "bg-red-500"}`}></span>
+                <option value="All">All Branches</option>
+                <option value="Irosin">Irosin Only</option>
+                <option value="Matnog">Matnog Only</option>
+              </select>
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {filteredUsers.length === 0 ? (
+             <p className="text-center text-xs text-gray-400 p-6 italic">No parents found for this branch.</p>
+          ) : (
+            filteredUsers.map((user) => {
+              const isOnline = user.lastActive?.toDate && Date.now() - user.lastActive.toDate().getTime() < 60000;
+              return (
+                <div 
+                  key={user.id} 
+                  onClick={() => setSelectedUser(user)}
+                  className={`flex items-center gap-3 p-4 cursor-pointer border-b border-gray-50 transition-all ${
+                    selectedUser?.id === user.id ? "bg-[#F0F7F7] border-l-4 border-[#2D5B60]" : "hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="relative flex-shrink-0">
+                    <img 
+                      src={user.profilePicture || defaultPic} 
+                      onError={(e) => { e.target.src = defaultPic; }} // FALLBACK FOR BROKEN IMAGES
+                      referrerPolicy="no-referrer" 
+                      crossOrigin="anonymous" 
+                      className="w-12 h-12 rounded-full object-cover shadow-sm border border-gray-100" 
+                      alt=""
+                    />
+                    <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${isOnline ? "bg-green-500" : "bg-red-500"}`}></span>
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <p className="font-bold text-sm text-gray-800 truncate">{user.fullname}</p>
+                    <p className="text-[10px] text-indigo-600 font-bold uppercase">{user.branch || "Unassigned"} Branch</p>
+                  </div>
                 </div>
-                <div className="flex flex-col min-w-0">
-                  <p className="font-bold text-sm text-gray-800 truncate">{user.fullname}</p>
-                  <p className="text-[11px] text-gray-400 truncate">{user.email}</p>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
 
       {/* RIGHT SIDE: DETAILS */}
       <div className="flex-1 bg-[#F9FBFC] p-8 overflow-y-auto">
         <div className="max-w-4xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-black text-gray-800">Profile Information</h1>
-           
-          </div>
-
           {selectedUser ? (
-            <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-10 relative overflow-hidden">
-              {/* Header */}
+            <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-10 relative overflow-hidden flex flex-col min-h-[75vh]">
+              
               <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-10">
                 <div className="flex gap-6 items-center">
                   <div className="relative">
-                    <img src={selectedUser.profilePicture} className="w-24 h-24 rounded-[28px] object-cover shadow-md cursor-pointer hover:scale-105 transition-transform border-4 border-white" onClick={() => setSelectedPicture(selectedUser.profilePicture)} alt="" />
-                    <span className={`absolute -top-2 -right-2 w-6 h-6 rounded-full border-4 border-white flex items-center justify-center ${getLastSeen(selectedUser.lastActive) === "Active Now" ? "bg-green-500" : "bg-red-500"}`}>
-                        <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                    </span>
+                    <img 
+                      src={selectedUser.profilePicture || defaultPic} 
+                      onError={(e) => { e.target.src = defaultPic; }} // FALLBACK
+                      referrerPolicy="no-referrer" 
+                      crossOrigin="anonymous" 
+                      className="w-24 h-24 rounded-[28px] object-cover shadow-md cursor-pointer hover:scale-105 transition-transform border-4 border-white" 
+                      onClick={() => setSelectedPicture(selectedUser.profilePicture || defaultPic)} 
+                      alt="" 
+                    />
                   </div>
                   <div>
                     <h2 className="text-3xl font-black text-gray-800 leading-none mb-1">{selectedUser.fullname}</h2>
-                    <p className="text-gray-400 font-medium text-sm">{selectedUser.email}</p>
-                    <div className="flex gap-2 mt-4">
-                      <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-green-200">{studentStats.enrolled} Enrolled</span>
-                      {studentStats.pending > 0 && <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-orange-200 animate-pulse">{studentStats.pending} For Approval</span>}
-                    </div>
+                    <p className="text-gray-400 font-medium text-sm mb-2">{selectedUser.email}</p>
+                    <span className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-indigo-200">{selectedUser.branch || "Unassigned"} Branch</span>
                   </div>
-                </div>
-                <div className="flex flex-col items-end">
-                   <div className={`flex items-center gap-2 px-4 py-1.5 rounded-xl text-xs font-black mb-2 uppercase border shadow-sm ${getLastSeen(selectedUser.lastActive) === "Active Now" ? "bg-green-50 text-green-700 border-green-100" : "bg-gray-50 text-gray-500 border-gray-100"}`}>
-                        {getLastSeen(selectedUser.lastActive) === "Active Now" && <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>}
-                        {getLastSeen(selectedUser.lastActive)}
-                   </div>
-                   <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">User Status</p>
                 </div>
               </div>
 
               {/* Data Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 bg-gray-50/80 p-6 rounded-[24px] mb-10 border border-gray-100">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50/80 p-6 rounded-[24px] mb-10 border border-gray-100">
                 <div><p className="text-[9px] text-gray-400 font-black uppercase mb-1">Occupation</p><p className="text-xs font-bold text-gray-700 truncate">{selectedUser.parent?.occupation || "N/A"}</p></div>
-                <div><p className="text-[9px] text-gray-400 font-black uppercase mb-1">Total Children</p><p className="text-sm font-black text-gray-800">{studentStats.enrolled + studentStats.pending}</p></div>
+                <div><p className="text-[9px] text-gray-400 font-black uppercase mb-1">Children</p><p className="text-sm font-black text-gray-800">{studentStats.enrolled + studentStats.pending}</p></div>
                 <div><p className="text-[9px] text-gray-400 font-black uppercase mb-1">City</p><p className="text-xs font-bold text-gray-700 truncate">{selectedUser.address?.city || "N/A"}</p></div>
                 <div><p className="text-[9px] text-gray-400 font-black uppercase mb-1">Contact</p><p className="text-xs font-bold text-gray-700 truncate">{selectedUser.contact || "N/A"}</p></div>
-                <div><p className="text-[9px] text-gray-400 font-black uppercase mb-1">Account</p><p className="text-xs font-black text-[#2D5B60] uppercase tracking-tighter">Verified</p></div>
               </div>
 
-              {/* Family & Address */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t pt-10">
                 <div>
                   <h3 className="text-xs font-black text-gray-300 uppercase mb-5 tracking-[2px]">Family Relations</h3>
                   <div className="space-y-4">
                     <div className="bg-white border p-4 rounded-2xl shadow-sm">
-                        <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Father / Spouse</p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Spouse</p>
                         <p className="text-sm font-black text-gray-700">{selectedUser.spouse?.firstname} {selectedUser.spouse?.lastname || "None Recorded"}</p>
-                    </div>
-                    <div className="bg-white border p-4 rounded-2xl shadow-sm">
-                        <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Mother / Parent</p>
-                        <p className="text-sm font-black text-gray-700">{selectedUser.parent?.firstname} {selectedUser.parent?.lastname}</p>
                     </div>
                   </div>
                 </div>
@@ -214,13 +229,26 @@ const Users = () => {
                 </div>
               </div>
 
-              {/* Footer Actions */}
-              <div className="mt-12 pt-8 border-t flex justify-between items-center">
-                 <div className="flex gap-4">
-                    <button className="bg-black text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase shadow-lg shadow-black/20 hover:scale-105 transition-all">Open Chat</button>
-                    <button className="border border-gray-200 px-6 py-2.5 rounded-xl text-xs font-black uppercase hover:bg-gray-50 transition-all">Enrollment Files</button>
-                 </div>
-                 <button onClick={() => handleDelete(selectedUser.id)} className="text-red-500 font-black text-[10px] uppercase tracking-widest hover:underline">Delete Member</button>
+              {/* --- ACTION BUTTONS (CHAT, EMAIL, DELETE) --- */}
+              <div className="mt-auto pt-8 border-t border-gray-100 flex flex-wrap justify-end gap-3">
+                 <button 
+                   onClick={() => window.location.href = `mailto:${selectedUser.email}`} 
+                   className="bg-white text-gray-700 border border-gray-200 px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-sm hover:bg-gray-50 transition-all"
+                 >
+                   <Mail size={16} /> Email
+                 </button>
+                 <button 
+                   onClick={handleOpenChat} 
+                   className="bg-[#2D5B60] text-white px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-sm hover:bg-black transition-all"
+                 >
+                   <MessageSquare size={16} /> Open Chat
+                 </button>
+                 <button 
+                   onClick={() => handleDelete(selectedUser.id)} 
+                   className="bg-red-50 text-red-600 border border-red-200 px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-sm hover:bg-red-100 transition-all ml-auto md:ml-4"
+                 >
+                   <Trash2 size={16} /> Delete Account
+                 </button>
               </div>
 
             </div>
@@ -232,13 +260,6 @@ const Users = () => {
           )}
         </div>
       </div>
-
-      {/* MODAL */}
-      {selectedPicture && (
-        <div className="fixed inset-0 backdrop-blur-md bg-black/60 flex justify-center items-center z-50 p-6" onClick={() => setSelectedPicture(null)}>
-          <img src={selectedPicture} alt="" className="max-w-full max-h-full rounded-[32px] shadow-2xl border-4 border-white object-contain" />
-        </div>
-      )}
     </div>
   );
 };

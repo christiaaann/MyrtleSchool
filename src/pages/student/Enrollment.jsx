@@ -13,7 +13,9 @@ import { onAuthStateChanged } from "firebase/auth";
 import { sileo } from 'sileo';
 import EnrollmentArchive from './EnrollmentArchive';
 import { useLocation } from 'react-router-dom';
-import logo from '../../assets/logo.png'
+import logo from '../../assets/logo.png';
+import defaultPic from '../../assets/default.png'; 
+import imageCompression from 'browser-image-compression'; 
 
 import { Archive,
       BookOpenCheck, 
@@ -35,7 +37,8 @@ import { useTheme } from '../../components/ThemeContext';
 const Enrollment = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [open, setOpen] = useState(false);
-    const [setpage, setPage] = useState("personal");
+    const [setpage, setPage] = useState("archive"); 
+    
     const [level, setLevel] = useState("");
     const [grade, setGrade] = useState("");
     const [studentType, setStudentType] = useState("");
@@ -68,17 +71,6 @@ const Enrollment = () => {
     const [currentSY, setCurrentSY] = useState("2025-2026");
     const [myStudents, setMyStudents] = useState([]);
     const [editingStudent, setEditingStudent] = useState(null);
-    
-
-useEffect(() => {
-  if (!editingStudent) {
-    if (myStudents.length > 0) {
-      setPage((prev) => (prev === "personal" ? "archive" : prev));
-    } else {
-      setPage("personal");
-    }
-  }
-}, [myStudents, editingStudent]);
     
     const validateStep1 = () => {
       const newErrors = {};
@@ -223,21 +215,21 @@ useEffect(() => {
       checkProfile();
     }, [navigate]);
                 
-    // --- NEW: Fetch dynamic fees from database ---
     const [tuitionFees, setTuitionFees] = useState(null);
 
     useEffect(() => {
-        const unsubFees = onSnapshot(doc(db, "settings", "fees"), (snap) => {
+        // Fetch fees based on the user's specific branch
+        if (!userData?.branch) return;
+
+        const unsubFees = onSnapshot(doc(db, "settings", `fees_${userData.branch}`), (snap) => {
             const monthsArray = ["JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC", "JAN", "FEB", "MAR"];
             
             if (snap.exists()) {
                 const data = snap.data();
-                // Inject the months array into the fetched data so the rest of the app doesn't break
                 if (data.Preschool) data.Preschool.months = monthsArray;
                 if (data.Elementary) data.Elementary.months = monthsArray;
                 setTuitionFees(data);
             } else {
-                // Fallback to defaults if admin hasn't set up the database document yet
                 setTuitionFees({
                     "Preschool": { registration: 500, misc: 3500, books: 2500, instructional: 500, uniform: 700, pta: 200, monthlyRate: 900, months: monthsArray },
                     "Elementary": { registration: 500, misc: 3500, books: 2500, instructional: 700, uniform: 700, pta: 200, monthlyRate: 1500, months: monthsArray }
@@ -245,9 +237,8 @@ useEffect(() => {
             }
         });
         return () => unsubFees();
-    }, []);
+    }, [userData]);
 
-    // (Make sure to wrap Step 4 in a null check for tuitionFees so it doesn't crash while loading)
     if (!tuitionFees && step === 4) {
         return <p className="text-center animate-pulse p-10 font-bold text-gray-500">Loading Assessment...</p>;
     }
@@ -320,18 +311,46 @@ useEffect(() => {
         return () => unsubscribe();
     }, [navigate, currentSY]);
 
-    const uploadToCloudinary = async (file) => {
-        if (!file || !file.name) return ""; 
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+    // Cloudinary Uploader (with compression and 2x2 crop)
+    const uploadToCloudinary = async (file, isIdPicture = false) => {
+        if (!file) return ""; 
+        if (file.url) return file.url || ""; 
+        if (!file.name) return ""; 
+
         try {
+            const options = {
+                maxSizeMB: 1,           
+                maxWidthOrHeight: 1920, 
+                useWebWorker: true,     
+            };
+            const compressedFile = await imageCompression(file, options);
+
+            const formData = new FormData();
+            formData.append("file", compressedFile, file.name);
+            formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+            
             const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`, {
                 method: "POST", body: formData,
             });
+            
             const data = await res.json();
-            return data.secure_url;
-        } catch (err) { console.error(err); return ""; }
+            
+            if (data.error) {
+               console.error("Cloudinary Error:", data.error.message);
+               return ""; 
+            }
+
+            if (isIdPicture && data.secure_url) {
+                const urlParts = data.secure_url.split('/upload/');
+                return `${urlParts[0]}/upload/c_thumb,g_face,w_600,h_600/${urlParts[1]}`;
+            }
+
+            return data.secure_url || ""; 
+
+        } catch (err) { 
+            console.error("Upload failed:", err); 
+            return ""; 
+        }
     };
 
     const handleAddNewChild = () => {
@@ -370,30 +389,77 @@ useEffect(() => {
         const [birthUrl, cardUrl, picUrl] = await Promise.all([
           uploadToCloudinary(files.birthCert),
           uploadToCloudinary(files.reportCard),
-          uploadToCloudinary(files.idPicture)
+          uploadToCloudinary(files.idPicture, true)
         ]);
 
+        if (!birthUrl || !picUrl || ((studentType === "Old" || studentType === "Transferee") && !cardUrl)) {
+            throw new Error("One or more images failed to upload. Ensure files are valid images and under 5MB.");
+        }
+
+        // --- NEW: FETCH RELEVANT BROADCASTS FOR LATE ENROLLEES ---
+        // We find all broadcasts for this branch, and then filter them based on the student's level & grade
+        let inheritedContributions = {};
+        try {
+            const bQuery = query(
+                collection(db, "broadcasts"), 
+                where("schoolYear", "==", currentSY),
+                where("branch", "==", userData?.branch)
+            );
+            const bSnap = await getDocs(bQuery);
+            
+            bSnap.docs.forEach(doc => {
+                const bData = doc.data();
+                const bId = doc.id;
+
+                let matchesTarget = false;
+                if (bData.targetLevel === "All" || !bData.targetLevel) {
+                    matchesTarget = true;
+                } else if (bData.targetLevel === level) {
+                    if (bData.targetGrade === "All" || !bData.targetGrade || bData.targetGrade === grade) {
+                        matchesTarget = true;
+                    }
+                }
+
+                if (matchesTarget) {
+                    inheritedContributions[bId] = {
+                        title: bData.title,
+                        amount: bData.amount,
+                        breakdown: bData.breakdown || [],
+                        status: "Unpaid",
+                        amountPaid: 0
+                    };
+                }
+            });
+        } catch (e) {
+            console.error("Failed to inherit broadcasts:", e);
+        }
+
+        // Save Student Document
         await setDoc(doc(db, "students", studentID), {
           studentID,
           parentUID: auth.currentUser.uid,
+          branch: userData?.branch || "",
           firstname: childFirst, middlename: childMiddle, lastname: childLast, suffix,
           level, grade, birthDate, age: Number(age), sex, studentType,
           previousSchool: studentType === "Transferee" ? prevSchool : "",
           isEnrolled: false,
           status: "Submitted for Verification",
-          requirements: { birthCert: birthUrl, reportCard: cardUrl, idPicture: picUrl },
+          requirements: { birthCert: birthUrl || "", reportCard: cardUrl || "", idPicture: picUrl || "" },
           address: userData.address, father: userData.spouse, mother: userData.parent,
           schoolYear: currentSY,
           createdAt: serverTimestamp()
         });
 
+        // Save Financial Ledger
         await setDoc(doc(db, "enrollments", `ENR-${currentSY}-${studentID}`), {
           studentID, parentUID: auth.currentUser.uid, schoolYear: currentSY,
+          branch: userData?.branch || "", 
           fees: tuitionFees[level],
           monthlyTracking: tuitionFees[level].months.reduce((acc, month) => {
             acc[month] = { status: "Unpaid", amount: tuitionFees[level].monthlyRate };
             return acc;
           }, {}),
+          contributions: inheritedContributions, // <-- INJECT INHERITED CONTRIBUTIONS HERE
           verificationStatus: "Pending",
           payment: { method: "", proofImage: "", status: "Pending", dateEnrolled: serverTimestamp() }
         });
@@ -424,17 +490,21 @@ useEffect(() => {
       setIsSubmitting(true);
       const submitEnrollmentAction = async () => {
         const selectedKeys = paymentType === "Full" ? ['registration', 'misc', 'books', 'instructional', 'uniform', 'pta'] : selectedInitialFees;
-        const gcashUrl = paymentProof ? await uploadToCloudinary(paymentProof) : null;
+        
+        let gcashUrl = null;
+        if (paymentProof) {
+           gcashUrl = await uploadToCloudinary(paymentProof);
+           if (!gcashUrl) throw new Error("Failed to upload GCash receipt. Please check the image and try again.");
+        }
 
         await updateDoc(doc(db, "enrollments", `ENR-${currentSY}-${submittedStudentID}`), {
             payment: {
-                method: paymentMethod, proofImage: gcashUrl,
+                method: paymentMethod, proofImage: gcashUrl || "",
                 status: "Pending Approval", dateEnrolled: serverTimestamp()
             },
             paidInitialFees: selectedKeys
         });
 
-        // Update Students table status to tell Admin we are ready
         await updateDoc(doc(db, "students", submittedStudentID), {
             status: "Payment Submitted"
         });
@@ -464,7 +534,9 @@ useEffect(() => {
 
     if (!userData) return <p className='text-center mt-20 font-bold animate-pulse text-gray-400'>Loading MCS Portal...</p>;
 
-    const fullAddress = `${userData.address.purok}, ${userData.address.barangay}, ${userData.address.city}, ${userData.address.province}`;
+    const fullAddress = `${userData.address?.purok || ""}, ${userData.address?.barangay || ""}, ${userData.address?.city || ""}, ${userData.address?.province || ""}`;
+
+    const safeAvatar = userData?.profilePicture?.trim() ? userData.profilePicture : defaultPic;
 
     return (
         <div className='dark:bg-black bg-white font-sans text-[#2D3748]'>
@@ -482,6 +554,7 @@ useEffect(() => {
           </header>
                 
           <div className="flex">
+            {/* MOBILE BOTTOM BAR */}
             <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-auto min-w-[280px] z-50 tablet:hidden">
               <div className="bg-white/80 dark:bg-neutral-950/90 backdrop-blur-md border border-gray-200/50 dark:border-neutral-800 shadow-xl rounded-full px-4 py-2 flex justify-between items-center gap-6">
                 <button onClick={() => setPage("personal")} className={`flex flex-col items-center transition-all duration-300 ${setpage === "personal" ? "text-blue-600" : "text-gray-400"}`}>
@@ -492,8 +565,17 @@ useEffect(() => {
                   <div className={`p-1.5 rounded-xl transition-colors ${setpage === "archive" ? "bg-blue-50 dark:bg-blue-600/10" : ""}`}><Archive size={18} strokeWidth={2} /></div>
                   <span className="text-[9px] font-bold tracking-tight">Records</span>
                 </button>
-                <button className="flex flex-col items-center transition-all duration-300 text-gray-400">
-                  <div className="p-0.5 rounded-full border border-gray-200 dark:border-neutral-800"><img className="w-6 h-6 rounded-full object-cover grayscale-[0.5]" src={userData.profilePicture} alt="" /></div>
+                <button onClick={() => navigate("/profile")} className="flex flex-col items-center transition-all duration-300 text-gray-400">
+                  <div className="p-0.5 rounded-full border border-gray-200 dark:border-neutral-800">
+                    <img 
+                      className="w-6 h-6 rounded-full object-cover grayscale-[0.5]" 
+                      src={safeAvatar} 
+                      onError={(e) => { e.currentTarget.src = defaultPic; }} 
+                      referrerPolicy="no-referrer" 
+                      crossOrigin="anonymous" 
+                      alt="Profile" 
+                    />
+                  </div>
                   <span className="text-[9px] font-bold tracking-tight">Account</span>
                 </button>
                 <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className="flex flex-col items-center text-red-500/70">
@@ -503,6 +585,7 @@ useEffect(() => {
               </div>
             </div>
  
+            {/* DESKTOP SIDEBAR */}
             <div className='p-5 hidden dark:text-neutral-700 tablet:block tablet:sticky tablet:top-20 tablet:h-[calc(100vh-5rem)] relative '>
               <div className='w-[15rem] gap-2'>
                 <h1 className='font-semibold'>Child</h1>  
@@ -527,10 +610,23 @@ useEffect(() => {
                   )}
                 </div>
               </div>
-              <div className='flex absolute bottom-3 w-[15rem] items-center justify-center px-6 py-1 rounded-2xl bg-gray-100 dark:text-white dark:bg-neutral-900 gap-2'> 
-                <img className='w-8 h-8 rounded-full' src={userData.profilePicture} alt="" />
-                <h1 className='text-nowrap'>{userData.parent?.firstname} {userData.parent?.lastname}</h1> 
-                <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className=" text-red-600"><LogOut/></button>
+              
+              {/* SIDEBAR BOTTOM PROFILE */}
+              <div className='flex absolute bottom-3 w-[15rem] items-center px-4 py-2 rounded-2xl bg-gray-100 dark:text-white dark:bg-neutral-900 gap-3'> 
+                <img 
+                  className='w-8 h-8 rounded-full object-cover flex-shrink-0 border border-gray-300' 
+                  src={safeAvatar} 
+                  onError={(e) => { e.currentTarget.src = defaultPic; }}
+                  referrerPolicy="no-referrer" 
+                  crossOrigin="anonymous" 
+                  alt="Profile" 
+                />
+                <h1 className='text-sm font-bold text-gray-800 truncate leading-tight w-28'>
+                  {userData.parent?.firstname} {userData.parent?.lastname}
+                </h1> 
+                <button onClick={async () => { await auth.signOut(); navigate("/auth"); }} className="text-red-500 hover:text-red-700 ml-auto transition-colors">
+                  <LogOut size={18} />
+                </button>
               </div>
             </div>
 
@@ -562,197 +658,83 @@ useEffect(() => {
                       <div className='w-1 h-6 bg-[#2D5B60] rounded-full'></div>
                       <h3 className='font-bold uppercase tracking-widest text-sm dark:text-neutral-600'>Child Information</h3>
                     </div>
-                    {/* ... (Existing Step 1 Inputs exactly as you had them) ... */}
-                    <div className='flex flex-col tablet:flex-row gap-2'>
-         <div className='flex flex-col w-full gap-2'>
-         <label className='flex gap-2 dark:text-neutral-600'><span className='text-red-600'>*</span>First name</label>
-         <FloatingInput
-         type="text"
-         label="First name"
-         id="childFirst"
-         value={childFirst} 
-         onChange={(e)=>{
-         setChildFirst(e.target.value);
-         setErrors(prev => ({ ...prev, childFirst: ""}));  
-         }} 
-         />
-         {errors.childFirst && (
-         <p className="text-red-600 text-sm">{errors.childFirst}</p>
-         )}
-         </div>
-            
-         <div className='flex flex-col w-full gap-2'>
-         <label className='flex gap-1 dark:text-neutral-600'>Middle Name</label>
-         <FloatingInput
-         type="text"
-         label="Middle name"
-         id="childMiddle"
-         value={childMiddle} 
-         onChange={(e)=>setChildMiddle(e.target.value)} />
-         </div>
-            
-         <div className='flex flex-col w-full gap-2'>
-         <label className='flex gap-1 dark:text-neutral-600'><span className='text-red-500'>*</span>Last Name</label>
-         <FloatingInput
-          type="text"
-          label="Last name" 
-          id="childLast"
-          value={childLast} 
-          onChange={(e)=>{
-          setChildLast(e.target.value);
-          setErrors(prev => ({ ...prev, childLast: ""}));
-          }} 
-          />
-          {errors.childLast && (
-            <p className="text-red-600 text-sm">{errors.childLast}</p>
-          )}
-          </div>
-          </div>
-
-          <div className='grid grid-cols-1 tablet:grid-cols-2 md:grid-cols-4 gap-6 mt-6'>
-          <div className='flex flex-col gap-2'>
-          <label className='text-neutral-600'>Suffix</label>
-          <FloatingSelect
-          id="suffix"
-          label="Suffix"
-          value={suffix}
-          onChange={(e) => setSuffix(e.target.value)}
-          options={["None", "Jr.", "Sr."]}
-          />
-          </div>
-            
-        <div className='flex flex-col gap-2'>
-          <label className="flex gap-1 dark:text-neutral-600">
-            <span className='text-red-600'>*</span>Birthday
-          </label>
-
-          <div
-            className="relative w-full cursor-pointer"
-            onClick={() => document.getElementById("birthdayInput").showPicker?.()}
-          >
-              
-            <div className="w-full px-6 py-3 border border-neutral-300 dark:border-none rounded-xl bg-white dark:bg-neutral-900 dark:text-white">
-              {birthDate ? birthDate : "Select birthday"}
-            </div>
-
-            {/* hidden input */}
-            <input
-              id="birthdayInput"
-              type="date"
-              value={birthDate}
-              max={new Date().toISOString().split("T")[0]}
-              onChange={(e) => {
-                setBirthDate(e.target.value);
-                setErrors(prev => ({ ...prev, age: "" }));
-              }}
-              className="absolute opacity-0 w-full h-full top-0 left-0 cursor-pointer"
-            />
-            </div>
-            </div>
-
-        <div className='flex flex-col gap-2'>
-          <label className="dark:text-neutral-600 flex gap-1"><span className='text-red-600'>*</span>Age</label>
-
-          <FloatingInput
-            type="text"
-            value={age}
-            readOnly
-            label="Age"
-            disabled
-          />
-        </div>
                     
-          <div className='flex flex-col gap-2'>
-          <label className="flex gap-1 dark:text-neutral-600"><span className='text-red-600'>*</span>Sex</label>
-          <FloatingSelect
-          label="Select"
-          id="sex"
-          value={sex} 
-          onChange={(e)=>{
-          setSex(e.target.value);
-          setErrors(prev => ({ ...prev, sex : ""}));
-          }}
-          options={["Male", "Female"]}
-          />
-          {errors.sex && (
-          <p className="text-red-600 text-sm">{errors.sex}</p>
-          )}
-          </div>
-          
-          <div className='flex items-center'>
-          <div className='flex w-full flex-col gap-2'>
-          <label className="flex gap-1 dark:text-neutral-600"><span className='text-red-600'>*</span>Student Type</label>
-          <FloatingSelect 
-          label="Select"
-          value={studentType} 
-          onChange={(e) => {
-          setStudentType(e.target.value);
-          setErrors(prev => ({...prev, studentType: ""}))
-          }}
-          options={["New Student", "Old", "Transferee"]}
-          />
-          {errors.studentType && (
-          <p className="text-red-600 text-sm">{errors.studentType}</p>
-          )}
-         </div>
-         </div>
-          
-          {/* ==== previous school ===== */}
-          {studentType === "Transferee" && (
-          <div className='flex flex-col gap-2'>
-          <label className='flex gap-1 dark:text-neutral-600'><span className='text-red-600'>*</span>Previous School Attended</label>
-          <FloatingInput 
-          type="text" 
-          id="prevSchool"
-          label="Previous School"
-          value={prevSchool} 
-          onChange={(e) => {
-          setPrevSchool(e.target.value);
-          setErrors(prev => ({...prev, prevSchool : ""}));
-          }} 
-          />
-          {errors.prevSchool && (
-          <p className="text-red-600 text-sm">{errors.prevSchool}</p>  
-          )}
-          </div>
-          )}
-          </div>
-          <div className='flex gap-5 mt-5'>
-          <div className='flex flex-col w-full gap-2'>
-          <label className='flex gap-1 dark:text-neutral-600'><span className='text-red-600'>*</span>Level</label>
-          <FloatingSelect 
-          label="Select"
-          id="level"
-          value={level} 
-          onChange={(e) => {setLevel(e.target.value); 
-          setGrade("");
-          setErrors (prev =>({...prev, level: ""}));
-          }}
-          options={["Preschool", "Elementary"]}
-          />
-          {errors.level && (
-          <p className="text-red-600 text-sm">{errors.level}</p>  
-          )}
-         </div>
+                    <div className='flex flex-col tablet:flex-row gap-2'>
+                       <div className='flex flex-col w-full gap-2'>
+                       <label className='flex gap-2 dark:text-neutral-600'><span className='text-red-600'>*</span>First name</label>
+                       <FloatingInput type="text" label="First name" id="childFirst" value={childFirst} onChange={(e)=>{ setChildFirst(e.target.value); setErrors(prev => ({ ...prev, childFirst: ""})); }} />
+                       {errors.childFirst && <p className="text-red-600 text-sm">{errors.childFirst}</p>}
+                       </div>
+                          
+                       <div className='flex flex-col w-full gap-2'>
+                       <label className='flex gap-1 dark:text-neutral-600'>Middle Name</label>
+                       <FloatingInput type="text" label="Middle name" id="childMiddle" value={childMiddle} onChange={(e)=>setChildMiddle(e.target.value)} />
+                       </div>
+                          
+                       <div className='flex flex-col w-full gap-2'>
+                       <label className='flex gap-1 dark:text-neutral-600'><span className='text-red-500'>*</span>Last Name</label>
+                       <FloatingInput type="text" label="Last name" id="childLast" value={childLast} onChange={(e)=>{ setChildLast(e.target.value); setErrors(prev => ({ ...prev, childLast: ""})); }} />
+                        {errors.childLast && <p className="text-red-600 text-sm">{errors.childLast}</p>}
+                        </div>
+                    </div>
 
-         <div className='flex flex-col w-full gap-2'>
-         <label className='flex gap-1 dark:text-neutral-600'><span className='text-red-600'>*</span>Grade</label>
-         <FloatingSelect 
-         label="select"
-         id="grade"
-         value={grade} 
-         onChange={(e) => {
-         setGrade(e.target.value);
-         setErrors (prev => ({...prev, grade : ""}));   
-         }}
-         disabled={!level}
-         options={gradeOptions}
-         />
-         {errors.grade && (
-         <p className="text-red-600 text-sm">{errors.grade}</p>   
-         )}
-         </div>
-         </div>
+                    <div className='grid grid-cols-1 tablet:grid-cols-2 md:grid-cols-4 gap-6 mt-6'>
+                      <div className='flex flex-col gap-2'>
+                      <label className='text-neutral-600'>Suffix</label>
+                      <FloatingSelect id="suffix" label="Suffix" value={suffix} onChange={(e) => setSuffix(e.target.value)} options={["None", "Jr.", "Sr."]} />
+                      </div>
+                        
+                      <div className='flex flex-col gap-2'>
+                        <label className="flex gap-1 dark:text-neutral-600"><span className='text-red-600'>*</span>Birthday</label>
+                        <div className="relative w-full cursor-pointer" onClick={() => document.getElementById("birthdayInput").showPicker?.()}>
+                          <div className="w-full px-6 py-3 border border-neutral-300 dark:border-none rounded-xl bg-white dark:bg-neutral-900 dark:text-white">
+                            {birthDate ? birthDate : "Select birthday"}
+                          </div>
+                          <input id="birthdayInput" type="date" value={birthDate} max={new Date().toISOString().split("T")[0]} onChange={(e) => { setBirthDate(e.target.value); setErrors(prev => ({ ...prev, age: "" })); }} className="absolute opacity-0 w-full h-full top-0 left-0 cursor-pointer" />
+                        </div>
+                      </div>
+
+                      <div className='flex flex-col gap-2'>
+                        <label className="dark:text-neutral-600 flex gap-1"><span className='text-red-600'>*</span>Age</label>
+                        <FloatingInput type="text" value={age} readOnly label="Age" disabled />
+                      </div>
+                                  
+                      <div className='flex flex-col gap-2'>
+                      <label className="flex gap-1 dark:text-neutral-600"><span className='text-red-600'>*</span>Sex</label>
+                      <FloatingSelect label="Select" id="sex" value={sex} onChange={(e)=>{ setSex(e.target.value); setErrors(prev => ({ ...prev, sex : ""})); }} options={["Male", "Female"]} />
+                      {errors.sex && <p className="text-red-600 text-sm">{errors.sex}</p>}
+                      </div>
+                      
+                      <div className='flex items-center'>
+                      <div className='flex w-full flex-col gap-2'>
+                      <label className="flex gap-1 dark:text-neutral-600"><span className='text-red-600'>*</span>Student Type</label>
+                      <FloatingSelect label="Select" value={studentType} onChange={(e) => { setStudentType(e.target.value); setErrors(prev => ({...prev, studentType: ""})) }} options={["New Student", "Old", "Transferee"]} />
+                      {errors.studentType && <p className="text-red-600 text-sm">{errors.studentType}</p>}
+                     </div>
+                     </div>
+                      
+                      {/* ==== previous school ===== */}
+                      {studentType === "Transferee" && (
+                      <div className='flex flex-col gap-2'>
+                      <label className='flex gap-1 dark:text-neutral-600'><span className='text-red-600'>*</span>Previous School Attended</label>
+                      <FloatingInput type="text" id="prevSchool" label="Previous School" value={prevSchool} onChange={(e) => { setPrevSchool(e.target.value); setErrors(prev => ({...prev, prevSchool : ""})); }} />
+                      {errors.prevSchool && <p className="text-red-600 text-sm">{errors.prevSchool}</p>}
+                      </div>
+                      )}
+                    </div>
+                    <div className='flex gap-5 mt-5'>
+                      <div className='flex flex-col w-full gap-2'>
+                      <label className='flex gap-1 dark:text-neutral-600'><span className='text-red-600'>*</span>Level</label>
+                      <FloatingSelect label="Select" id="level" value={level} onChange={(e) => {setLevel(e.target.value); setGrade(""); setErrors (prev =>({...prev, level: ""})); }} options={["Preschool", "Elementary"]} />
+                      {errors.level && <p className="text-red-600 text-sm">{errors.level}</p>}
+                     </div>
+
+                     <div className='flex flex-col w-full gap-2'>
+                     <label className='flex gap-1 dark:text-neutral-600'><span className='text-red-600'>*</span>Grade</label>
+                     <FloatingSelect label="select" id="grade" value={grade} onChange={(e) => { setGrade(e.target.value); setErrors (prev => ({...prev, grade : ""})); }} disabled={!level} options={gradeOptions} />
+                     {errors.grade && <p className="text-red-600 text-sm">{errors.grade}</p>}
+                     </div>
+                    </div>
                   </section>
                 )}
 
@@ -760,45 +742,22 @@ useEffect(() => {
                 { step === 2 && (
                   <section className="space-y-4">
                     <h3 className="font-bold text-slate-700 dark:text-neutral-400">Upload Requirements</h3>
-                    {/* ... (Existing Step 2 Inputs) ... */}
                     <div className='flex justify-center'>
-        <div className='flex flex-col w-full tablet:w-96'>
-        <UploadBox
-         label="ID Picture 2x2"
-         file={files.idPicture}
-         setFile={(file) => {
-         setFiles(prev => ({ ...prev, idPicture: file }));
-         setErrors(prev => ({ ...prev, idPicture: "" }));
-          }}
-         validateSize={true}
-         />
-         {errors.idPicture && (
-         <p className='text-red-600 text-sm'>{errors.idPicture}</p>  
-         )}
-        </div>
-        </div>
-         <div className="flex flex-col tablet:flex-row gap-5">
-         <div className='flex flex-col w-full'>   
-         <UploadBox
-         label="Birth Certificate"
-         file={files.birthCert}
-         setFile={(file) => setFiles(prev => ({ ...prev, birthCert: file }))}
-         />
-         {errors.birthCert && (
-         <p className='text-red-600 text-sm'>{errors.birthCert}</p>   
-         )}
-         </div>
-         <div className='flex flex-col w-full'>
-         <UploadBox
-         label="Report Card"
-         file={files.reportCard}
-         setFile={(file) => setFiles(prev => ({ ...prev, reportCard: file }))}
-         />
-         {errors.reportCard && (
-         <p className='text-red-600 text-sm'>{errors.reportCard}</p>   
-         )}
-        </div>
-        </div>
+                      <div className='flex flex-col w-full tablet:w-96'>
+                      <UploadBox label="ID Picture 2x2" file={files.idPicture} setFile={(file) => { setFiles(prev => ({ ...prev, idPicture: file })); setErrors(prev => ({ ...prev, idPicture: "" })); }} validateSize={true} />
+                       {errors.idPicture && <p className='text-red-600 text-sm'>{errors.idPicture}</p>}
+                      </div>
+                    </div>
+                     <div className="flex flex-col tablet:flex-row gap-5">
+                       <div className='flex flex-col w-full'>   
+                       <UploadBox label="Birth Certificate" file={files.birthCert} setFile={(file) => setFiles(prev => ({ ...prev, birthCert: file }))} />
+                       {errors.birthCert && <p className='text-red-600 text-sm'>{errors.birthCert}</p>}
+                       </div>
+                       <div className='flex flex-col w-full'>
+                       <UploadBox label="Report Card" file={files.reportCard} setFile={(file) => setFiles(prev => ({ ...prev, reportCard: file }))} />
+                       {errors.reportCard && <p className='text-red-600 text-sm'>{errors.reportCard}</p>}
+                      </div>
+                    </div>
                   </section>
                 )}
 
@@ -813,9 +772,9 @@ useEffect(() => {
                       <h4 className='text-xl font-bold mb-2'>Documents Submitted</h4>
                       <p className='text-gray-600 dark:text-neutral-400 mb-6'>We are currently reviewing the uploaded documents for {childFirst}.</p>
                       
-                      <div className='inline-block px-6 py-3 rounded-full font-bold uppercase tracking-widest text-sm
+                      <div className={`inline-block px-6 py-3 rounded-full font-bold uppercase tracking-widest text-sm
                         ${verificationStatus === "Approved" ? "bg-green-100 text-green-700" : 
-                          verificationStatus === "Rejected" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700 animate-pulse"}'>
+                          verificationStatus === "Rejected" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700 animate-pulse"}`}>
                         {verificationStatus === "Pending" ? "⏳ AWAITING VERIFICATION" : verificationStatus}
                       </div>
 
@@ -842,7 +801,6 @@ useEffect(() => {
                 { step === 4 && (
                   <section>
                     <div className='bg-gray-50 dark:bg-neutral-900 rounded-3xl p-6'>
-                      {/* ... (Existing Step 4 Inputs & logic exactly as you had them) ... */}
                       <div className='flex justify-between items-center mb-6 text-neutral-400'>
                     <h4 className='text-[10px] font-black uppercase text-gray-400 tracking-widest'>Financial Summary</h4>
                     <span className='text-[10px] font-bold text-green-950'>S.Y. {currentSY}</span>

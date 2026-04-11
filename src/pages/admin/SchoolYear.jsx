@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { sileo} from 'sileo';
-import { doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { sileo } from 'sileo';
+import { doc, onSnapshot, setDoc } from "firebase/firestore"; // Changed to setDoc
 import { db } from "../../services/firebase";
-
 
 const SchoolYear = () => {
   const [currentSY, setCurrentSY] = useState("");
   const [newSY, setNewSY] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
-  
   useEffect(() => {
     const settingsRef = doc(db, "settings", "schoolYear");
     const unsub = onSnapshot(settingsRef, (snap) => {
@@ -39,7 +37,8 @@ const SchoolYear = () => {
       setIsUpdating(true);
       try {
         const settingsRef = doc(db, "settings", "schoolYear");
-        await updateDoc(settingsRef, { active: newSY });
+        // FIX: Used setDoc with merge: true so it creates the document if it doesn't exist yet
+        await setDoc(settingsRef, { active: newSY }, { merge: true });
         alert("Success! Ang active School Year ay " + newSY + " na.");
         setNewSY(""); 
       } catch (error) {
@@ -61,7 +60,7 @@ const SchoolYear = () => {
           <div className="flex items-center justify-between p-6 bg-[#2D5B60]/5 rounded-xl border border-[#2D5B60]/20">
             <div>
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Academic Year</p>
-              <h1 className="text-4xl font-black text-[#2D5B60]">{currentSY || "Loading..."}</h1>
+              <h1 className="text-4xl font-black text-[#2D5B60]">{currentSY || "None Set"}</h1>
             </div>
             <div className="bg-green-500 w-3 h-3 rounded-full animate-ping"></div>
           </div>
@@ -100,7 +99,7 @@ const SchoolYear = () => {
           <div>
              <h4 className="text-sm font-bold text-blue-900 uppercase mb-1">Paano ito gumagana?</h4>
              <p className="text-[11px] text-blue-800 leading-relaxed">
-              Hindi mabubura ang records ng <b>{currentSY}</b>. Naka-save sila nang maayos sa database. Kapag pinalitan mo ang taon, binibigyan mo lang ang system ng bagong "Folder Name" para sa susunod na batch ng mga estudyante at payments.
+              Hindi mabubura ang records ng <b>{currentSY || "kasalukuyang taon"}</b>. Naka-save sila nang maayos sa database. Kapag pinalitan mo ang taon, binibigyan mo lang ang system ng bagong "Folder Name" para sa susunod na batch ng mga estudyante at payments.
             </p>
           </div>
         </div>

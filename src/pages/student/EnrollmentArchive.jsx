@@ -36,7 +36,7 @@ const EnrollmentArchive = ({
   const fileInputRef = useRef(null);
 
   const schoolMonths = ["June", "July", "August", "September", "October", "November", "December", "January", "February", "March"];
-
+    
   useEffect(() => {
     const unsubSettings = onSnapshot(doc(db, "settings", "schoolYear"), (snap) => {
       if (snap.exists()) setCurrentSY(snap.data().active);
@@ -471,7 +471,6 @@ const EnrollmentArchive = ({
                       {stud.contributions && Object.keys(stud.contributions).length > 0 && (() => {
                           const contribList = Object.entries(stud.contributions);
                           
-                          // --- FIX: Check if there are any unpaid ones to determine banner color and default state ---
                           const hasUnpaid = contribList.some(([_, c]) => c.status !== "Paid");
                           const isOpen = expandedContribs[stud.studentID] !== undefined ? expandedContribs[stud.studentID] : hasUnpaid;
 
@@ -516,22 +515,22 @@ const EnrollmentArchive = ({
                                             isCPaid ? "bg-green-50 border-green-200 shadow-sm" :
                                             isCPending ? "bg-yellow-50 border-yellow-300 animate-pulse shadow-sm" :
                                             isCRefund ? "bg-teal-50 border-teal-300 shadow-sm" :
-                                            isCBalance && !cInCart ? "bg-orange-50 border-orange-300 shadow-sm" :
-                                            cInCart ? "bg-red-600 border-red-600 text-white shadow-lg scale-[1.02]" :
-                                            "bg-red-50 border-red-200 hover:bg-red-100 shadow-sm"
+                                            isCBalance && !cInCart ? "bg-red-50 border-red-300 shadow-sm hover:bg-red-100" :
+                                            cInCart ? "bg-[#2D5B60] border-[#2D5B60] text-white shadow-lg scale-[1.02]" :
+                                            "bg-orange-50 border-orange-200 hover:bg-orange-100 shadow-sm"
                                           }`}
                                        >
                                           <div>
                                             <div className="flex justify-between items-start mb-1">
-                                              <p className={`text-[10px] font-bold uppercase leading-tight pr-2 ${cInCart ? "text-red-100" : isCPaid ? "text-green-800" : "text-red-800"}`}>{cData.title}</p>
-                                              <p className={`text-sm font-black ${cInCart ? "text-white" : isCRefund ? "text-teal-700" : isCBalance ? "text-orange-600" : isCPaid ? "text-green-900" : "text-red-900"}`}>₱{displayAmount}</p>
+                                              <p className={`text-[10px] font-bold uppercase leading-tight pr-2 ${cInCart ? "text-white" : isCPaid ? "text-green-800" : "text-red-800"}`}>{cData.title}</p>
+                                              <p className={`text-sm font-black ${cInCart ? "text-white" : isCRefund ? "text-teal-700" : isCBalance ? "text-red-600" : isCPaid ? "text-green-900" : "text-gray-800"}`}>₱{displayAmount}</p>
                                             </div>
                                             
                                             {/* Breakdown */}
                                             {cData.breakdown && cData.breakdown.length > 0 && !isCBalance && !isCRefund && (
-                                              <div className={`mt-2 pt-2 border-t space-y-1 ${cInCart ? "border-red-400" : isCPaid ? "border-green-200" : "border-red-200"}`}>
+                                              <div className={`mt-2 pt-2 border-t space-y-1 ${cInCart ? "border-teal-500" : isCPaid ? "border-green-200" : "border-orange-200"}`}>
                                                 {cData.breakdown.map((item, idx) => (
-                                                  <div key={idx} className={`flex justify-between text-[8px] uppercase tracking-wider ${cInCart ? "text-red-100" : "text-gray-500"}`}>
+                                                  <div key={idx} className={`flex justify-between text-[8px] uppercase tracking-wider ${cInCart ? "text-teal-100" : "text-gray-500"}`}>
                                                     <span className="truncate pr-2">• {item.name}</span>
                                                     <span className="font-bold">₱{item.amount}</span>
                                                   </div>
@@ -540,7 +539,7 @@ const EnrollmentArchive = ({
                                             )}
                                           </div>
                                           
-                                          <p className={`text-[8px] text-center font-black uppercase mt-3 pt-2 border-t border-dashed ${cInCart ? "border-red-400" : ""} ${isCPaid ? "text-green-600 underline" : isCPending ? "text-yellow-600" : isCRefund ? "text-teal-600" : isCBalance ? "text-orange-600" : cInCart ? "text-white" : "text-red-600"}`}>
+                                          <p className={`text-[8px] text-center font-black uppercase mt-3 pt-2 border-t border-dashed ${cInCart ? "border-teal-500" : ""} ${isCPaid ? "text-green-600 underline" : isCPending ? "text-yellow-600" : isCRefund ? "text-teal-600" : isCBalance ? "text-red-600" : cInCart ? "text-white" : "text-orange-600"}`}>
                                             {isCPaid || isCRefund ? "DOWNLOAD RECEIPT" : isCPending ? "VERIFICATION PENDING" : isCBalance && !cInCart ? "BALANCE DUE" : isCRefund ? "REFUND DUE" : cInCart ? "SELECTED FOR PAYMENT" : "PAY NOW"}
                                           </p>
                                        </div>
@@ -571,12 +570,12 @@ const EnrollmentArchive = ({
                                  className={`text-center py-2 rounded transition-all flex flex-col justify-center cursor-pointer ${
                                    initFeePending ? "bg-yellow-400 border-yellow-500 text-white animate-pulse shadow-sm" :
                                    initFeeInCart ? "bg-[#2D5B60] border-[#2D5B60] text-white shadow-lg scale-105" :
-                                   "bg-red-50 border-red-200 text-red-600 shadow-sm hover:bg-red-100 border-dashed"
+                                   "bg-red-50 border-red-300 text-red-700 shadow-sm hover:bg-red-100 border-dashed"
                                  }`}
                                >
                                  <p className={`text-[7px] font-bold uppercase ${initFeeInCart || initFeePending ? "text-white" : "text-red-400"}`}>Init. Fees</p>
                                  <p className="text-[9px] font-black">₱{unpaidInitialBalance.toLocaleString()}</p>
-                                 <p className={`text-[7px] font-bold uppercase mt-0.5 ${initFeeInCart || initFeePending ? "text-white" : "text-red-500"}`}>
+                                 <p className={`text-[7px] font-bold uppercase mt-0.5 ${initFeeInCart || initFeePending ? "text-white" : "text-red-600"}`}>
                                    {initFeePending ? "PENDING" : initFeeInCart ? "SELECTED" : "PAY NOW"}
                                  </p>
                                </div>
@@ -585,12 +584,21 @@ const EnrollmentArchive = ({
                            return null;
                         })()}
 
+                        {/* --- UPDATED: CALCULATE & SHOW PARTIAL BALANCES FOR MONTHS --- */}
                         {schoolMonths.map((month) => {
                           const dbMonthKey = month.substring(0, 3).toUpperCase();
                           const data = paymentRecord[dbMonthKey] || { status: "Unpaid", amount: monthlyRate };
-                          const isPaid = data.status === "Paid";
+                          
+                          const expectedAmt = Number(data.amount || monthlyRate);
+                          const amtPaid = Number(data.amountPaid || 0);
+                          const balance = expectedAmt - amtPaid;
+
+                          const isPaid = data.status === "Paid" || balance <= 0;
                           const isPending = data.status === "Pending Approval";
+                          const isBalanceDue = data.status === "Balance Due" || (amtPaid > 0 && balance > 0);
                           const canPay = !isPaid && !isPending; 
+                          
+                          const displayAmount = isBalanceDue ? balance : expectedAmt;
                           
                           const isInCart = cart.student?.studentID === stud.studentID && cart.items.some(i => i.key === month);
 
@@ -598,21 +606,22 @@ const EnrollmentArchive = ({
                             <div 
                               key={month} 
                               onClick={() => {
-                                if (isPaid) generateReceipt(stud, data.amount, `Tuition Fee: ${month}`);
-                                else if (canPay) handleToggleCart(stud, month, data.amount, "monthly");
+                                if (isPaid) generateReceipt(stud, expectedAmt, `Tuition Fee: ${month}`);
+                                else if (canPay) handleToggleCart(stud, month, displayAmount, "monthly");
                               }}
                               className={`text-center py-2 rounded transition-all flex flex-col justify-center ${
                                 isPaid ? "bg-green-50 border-green-200 text-green-700 cursor-pointer hover:bg-green-100" : 
-                                isPending ? "bg-yellow-400 border-yellow-500 text-white animate-pulse" :
+                                isPending ? "bg-yellow-400 border-yellow-500 text-white animate-pulse shadow-sm" :
                                 isInCart ? "bg-[#2D5B60] border-[#2D5B60] text-white shadow-lg scale-105" :
-                                canPay ? "bg-orange-50 border-orange-200 text-orange-600 cursor-pointer hover:bg-orange-100 border-dashed" : 
+                                isBalanceDue ? "bg-red-50 border-red-300 text-red-700 cursor-pointer hover:bg-red-100 border-dashed shadow-sm" :
+                                canPay ? "bg-orange-50 border-orange-200 text-orange-600 cursor-pointer hover:bg-orange-100 border-dashed shadow-sm" : 
                                 "bg-gray-50 border-gray-100 text-gray-300"
                               }`}
                             >
-                              <p className={`text-[8px] font-bold uppercase ${isInCart ? "text-white" : ""}`}>{month.substring(0, 3)}</p>
-                              <p className={`text-[9px] font-black ${isInCart ? "text-white" : "text-gray-800"}`}>₱{data.amount}</p>
+                              <p className={`text-[8px] font-bold uppercase ${isInCart || isPending ? "text-white" : ""}`}>{month.substring(0, 3)}</p>
+                              <p className={`text-[9px] font-black ${isInCart || isPending ? "text-white" : "text-gray-800"}`}>₱{displayAmount.toLocaleString()}</p>
                               <p className={`text-[7px] font-bold uppercase mt-0.5 ${isPaid ? "underline" : ""}`}>
-                                {isPaid ? "RECEIPT" : isPending ? "PENDING" : isInCart ? "SELECTED" : "PAY NOW"}
+                                {isPaid ? "RECEIPT" : isPending ? "PENDING" : isInCart ? "SELECTED" : isBalanceDue ? "BALANCE DUE" : "PAY NOW"}
                               </p>
                             </div>
                           );
@@ -631,7 +640,7 @@ const EnrollmentArchive = ({
                           </div>
                           <div className="flex items-center gap-4 w-full md:w-auto">
                             <div className="text-right hidden md:block">
-                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Total Amount</p>
+                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Total Amount Due</p>
                                 <p className="text-xl font-black text-gray-800">₱{cart.items.reduce((sum, i) => sum + i.amount, 0).toLocaleString()}</p>
                             </div>
                             <button onClick={() => setShowPayModal(true)} className="bg-[#2D5B60] w-full md:w-auto text-white px-8 py-3 rounded-xl font-black uppercase text-xs hover:bg-black transition-colors shadow-lg">

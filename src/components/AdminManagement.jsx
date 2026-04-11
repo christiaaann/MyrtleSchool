@@ -1,119 +1,216 @@
-// src/pages/AdminManagement.jsx (or src/components/AdminManagement.jsx)
-import React, { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { db } from "../services/firebase";
-import { logAdminAction } from '../services/systemLogger'; // Adjust path if needed
+import { collection, onSnapshot } from "firebase/firestore";
+import { logAdminAction } from "../services/systemLogger";
 
 const AdminManagement = () => {
-  const [admins, setAdmins] = useState([]);
-  const [newAdminEmail, setNewAdminEmail] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("registrar");
+  const [branch, setBranch] = useState("Irosin");
+  
+  const [activeStaff, setActiveStaff] = useState([]);
+  const [pendingInvites, setPendingInvites] = useState([]);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Fetch all users with role 'admin'
+  // Fetch Active Staff (Superadmins & Registrars)
   useEffect(() => {
-    const q = query(collection(db, "users"), where("role", "==", "admin"));
+    const q = query(collection(db, "users"), where("role", "in", ["superadmin", "registrar", "admin"]));
     const unsub = onSnapshot(q, (snap) => {
-      const adminList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setAdmins(adminList);
-      setLoading(false);
+      setActiveStaff(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
     return () => unsub();
   }, []);
 
-  const handleAddAdmin = async (e) => {
+  // Fetch Pending Invites
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "pre_approved_staff"), (snap) => {
+      setPendingInvites(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => unsub();
+  }, []);
+
+  const handleInvite = async (e) => {
     e.preventDefault();
-    if (!newAdminEmail.trim() || !newAdminEmail.includes("@gmail.com")) {
-      alert("Please enter a valid @gmail.com address.");
-      return;
-    }
+    if (!email) return alert("Please enter an email address.");
+    setIsProcessing(true);
 
-    // Use the email as the temporary document ID so it's easy to find when they log in
-    const tempId = newAdminEmail.toLowerCase().trim();
-    
     try {
-      await setDoc(doc(db, "users", tempId), {
-        email: tempId,
-        role: "admin",
-        status: "Inactive", // Remains inactive until they login
-        invitedAt: serverTimestamp(),
-      });
-
-      await logAdminAction("ADMIN_INVITED", `Invited new admin: ${tempId}`);
-      setNewAdminEmail("");
-      alert("Admin invited successfully! They can now log in via Google to activate their account.");
+      const functions = getFunctions();
+      const assignStaffRole = httpsCallable(functions, "assignStaffRole");
+      const result = await assignStaffRole({ targetEmail: email, role, branch });
+      await logAdminAction("STAFF_INVITED", result.data.message);
+      alert(result.data.message);
+      setEmail("");
     } catch (error) {
-      console.error(error);
-      alert("Error adding admin.");
+      alert("Error: " + error.message);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const handleRemoveAdmin = async (id, email) => {
-    if (window.confirm(`Are you sure you want to revoke admin access for ${email}?`)) {
+
+  const handleRevokeActive = async (userId, userEmail) => {
+    if (!window.confirm(`Revoke staff access for ${userEmail}?`)) return;
+    try {
+      const functions = getFunctions();
+      const revokeStaffRole = httpsCallable(functions, "revokeStaffRole");
+      await revokeStaffRole({ targetUserId: userId });
+      await logAdminAction("STAFF_REVOKED", `Demoted ${userEmail} to Parent.`);
+    } catch (error) {
+      alert("Failed to revoke: " + error.message);
+    }
+  };
+
+  const handleCancelInvite = async (inviteId) => {
+    if (window.confirm("Cancel this pending invitation?")) {
       try {
-        await deleteDoc(doc(db, "users", id));
-        await logAdminAction("ADMIN_REMOVED", `Revoked access for admin: ${email}`);
+        await deleteDoc(doc(db, "pre_approved_staff", inviteId));
+        await logAdminAction("INVITE_CANCELLED", `Cancelled pending staff invite for ${inviteId}`);
       } catch (error) {
-        console.error(error);
+        alert("Failed to cancel invite.");
       }
     }
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-2xl font-bold text-[#2D5B60] mb-6">Staff & Admin Management</h2>
-
-      {/* Add New Admin Form */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border mb-8 max-w-xl">
-        <h3 className="text-sm font-black text-gray-500 uppercase tracking-widest mb-4">Invite New Admin</h3>
-        <form onSubmit={handleAddAdmin} className="flex gap-3">
-          <input 
-            type="email" 
-            placeholder="staff@gmail.com" 
-            value={newAdminEmail}
-            onChange={(e) => setNewAdminEmail(e.target.value)}
-            className="flex-1 border p-3 rounded-lg outline-[#2D5B60]"
-          />
-          <button type="submit" className="bg-[#2D5B60] text-white px-6 py-3 rounded-lg font-bold hover:bg-black transition-colors">
-            Invite Admin
-          </button>
-        </form>
-        <p className="text-[10px] text-gray-400 mt-2 italic">Invited users must log in using 'Continue with Google' to activate their account.</p>
+    <div className="p-4 md:p-8 bg-gray-50 min-h-screen rounded-2xl">
+      <div className="mb-8">
+        <h2 className="text-2xl font-black text-[#2D5B60] tracking-tight flex items-center gap-2">
+          <Shield size={24} /> Staff & Role Management
+        </h2>
+        <p className="text-sm text-gray-500 mt-1">Assign roles and branches to your cashiers and registrars.</p>
       </div>
 
-      {/* Admin List */}
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-100 text-gray-500 text-[10px] uppercase font-black tracking-wider">
-            <tr>
-              <th className="p-4">Staff Member</th>
-              <th className="p-4">Status</th>
-              <th className="p-4">Last Login</th>
-              <th className="p-4 text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? <tr><td colSpan="4" className="p-4 text-center text-gray-400 animate-pulse">Loading staff...</td></tr> : 
-             admins.map(admin => (
-              <tr key={admin.id} className="border-b">
-                <td className="p-4">
-                  <p className="font-bold text-gray-800">{admin.name || "Pending Registration"}</p>
-                  <p className="text-xs text-gray-500">{admin.email}</p>
-                </td>
-                <td className="p-4">
-                  <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${admin.status === "Active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                    {admin.status || "Inactive"}
-                  </span>
-                </td>
-                <td className="p-4 text-xs text-gray-500">
-                  {admin.lastActive ? new Date(admin.lastActive.toDate()).toLocaleDateString() : "Never"}
-                </td>
-                <td className="p-4 text-center">
-                  <button onClick={() => handleRemoveAdmin(admin.id, admin.email)} className="text-red-500 font-bold text-xs hover:underline">Revoke Access</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* ADD STAFF FORM */}
+        <div className="lg:col-span-1">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 sticky top-6">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-[#2D5B60] mb-4 flex items-center gap-2">
+              <UserPlus size={16}/> Add New Staff
+            </h3>
+            
+            <form onSubmit={handleInvite} className="space-y-4">
+              <div>
+                <label className="text-[10px] font-black text-gray-400 uppercase pl-1">Google / FB Email</label>
+                <div className="relative mt-1">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <input 
+                    type="email" 
+                    value={email} 
+                    onChange={e => setEmail(e.target.value)} 
+                    required 
+                    className="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl bg-gray-50 outline-none focus:border-[#2D5B60] focus:bg-white text-sm transition-all" 
+                    placeholder="staff@gmail.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-gray-400 uppercase pl-1">Role</label>
+                <select 
+                  value={role} 
+                  onChange={e => setRole(e.target.value)}
+                  className="w-full mt-1 p-3 border border-gray-200 rounded-xl bg-gray-50 outline-none focus:border-[#2D5B60] text-sm font-bold text-gray-700 cursor-pointer"
+                >
+                  <option value="registrar">Registrar / Cashier</option>
+                  <option value="superadmin">Superadmin (Owner)</option>
+                </select>
+              </div>
+
+              {role === "registrar" && (
+                <div className="animate-in fade-in slide-in-from-top-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase pl-1">Assigned Branch</label>
+                  <select 
+                    value={branch} 
+                    onChange={e => setBranch(e.target.value)}
+                    className="w-full mt-1 p-3 border border-gray-200 rounded-xl bg-gray-50 outline-none focus:border-[#2D5B60] text-sm font-bold text-[#2D5B60] cursor-pointer"
+                  >
+                    <option value="Irosin">Irosin Branch</option>
+                    <option value="Matnog">Matnog Branch</option>
+                  </select>
+                </div>
+              )}
+
+              <button 
+                type="submit" 
+                disabled={isProcessing} 
+                className="w-full bg-[#2D5B60] text-white py-3 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-black transition-all shadow-md disabled:bg-gray-300 mt-2"
+              >
+                {isProcessing ? "Processing..." : "Grant Access"}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* LISTS */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* Active Staff */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="p-5 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+              <h3 className="text-xs font-black uppercase tracking-widest text-gray-600 flex items-center gap-2">
+                <CheckCircle size={16} className="text-green-500"/> Active Staff Members
+              </h3>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {activeStaff.length === 0 ? (
+                <p className="p-6 text-center text-sm text-gray-400 italic">No active staff found.</p>
+              ) : (
+                activeStaff.map(staff => (
+                  <div key={staff.id} className="p-5 flex justify-between items-center hover:bg-gray-50 transition-colors">
+                    <div>
+                      <p className="font-bold text-gray-800">{staff.email}</p>
+                      <div className="flex gap-2 mt-1">
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${staff.role === 'superadmin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                          {staff.role}
+                        </span>
+                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-[9px] font-black uppercase tracking-wider">
+                          Branch: {staff.branch || "ALL"}
+                        </span>
+                      </div>
+                    </div>
+                    <button onClick={() => handleRevokeActive(staff.id, staff.email)} className="text-gray-400 hover:text-red-500 p-2" title="Revoke Access">
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Pending Invites */}
+          {pendingInvites.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-sm border border-orange-200 overflow-hidden">
+              <div className="p-5 border-b border-orange-100 bg-orange-50/50 flex items-center justify-between">
+                <h3 className="text-xs font-black uppercase tracking-widest text-orange-700 flex items-center gap-2">
+                  <Clock size={16} className="text-orange-500"/> Pending Invitations
+                </h3>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {pendingInvites.map(invite => (
+                  <div key={invite.id} className="p-5 flex justify-between items-center">
+                    <div>
+                      <p className="font-bold text-gray-800">{invite.email}</p>
+                      <div className="flex gap-2 mt-1">
+                        <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-[9px] font-black uppercase tracking-wider">
+                          Waiting for login...
+                        </span>
+                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-[9px] font-black uppercase tracking-wider">
+                          Assigned: {invite.role} ({invite.branch})
+                        </span>
+                      </div>
+                    </div>
+                    <button onClick={() => handleCancelInvite(invite.id)} className="text-gray-400 hover:text-red-500 text-[10px] font-bold uppercase underline">
+                      Cancel
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
     </div>
   );

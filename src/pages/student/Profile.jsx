@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../../services/firebase";
-import { User, MapPin, Heart, Users, Save, Loader2, Camera, Trash2, SmartphoneNfc } from "lucide-react";
-import { MapPinHouse } from "lucide-react";
+import { User, MapPin, Heart, Users as UsersIcon, Save, Loader2, Camera, SmartphoneNfc, MapPinHouse } from "lucide-react";
+import defaultPic from "../../assets/default.png"; // <-- Added fallback image import
+
 const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -72,8 +73,7 @@ const Profile = () => {
       try {
         const base64Image = reader.result;
         const uid = auth.currentUser.uid;
-        // Agarang update sa Firestore
-        await updateDoc(doc(db, "users", uid), { "parent.profilePicture": base64Image });
+        await updateDoc(doc(db, "users", uid), { "parent.profilePicture": base64Image, "profilePicture": base64Image });
         setProfilePicture(base64Image);
         alert("Photo updated!");
       } catch (err) {
@@ -117,13 +117,12 @@ const Profile = () => {
 
   if (loading) return <div className="p-10 text-center font-bold text-gray-500">Loading Profile...</div>;
 
-  const avatar = profilePicture && profilePicture.trim() !== "" 
-    ? profilePicture 
-    : `https://ui-avatars.com/api/?name=${encodeURIComponent(form.firstname || "User")}&background=random`;
+  // STRICT IMAGE FALLBACK LOGIC
+  const avatar = profilePicture && profilePicture.trim() !== "" ? profilePicture : defaultPic;
 
   return (
     <div className="max-w-6xl relative mx-auto p-6 space-y-6">
-        <Link to="/enrollment">Back</Link>
+        <Link to="/enrollment" className="font-bold text-gray-500 hover:text-black">← Back to Portal</Link>
       {/* HEADER */}
       <div className="flex justify-between items-center border-b pb-6">
         <div>
@@ -137,7 +136,14 @@ const Profile = () => {
         {/* LEFT: PHOTO SECTION (INSTANT UPDATE) */}
         <div className="absolute top-0 right-1 rounded-xl p-6 flex gap-3 flex-co items-center h-fit">
           <div className="relative group">
-            <img src={avatar} alt="profile" className={`w-20 h-20 rounded-full object-cover border-2 ${imgLoading ? "opacity-30" : "opacity-100"}`} />
+            <img 
+              src={avatar} 
+              alt="profile" 
+              referrerPolicy="no-referrer"
+              crossOrigin="anonymous"
+              onError={(e) => { e.target.src = defaultPic; }} // INSTANT FIX FOR BROKEN IMAGES
+              className={`w-20 h-20 rounded-full object-cover border-2 ${imgLoading ? "opacity-30" : "opacity-100"}`} 
+            />
             {imgLoading && <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="animate-spin" size={20} /></div>}
           </div>
          <div className="flex flex-col">
@@ -183,7 +189,7 @@ const Profile = () => {
             </div>
           </Section>
 
-          <Section title="Spouse" icon={Users}>
+          <Section title="Spouse" icon={UsersIcon}>
             <div className="grid grid-cols-2 gap-3">
               <Input label="First Name" value={form.spouseFirstname} onChange={e => setForm({...form, spouseFirstname: e.target.value})} />
               <Input label="Last Name" value={form.spouseLastname} onChange={e => setForm({...form, spouseLastname: e.target.value})} />
@@ -192,12 +198,11 @@ const Profile = () => {
             </div>
           </Section>
 
-          {/* SAVE BUTTON SA BABA PARA SA DETAILS */}
           <div className="flex justify-end pt-4">
             <button
               onClick={handleSaveDetails}
               disabled={saving}
-              className="flex items-center gap-2 px-8 py-2 text-sm bg-black hover:bg-green-800 text-white rounded-xl font-bold transition-all shadow-md active:scale-95 disabled:opacity-50"
+              className="flex items-center gap-2 px-8 py-3 text-sm bg-[#2D5B60] hover:bg-black text-white rounded-xl font-bold transition-all shadow-md active:scale-95 disabled:opacity-50"
             >
               {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
               {saving ? "Saving Details..." : "Save Details"}
@@ -210,21 +215,20 @@ const Profile = () => {
   );
 };
 
-/* --- UI COMPONENTS (HINDI BINAGO) --- */
 const Section = ({ title, icon: Icon, children }) => (
-  <div className="bg-white border rounded-lg shadow-sm">
-    <div className="flex items-center gap-2 p-4 border-b bg-gray-50">
-      <Icon size={18} />
-      <h2 className="font-bold text-sm uppercase text-gray-700">{title}</h2>
+  <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
+    <div className="flex items-center gap-2 p-4 border-b bg-gray-50/80">
+      <Icon size={18} className="text-[#2D5B60]"/>
+      <h2 className="font-bold text-[11px] tracking-widest uppercase text-gray-700">{title}</h2>
     </div>
-    <div className="p-4">{children}</div>
+    <div className="p-5">{children}</div>
   </div>
 );
 
 const Input = ({ label, ...props }) => (
   <div>
-    <label className="text-xs text-gray-500 font-semibold ml-1">{label}</label>
-    <input {...props} className="w-full border px-3 py-2 rounded text-sm focus:border-green-600 outline-none transition-all" />
+    <label className="text-[10px] text-gray-400 uppercase font-black ml-1 mb-1 block">{label}</label>
+    <input {...props} className="w-full border border-gray-200 bg-gray-50 px-3 py-2.5 rounded-lg text-sm font-bold text-gray-800 focus:border-[#2D5B60] focus:bg-white outline-none transition-all" />
   </div>
 );
 

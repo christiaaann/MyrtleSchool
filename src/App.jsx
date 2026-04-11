@@ -12,15 +12,22 @@ const Enrollment = lazy(() => import("./pages/student/Enrollment"));
 const CompleteProfile = lazy(() => import("./pages/student/CompleteProfile"));
 const SignUpForm = lazy(() => import("./pages/student/SignUpForm"));
 const AdminRoutes = lazy(() => import("./routes/AdminRoutes"));
-const Profile = lazy(() =>import("./pages/student/Profile"));
-const ChangePassword = lazy(() =>import("./pages/student/ChangePassword"));
+const Profile = lazy(() => import("./pages/student/Profile"));
+const ChangePassword = lazy(() => import("./pages/student/ChangePassword"));
+
+// The expanded list of valid parent roles
+const VALID_PARENT_ROLES = ["parent", "user", "mother", "father", "guardian"];
 
 const App = () => {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Toaster closeButton position="top-center" richColors={false} />
-        <Suspense>
+        <Suspense fallback={
+          <div className="flex h-screen w-full items-center justify-center text-[#2D5B60] font-black uppercase tracking-widest animate-pulse">
+            Loading Page...
+          </div>
+        }>
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/Auth" element={<Auth />} />
@@ -28,45 +35,45 @@ const App = () => {
             <Route path="/signup" element={<SignUpForm />} />
             <Route path="/forgotpassword" element={<ForgotPasswordStepper/>} />
 
+            {/* PARENT ROUTES - Now accepting mother, father, and guardian! */}
             <Route
               path="/completeprofile"
               element={
-                <ProtectedRoute requiredRole="user">
+                <ProtectedRoute allowedRoles={VALID_PARENT_ROLES}>
                   <CompleteProfile />
                 </ProtectedRoute>
               }
             />
-              <Route
+            <Route
               path="/profile"
               element={
-                <ProtectedRoute requiredRole="user">
+                <ProtectedRoute allowedRoles={VALID_PARENT_ROLES}>
                  <Profile/>
                 </ProtectedRoute>
               }
             />
-               <Route
+            <Route
               path="/changepassword"
               element={
-                <ProtectedRoute requiredRole="user">
-                <ChangePassword/>
+                <ProtectedRoute allowedRoles={VALID_PARENT_ROLES}>
+                  <ChangePassword/>
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/Enrollment"
               element={
-                <ProtectedRoute requiredRole="user">
+                <ProtectedRoute allowedRoles={VALID_PARENT_ROLES}>
                   <Enrollment />
                 </ProtectedRoute>
               }
             />
 
-            {/* Admin route */}
+            {/* ADMIN ROUTES */}
             <Route
               path="/admin/*"
               element={
-                <ProtectedRoute allowedRoles={["admin"]}>
+                <ProtectedRoute allowedRoles={["admin", "superadmin", "registrar"]}>
                   <AdminRoutes />
                 </ProtectedRoute>
               }

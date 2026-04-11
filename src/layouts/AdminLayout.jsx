@@ -11,9 +11,10 @@ import {
   LogOut,
   ChevronDown,
   Settings2,
-  Receipt,       // Added icon
-  UserCog,       // Added icon
-  ShieldAlert    // Added icon
+  Receipt,
+  UserCog,
+  ShieldAlert,
+  CreditCard // <-- Added for Expenses
 } from "lucide-react";
 
 const AdminLayout = () => {
@@ -51,6 +52,7 @@ const AdminLayout = () => {
               profilePicture: data.profilePicture || data.photoURL || "/default.png",
               email: data.email || user.email,
               role: data.role || "user",
+              branch: data.branch || "", // Included branch
               lastActive: data.lastActive || null,
             });
           }
@@ -94,6 +96,8 @@ const AdminLayout = () => {
 
   if (!userData) return null;
 
+  const isSuperAdmin = userData.role === "superadmin";
+
   return (
     <div className="flex h-screen p-3 bg-gray-200">
       {/* Sidebar */}
@@ -106,7 +110,7 @@ const AdminLayout = () => {
             </h1>
             <span className="text-[10px] text-gray-400 flex items-center gap-1 font-semibold">
               {isOnline ? (
-                <><span className="bg-green-400 w-2 h-2 rounded-full inline-block"></span> Online</>
+                <><span className="bg-green-400 w-2 h-2 rounded-full inline-block"></span> {userData.role === 'superadmin' ? 'Owner' : userData.branch}</>
               ) : ` ${userData.lastActive ? getLastSeen(userData.lastActive) : "Offline"}`}
             </span>
           </div>
@@ -125,9 +129,13 @@ const AdminLayout = () => {
            <Baby size={18} /> Students
           </NavLink>
 
-          {/* NEW LINKS */}
           <NavLink to="/admin/fees" className={({ isActive }) => `p-2.5 rounded-xl flex items-center gap-3 transition-colors ${isActive ? "bg-[#2D5B60] text-white shadow-md" : "hover:bg-gray-100"}`}> 
            <Receipt size={18} /> Manage Fees
+          </NavLink>
+
+          {/* NEW: Expenses Module */}
+          <NavLink to="/admin/expenses" className={({ isActive }) => `p-2.5 rounded-xl flex items-center gap-3 transition-colors ${isActive ? "bg-[#2D5B60] text-white shadow-md" : "hover:bg-gray-100"}`}> 
+           <CreditCard size={18} /> Expenses
           </NavLink>
 
           <NavLink to="/admin/schoolyear" className={({ isActive }) => `p-2.5 rounded-xl flex items-center gap-3 transition-colors ${isActive ? "bg-[#2D5B60] text-white shadow-md" : "hover:bg-gray-100"}`}>       
@@ -136,13 +144,18 @@ const AdminLayout = () => {
 
           <div className="h-px bg-gray-100 my-2 w-full"></div>
 
-          <NavLink to="/admin/staff" className={({ isActive }) => `p-2.5 rounded-xl flex items-center gap-3 transition-colors ${isActive ? "bg-[#2D5B60] text-white shadow-md" : "hover:bg-gray-100"}`}>       
-            <UserCog size={18} /> Staff
-          </NavLink>
+          {/* HIDDEN FROM REGISTRARS */}
+          {isSuperAdmin && (
+            <>
+              <NavLink to="/admin/staff" className={({ isActive }) => `p-2.5 rounded-xl flex items-center gap-3 transition-colors ${isActive ? "bg-[#2D5B60] text-white shadow-md" : "hover:bg-gray-100"}`}>       
+                <UserCog size={18} /> Staff
+              </NavLink>
 
-          <NavLink to="/admin/logs" className={({ isActive }) => `p-2.5 rounded-xl flex items-center gap-3 transition-colors ${isActive ? "bg-[#2D5B60] text-white shadow-md" : "hover:bg-gray-100"}`}>       
-            <ShieldAlert size={18} /> System Logs
-          </NavLink>
+              <NavLink to="/admin/logs" className={({ isActive }) => `p-2.5 rounded-xl flex items-center gap-3 transition-colors ${isActive ? "bg-[#2D5B60] text-white shadow-md" : "hover:bg-gray-100"}`}>       
+                <ShieldAlert size={18} /> System Logs
+              </NavLink>
+            </>
+          )}
 
           <button onClick={() => setOpen(!open)} className="p-2.5 rounded-xl flex items-center justify-between hover:bg-gray-100 w-full">
             <div className="flex items-center gap-3"><Settings2 size={18}/> Settings</div>

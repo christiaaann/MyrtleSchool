@@ -1,199 +1,143 @@
 import React, { useState, useEffect } from "react";
-import FloatingInput from "./FloatingInput";
 
-const AddressPicker = ({ value, onChange }) => {
-  const [open, setOpen] = useState(false);
-  const [step, setStep] = useState("province");
-
+const AddressPicker = ({ onChange }) => {
+  // Lists for dropdowns
   const [provinces, setProvinces] = useState([]);
   const [cities, setCities] = useState([]);
   const [barangays, setBarangays] = useState([]);
 
-  const [province, setProvince] = useState(null);
-  const [city, setCity] = useState(null);
-  const [barangay, setBarangay] = useState(null);
+  // Selected Values
+  const [selectedProv, setSelectedProv] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+  const [selectedBrgy, setSelectedBrgy] = useState("");
   const [purok, setPurok] = useState("");
 
-  const [displayAddress, setDisplayAddress] = useState(value || "");
-
+  // 1. Fetch Provinces on mount
   useEffect(() => {
     fetch("https://psgc.gitlab.io/api/provinces/")
-      .then(r => r.json())
-      .then(setProvinces);
+      .then((res) => res.json())
+      .then((data) => {
+        // Sort alphabetically
+        const sorted = data.sort((a, b) => a.name.localeCompare(b.name));
+        setProvinces(sorted);
+      })
+      .catch((err) => console.error("Error fetching provinces:", err));
   }, []);
 
+  // 2. Fetch Cities when Province is selected
   useEffect(() => {
-    if (!province) return;
-    fetch("https://psgc.gitlab.io/api/cities-municipalities/")
-      .then(r => r.json())
-      .then(data => {
-        setCities(data.filter(c => c.provinceCode === province.code));
+    if (!selectedProv) {
+      setCities([]);
+      return;
+    }
+    const provCode = provinces.find((p) => p.name === selectedProv)?.code;
+    if (provCode) {
+      fetch(`https://psgc.gitlab.io/api/provinces/${provCode}/cities-municipalities/`)
+        .then((res) => res.json())
+        .then((data) => {
+          const sorted = data.sort((a, b) => a.name.localeCompare(b.name));
+          setCities(sorted);
+        });
+    }
+  }, [selectedProv, provinces]);
+
+  // 3. Fetch Barangays when City is selected
+  useEffect(() => {
+    if (!selectedCity) {
+      setBarangays([]);
+      return;
+    }
+    const cityCode = cities.find((c) => c.name === selectedCity)?.code;
+    if (cityCode) {
+      fetch(`https://psgc.gitlab.io/api/cities-municipalities/${cityCode}/barangays/`)
+        .then((res) => res.json())
+        .then((data) => {
+          const sorted = data.sort((a, b) => a.name.localeCompare(b.name));
+          setBarangays(sorted);
+        });
+    }
+  }, [selectedCity, cities]);
+
+  // 4. Send the data back to CompleteProfile.jsx whenever anything changes
+  useEffect(() => {
+    if (onChange) {
+      onChange({
+        province: selectedProv,
+        city: selectedCity,
+        barangay: selectedBrgy,
+        purok: purok,
       });
-  }, [province]);
-
-  useEffect(() => {
-    if (!city) return;
-    fetch(`https://psgc.gitlab.io/api/cities-municipalities/${city.code}/barangays/`)
-      .then(r => r.json())
-      .then(setBarangays);
-  }, [city]);
-
-const confirmAddress = () => {
-  if (!province || !city || !barangay) {
-    alert("Please complete your address");
-    return;
-  }
-
-  const full = (purok ? purok + ", " : "") + barangay.name + ", " + city.name + ", " + province.name;
-
-  setDisplayAddress(full);
-
-  // Send to parent
-  if (onChange) {
-    onChange({
-      purok,
-      barangay: barangay.name,
-      city: city.name,
-      province: province.name,
-    });
-  }
-
-  setOpen(false);
-  setStep("province");
-};
-  const preview =
-    (purok ? purok + ", " : "") +
-    (barangay?.name || "") +
-    (city ? ", " + city.name : "") +
-    (province ? ", " + province.name : "");
+    }
+  }, [selectedProv, selectedCity, selectedBrgy, purok, onChange]);
 
   return (
-    <>
-      {/* Input */}
-      <FloatingInput
-        id="displayAddress"
-        label="Full address"
-        type="text"
-        value={displayAddress}
-        readOnly
-        onClick={() => setOpen(true)}
-      />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Province Dropdown */}
+      <div className="flex flex-col">
+        <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1">Province</label>
+        <select
+          value={selectedProv}
+          onChange={(e) => {
+            setSelectedProv(e.target.value);
+            setSelectedCity(""); // Reset City and Brgy if Province changes
+            setSelectedBrgy("");
+          }}
+          className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#2D5B60] focus:bg-white text-sm font-bold text-gray-700 transition-all cursor-pointer"
+        >
+          <option value="" disabled hidden>Select Province</option>
+          {provinces.map((p) => (
+            <option key={p.code} value={p.name}>{p.name}</option>
+          ))}
+        </select>
+      </div>
 
-      {open && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      {/* City Dropdown */}
+      <div className="flex flex-col">
+        <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1">City / Municipality</label>
+        <select
+          value={selectedCity}
+          onChange={(e) => {
+            setSelectedCity(e.target.value);
+            setSelectedBrgy(""); // Reset Brgy if City changes
+          }}
+          disabled={!selectedProv}
+          className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#2D5B60] focus:bg-white text-sm font-bold text-gray-700 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <option value="" disabled hidden>Select City</option>
+          {cities.map((c) => (
+            <option key={c.code} value={c.name}>{c.name}</option>
+          ))}
+        </select>
+      </div>
 
-          <div className="bg-white w-[420px] max-h-[80vh] rounded-xl p-4 overflow-y-auto">
-         
-            <div className="flex justify-between mb-3">
-              <h3 className="font-bold text-lg">Select Address</h3>
-              <button onClick={() => setOpen(false)}>✕</button>
-            </div>
-            
-            {/* Preview Address */}
-         {preview && (
-         <div className="mb-4 p-2 bg-gray-100 flex flex-col rounded text-lg">
-         {purok && <span>Purok {purok},</span>}
-         {barangay?.name && <span>{barangay.name},</span>}
-         {city?.name && <span>{city.name},</span>}
-         {province?.name && <span>{province.name},</span>}
-         </div>
-         )}
-            {step === "province" && (
-              <>
-                <p className="font-semibold mb-2">Province</p>
-                {provinces.map(p => (
-                  <div
-                    key={p.code}
-                    onClick={() => {
-                      setProvince(p);
-                      setStep("city");
-                    }}
-                    className="p-2 border-b cursor-pointer hover:bg-gray-100"
-                  >
-                    {p.name}
-                  </div>
-                ))}
-              </>
-            )}
+      {/* Barangay Dropdown */}
+      <div className="flex flex-col">
+        <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1">Barangay</label>
+        <select
+          value={selectedBrgy}
+          onChange={(e) => setSelectedBrgy(e.target.value)}
+          disabled={!selectedCity}
+          className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#2D5B60] focus:bg-white text-sm font-bold text-gray-700 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <option value="" disabled hidden>Select Barangay</option>
+          {barangays.map((b) => (
+            <option key={b.code} value={b.name}>{b.name}</option>
+          ))}
+        </select>
+      </div>
 
-            {step === "city" && (
-              <>
-                <button
-                  className="text-blue-500 mb-2"
-                  onClick={() => setStep("province")}
-                >
-                  ← Back
-                </button>
-
-                {cities.map(c => (
-                  <div
-                    key={c.code}
-                    onClick={() => {
-                      setCity(c);
-                      setStep("barangay");
-                    }}
-                    className="p-2 border-b cursor-pointer hover:bg-gray-100"
-                  >
-                    {c.name}
-                  </div>
-                ))}
-              </>
-            )}
-
-            {step === "barangay" && (
-              <>
-                <button
-                  className="text-blue-500 mb-2"
-                  onClick={() => setStep("city")}
-                >
-                  ← Back
-                </button>
-
-                {barangays.map(b => (
-                  <div
-                    key={b.code}
-                    onClick={() => {
-                      setBarangay(b);
-                      setStep("purok");
-                    }}
-                    className="p-2 border-b cursor-pointer hover:bg-gray-100"
-                  >
-                    {b.name}
-                  </div>
-                ))}
-              </>
-            )}
-
-            {step === "purok" && (
-              <>
-                <button
-                  className="text-blue-500 mb-2"
-                  onClick={() => setStep("barangay")}
-                >
-                  ← Back
-                </button>
-
-                <input
-                  type="text"
-                  value={purok}
-                  onChange={(e) => setPurok(e.target.value)}
-                  placeholder="Purok / Street"
-                  className="w-full px-3 py-2 border rounded mb-3"
-                />
-
-                <button
-                  onClick={confirmAddress}
-                  className="w-full bg-blue-600 text-white py-2 rounded"
-                >
-                  Confirm Address
-                </button>
-              </>
-            )}
-
-          </div>
-        </div>
-      )}
-    </>
+      {/* Purok / Street Input */}
+      <div className="flex flex-col">
+        <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1">Street / Purok / House No.</label>
+        <input
+          type="text"
+          value={purok}
+          onChange={(e) => setPurok(e.target.value)}
+          placeholder="e.g. Purok 1, Block 2"
+          className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#2D5B60] focus:bg-white text-sm font-bold text-gray-700 transition-all"
+        />
+      </div>
+    </div>
   );
 };
 
